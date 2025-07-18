@@ -1,1 +1,1 @@
-export const USER_API_END_POINT="https://perfume-backend-newy.onrender.com/user"
+export const USER_API_END_POINT = "https://olcademybackend.vercel.app/";
