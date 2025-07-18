@@ -1,0 +1,1 @@
+export const USER_API_END_POINT="https://perfume-backend-newy.onrender.com/user"
