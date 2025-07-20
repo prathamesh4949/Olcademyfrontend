@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { FiMenu, FiSearch, FiX, FiUser, FiShoppingCart, FiHeart } from "react-icons/fi";
-
 import { Link } from "react-router-dom";
 import SignupModal from "./SignupModal";
 import { motion, AnimatePresence } from "framer-motion";
 import VerifyEmail from "./VerifyEmail";
 import Login from "./Login";
+import { AuthContext } from "../../context/AuthContext"; // Import AuthContext
 
 const navItems = [
   {
@@ -49,9 +49,10 @@ const Header = ({ darkMode, setDarkMode }) => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [isSignupOpen, setIsSignupOpen] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState(null);
-  const [isVerifyOpen, setIsVerifyOpen] = useState(false)
-  const [isLoginOpen, setIsLoginOpen] = useState(false)
-  const [email, setEmail] = useState(false)
+  const [isVerifyOpen, setIsVerifyOpen] = useState(false);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [email, setEmail] = useState(false);
+  const { user, logout } = useContext(AuthContext); // Use AuthContext
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "auto";
@@ -87,7 +88,6 @@ const Header = ({ darkMode, setDarkMode }) => {
           <h1 className="text-3xl font-bold tracking-wider">Vesarii</h1>
 
           {/* Right Icons */}
-          {/* Right Icons */}
           <div className="flex items-center space-x-4 z-50">
             {/* Wishlist Icon */}
             <Link to="/wishlist-collection" className="text-2xl">
@@ -99,12 +99,32 @@ const Header = ({ darkMode, setDarkMode }) => {
               <FiShoppingCart className={darkMode ? "text-white" : "text-black"} />
             </Link>
 
-            {/* Login Icon */}
-            <button onClick={() => setIsSignupOpen(true)} className="text-2xl">
-              <FiUser className={darkMode ? "text-white" : "text-black"} />
-            </button>
+            {/* User Section */}
+            {user ? (
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2">
+                  <div className="w-8 h-8 bg-gradient-to-r from-[#79300f] to-[#b14527] rounded-full flex items-center justify-center">
+                    <span className="text-white text-sm font-semibold">
+                      {user.username ? user.username.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                  <span className="text-sm font-medium hidden sm:block">
+                    {user.username || user.email}
+                  </span>
+                </div>
+                <button
+                  onClick={logout}
+                  className="text-sm text-red-600 hover:text-red-800 hover:underline transition-colors"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <button onClick={() => setIsSignupOpen(true)} className="text-2xl">
+                <FiUser className={darkMode ? "text-white" : "text-black"} />
+              </button>
+            )}
           </div>
-
         </div>
 
         {/* Desktop Nav with Dropdowns */}
@@ -135,7 +155,7 @@ const Header = ({ darkMode, setDarkMode }) => {
                       minWidth: '800px',
                       maxWidth: '90vw',
                       marginLeft: 'max(-50vw + 50%, -400px)',
-                      marginRight: 'max(-50vw + 50%, -400px)'
+                      marginRight: 'max(-50vw + 50%, -400px)',
                     }}
                     onMouseEnter={() => setHoveredIndex(idx)}
                     onMouseLeave={() => setHoveredIndex(null)}
@@ -186,25 +206,31 @@ const Header = ({ darkMode, setDarkMode }) => {
       </header>
 
       {/* Signup Modal */}
-      <SignupModal isOpen={isSignupOpen} onClose={() => setIsSignupOpen(false)}
+      <SignupModal
+        isOpen={isSignupOpen}
+        onClose={() => setIsSignupOpen(false)}
         openVerify={() => {
-          setIsSignupOpen(false)
-          setIsVerifyOpen(true)
+          setIsSignupOpen(false);
+          setIsVerifyOpen(true);
         }}
-        openLogin ={()=>{
-          setIsSignupOpen(false)
-          setIsLoginOpen(true)
+        openLogin={() => {
+          setIsSignupOpen(false);
+          setIsLoginOpen(true);
         }}
-        setEmail={setEmail} />
-      <VerifyEmail isOpen={isVerifyOpen} onClose={() => setIsVerifyOpen(false)} 
-        openLogin={()=>{
-          setIsVerifyOpen(false)
-          setIsLoginOpen(true)
+        setEmail={setEmail}
+      />
+      <VerifyEmail
+        isOpen={isVerifyOpen}
+        onClose={() => setIsVerifyOpen(false)}
+        openLogin={() => {
+          setIsVerifyOpen(false);
+          setIsLoginOpen(true);
         }}
-        email={email} />
-        <Login isOpen={isLoginOpen} onClose={()=>setIsLoginOpen(false)} />
+        email={email}
+      />
+      <Login isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
     </>
-  )
+  );
 };
 
 export default Header;

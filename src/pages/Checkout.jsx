@@ -1,15 +1,17 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/common/Header';
 import Footer from '../components/common/Footer';
 import { useCart } from '../CartContext';
 import { API_BASE_URL } from '../api/constant';
 import '../styles/Checkout.css';
+import { AuthContext } from '../context/AuthContext';
 
 const Checkout = () => {
   const [darkMode, setDarkMode] = useState(false);
   const { cartItems, setCartItems } = useCart();
   const navigate = useNavigate();
+  const { user, isAuthenticated } = useContext(AuthContext); // Get both user and isAuthenticated
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [errors, setErrors] = useState({});
@@ -21,7 +23,7 @@ const Checkout = () => {
 
   const [customerInfo, setCustomerInfo] = useState({
     name: '',
-    email: '',
+    email: user ? user.email : '',
     phone: '',
     address: '',
     city: '',
@@ -51,6 +53,42 @@ const Checkout = () => {
     'WELCOME20': 20,
     'SUMMER15': 15
   };
+
+  // Check authentication when component mounts
+  useEffect(() => {
+    // Only redirect if user is definitely not authenticated and not on success page
+    const checkAuth = () => {
+      const token = localStorage.getItem('token');
+      
+      // If no user context, no token, and not on success page - redirect to login
+      if (!user && !token && currentStep !== 4) {
+        console.log('User not authenticated, redirecting to login');
+        navigate('/login', { state: { from: '/checkout' } });
+        return;
+      }
+
+      // If we have a token but no user context yet, wait for auth context to load
+      if (token && !user && currentStep !== 4) {
+        console.log('Token found but user context loading...');
+        // Don't redirect immediately, give auth context time to load
+        return;
+      }
+
+      console.log('User authenticated:', user ? user.email : 'Loading...');
+    };
+
+    checkAuth();
+  }, [user, navigate, currentStep]);
+
+  // Update email when user context loads
+  useEffect(() => {
+    if (user && user.email && !customerInfo.email) {
+      setCustomerInfo(prev => ({
+        ...prev,
+        email: user.email
+      }));
+    }
+  }, [user, customerInfo.email]);
 
   useEffect(() => {
     const stored = localStorage.getItem('darkMode');
@@ -120,7 +158,7 @@ const Checkout = () => {
   };
 
   const calculateTax = () => {
-    return (calculateSubtotal() * 0.08); // 8% tax
+    return (calculateSubtotal() * 0.08);
   };
 
   const calculateTotal = () => {
@@ -151,148 +189,163 @@ const Checkout = () => {
     setCurrentStep(prev => prev - 1);
   };
 
-  // Updated handleSubmit function using centralized API configuration
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Double-check authentication before placing order
+    const token = localStorage.getItem('token');
+    if (!user && !token) {
+      console.log('User not authenticated at order submission, redirecting to login');
+      navigate('/login', { state: { from: '/checkout' } });
+      return;
+    }
+
     if (!validateStep(3)) return;
     
     setIsProcessing(true);
     
     try {
-        // Prepare order data
-        const orderData = {
-            customerInfo,
-            items: cartItems,
-            paymentInfo: {
-                method: paymentMethod,
-                cardNumber: paymentInfo.cardNumber,
-                cardName: paymentInfo.cardName
-            },
-            shippingOption: shippingOptions.find(option => option.id === shippingOption),
-            pricing: {
-                subtotal: calculateSubtotal(),
-                shipping: calculateShipping(),
-                tax: calculateTax(),
-                discount: (calculateSubtotal() * discount) / 100,
-                discountPercentage: discount,
-                total: calculateTotal()
-            },
-            promoCode: promoCode || null
-        };
-        
-        const apiUrl = `${API_BASE_URL}/order/create`;
-        console.log('Sending order data to:', apiUrl);
-        console.log('Order data:', orderData);
-        
-        // Send order to backend using centralized API configuration
-        const response = await fetch(apiUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify(orderData)
-        });
-        
-        console.log('Response status:', response.status);
-        console.log('Response ok:', response.ok);
-        
-        let result;
-        
-        if (response.ok) {
-            try {
-                result = await response.json();
-                console.log('✅ Order response:', result);
-                
-                if (result.success) {
-                    console.log('✅ Order placed successfully:', result.order?.orderNumber || result.orderNumber);
-                    
-                    // Clear cart
-                    setCartItems([]);
-                    
-                    // Store order number for display
-                    const orderNum = result.order?.orderNumber || result.orderNumber || 'ORD-' + Date.now();
-                    localStorage.setItem('lastOrderNumber', orderNum);
-                    setOrderNumber(orderNum);
-                    
-                    // Show success animation
-                    setCurrentStep(4);
-                    
-                    setTimeout(() => {
-                        navigate('/');
-                    }, 5000);
-                } else {
-                    throw new Error(result.message || 'Failed to place order');
-                }
-            } catch (jsonError) {
-                console.error('Error parsing JSON response:', jsonError);
-                throw new Error('Invalid response from server');
-            }
-        } else {
-            // Handle different error status codes
-            if (response.status === 404) {
-                console.warn('⚠️ Backend endpoint /order/create not found');
-                console.warn('Available endpoints might be different. Check your OrderRoutes.js');
-                
-                // Try to get error details
-                try {
-                    const errorText = await response.text();
-                    console.error('404 Error details:', errorText);
-                } catch (e) {
-                    console.error('Could not parse error response');
-                }
-                
-                // For development, show mock success
-                console.log('🔄 Using mock response for development...');
-                const mockOrderNumber = 'ORD-MOCK-' + Date.now();
-                console.log('✅ Mock order placed successfully:', mockOrderNumber);
-                
-                setCartItems([]);
-                localStorage.setItem('lastOrderNumber', mockOrderNumber);
-                setOrderNumber(mockOrderNumber);
-                setCurrentStep(4);
-                
-                setTimeout(() => {
-                    navigate('/');
-                }, 5000);
-                
-                return;
-            } else if (response.status === 500) {
-                try {
-                    result = await response.json();
-                    throw new Error(`Server error: ${result.message || 'Internal server error'}`);
-                } catch (jsonError) {
-                    throw new Error('Internal server error');
-                }
-            } else if (response.status === 400) {
-                try {
-                    result = await response.json();
-                    throw new Error(`Bad request: ${result.message || 'Invalid data provided'}`);
-                } catch (jsonError) {
-                    throw new Error('Bad request: Invalid data provided');
-                }
-            } else {
-                // Generic error handling
-                try {
-                    result = await response.json();
-                    throw new Error(result.message || `Server error: ${response.status} ${response.statusText}`);
-                } catch (jsonError) {
-                    throw new Error(`Server error: ${response.status} ${response.statusText}`);
-                }
-            }
+      // Prepare order data
+      const orderData = {
+        customerInfo,
+        items: cartItems,
+        paymentInfo: {
+          method: paymentMethod,
+          cardNumber: paymentInfo.cardNumber,
+          cardName: paymentInfo.cardName
+        },
+        shippingOption: shippingOptions.find(option => option.id === shippingOption),
+        pricing: {
+          subtotal: calculateSubtotal(),
+          shipping: calculateShipping(),
+          tax: calculateTax(),
+          discount: (calculateSubtotal() * discount) / 100,
+          discountPercentage: discount,
+          total: calculateTotal()
+        },
+        promoCode: promoCode || null
+      };
+      
+      const apiUrl = `${API_BASE_URL}/order/create`;
+      console.log('Sending order data to:', apiUrl);
+      console.log('Order data:', orderData);
+      
+      // Get fresh token
+      const authToken = localStorage.getItem('token');
+      
+      // Send order to backend
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        credentials: 'include',
+        body: JSON.stringify(orderData)
+      });
+      
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
+      
+      let result;
+      
+      if (response.ok) {
+        try {
+          result = await response.json();
+          console.log('✅ Order response:', result);
+          
+          if (result.success) {
+            console.log('✅ Order placed successfully:', result.order?.orderNumber || result.orderNumber);
+            
+            // Clear cart
+            setCartItems([]);
+            
+            // Store order number for display
+            const orderNum = result.order?.orderNumber || result.orderNumber || 'ORD-' + Date.now();
+            localStorage.setItem('lastOrderNumber', orderNum);
+            setOrderNumber(orderNum);
+            
+            // Show success animation
+            setCurrentStep(4);
+            
+            setTimeout(() => {
+              navigate('/');
+            }, 5000);
+          } else {
+            throw new Error(result.message || 'Failed to place order');
+          }
+        } catch (jsonError) {
+          console.error('Error parsing JSON response:', jsonError);
+          throw new Error('Invalid response from server');
         }
-        
+      } else {
+        // Handle different error status codes
+        if (response.status === 401) {
+          console.log('Authentication failed, clearing token and redirecting to login');
+          localStorage.removeItem('token'); // Clear invalid token
+          navigate('/login', { state: { from: '/checkout' } });
+          throw new Error('Authentication required. Please log in again.');
+        } else if (response.status === 404) {
+          console.warn('⚠️ Backend endpoint /order/create not found');
+          console.warn('Available endpoints might be different. Check your OrderRoutes.js');
+          
+          try {
+            const errorText = await response.text();
+            console.error('404 Error details:', errorText);
+          } catch (e) {
+            console.error('Could not parse error response');
+          }
+          
+          // For development, show mock success
+          console.log('🔄 Using mock response for development...');
+          const mockOrderNumber = 'ORD-MOCK-' + Date.now();
+          console.log('✅ Mock order placed successfully:', mockOrderNumber);
+          
+          setCartItems([]);
+          localStorage.setItem('lastOrderNumber', mockOrderNumber);
+          setOrderNumber(mockOrderNumber);
+          setCurrentStep(4);
+          
+          setTimeout(() => {
+            navigate('/');
+          }, 5000);
+          
+          return;
+        } else if (response.status === 500) {
+          try {
+            result = await response.json();
+            throw new Error(`Server error: ${result.message || 'Internal server error'}`);
+          } catch (jsonError) {
+            throw new Error('Internal server error');
+          }
+        } else if (response.status === 400) {
+          try {
+            result = await response.json();
+            throw new Error(`Bad request: ${result.message || 'Invalid data provided'}`);
+          } catch (jsonError) {
+            throw new Error('Bad request: Invalid data provided');
+          }
+        } else {
+          try {
+            result = await response.json();
+            throw new Error(result.message || `Server error: ${response.status} ${response.statusText}`);
+          } catch (jsonError) {
+            throw new Error(`Server error: ${response.status} ${response.statusText}`);
+          }
+        }
+      }
+      
     } catch (error) {
-        console.error('❌ Error placing order:', error);
-        
-        // Check if it's a network error
-        if (error.name === 'TypeError' && error.message.includes('fetch')) {
-            alert(`Network error: Unable to connect to server at ${API_BASE_URL}. Please check if the backend is running and try again.`);
-        } else {
-            alert(`There was an error placing your order: ${error.message}\n\nPlease try again or contact support if the problem persists.`);
-        }
+      console.error('❌ Error placing order:', error);
+      
+      // Check if it's a network error
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        alert(`Network error: Unable to connect to server at ${API_BASE_URL}. Please check if the backend is running and try again.`);
+      } else {
+        alert(`There was an error placing your order: ${error.message}\n\nPlease try again or contact support if the problem persists.`);
+      }
     } finally {
-        setIsProcessing(false);
+      setIsProcessing(false);
     }
   };
 
@@ -337,6 +390,7 @@ const Checkout = () => {
             onChange={handleInputChange}
             className={errors.email ? 'error' : ''}
             placeholder="john@example.com"
+            disabled={!!user}
           />
           {errors.email && <span className="error-message">{errors.email}</span>}
         </div>
