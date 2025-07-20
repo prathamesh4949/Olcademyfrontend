@@ -20,7 +20,7 @@ export const USER_API_END_POINT = `${BASE_URL}/user`;
 
 // Frontend URL (if needed in constants)
 export const FRONTEND_URL = isDevelopment 
-  ? "http://localhost:3000" 
+  ? "http://localhost:4028" 
   : "https://olcademyfrontend.vercel.app";
 
 // Export base URL if needed elsewhere

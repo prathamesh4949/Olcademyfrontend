@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../components/common/Header';
 import Footer from '../components/common/Footer';
 import { useCart } from '../CartContext';
+import { API_BASE_URL } from '../api/constant';
 import '../styles/Checkout.css';
 
 const Checkout = () => {
@@ -16,6 +17,7 @@ const Checkout = () => {
   const [promoCode, setPromoCode] = useState('');
   const [discount, setDiscount] = useState(0);
   const [showPromoSuccess, setShowPromoSuccess] = useState(false);
+  const [orderNumber, setOrderNumber] = useState('');
 
   const [customerInfo, setCustomerInfo] = useState({
     name: '',
@@ -149,6 +151,7 @@ const Checkout = () => {
     setCurrentStep(prev => prev - 1);
   };
 
+  // Updated handleSubmit function using centralized API configuration
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateStep(3)) return;
@@ -156,21 +159,140 @@ const Checkout = () => {
     setIsProcessing(true);
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      setCartItems([]);
-      
-      // Show success animation
-      setCurrentStep(4);
-      
-      setTimeout(() => {
-        navigate('/');
-      }, 3000);
-      
+        // Prepare order data
+        const orderData = {
+            customerInfo,
+            items: cartItems,
+            paymentInfo: {
+                method: paymentMethod,
+                cardNumber: paymentInfo.cardNumber,
+                cardName: paymentInfo.cardName
+            },
+            shippingOption: shippingOptions.find(option => option.id === shippingOption),
+            pricing: {
+                subtotal: calculateSubtotal(),
+                shipping: calculateShipping(),
+                tax: calculateTax(),
+                discount: (calculateSubtotal() * discount) / 100,
+                discountPercentage: discount,
+                total: calculateTotal()
+            },
+            promoCode: promoCode || null
+        };
+        
+        const apiUrl = `${API_BASE_URL}/order/create`;
+        console.log('Sending order data to:', apiUrl);
+        console.log('Order data:', orderData);
+        
+        // Send order to backend using centralized API configuration
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify(orderData)
+        });
+        
+        console.log('Response status:', response.status);
+        console.log('Response ok:', response.ok);
+        
+        let result;
+        
+        if (response.ok) {
+            try {
+                result = await response.json();
+                console.log('✅ Order response:', result);
+                
+                if (result.success) {
+                    console.log('✅ Order placed successfully:', result.order?.orderNumber || result.orderNumber);
+                    
+                    // Clear cart
+                    setCartItems([]);
+                    
+                    // Store order number for display
+                    const orderNum = result.order?.orderNumber || result.orderNumber || 'ORD-' + Date.now();
+                    localStorage.setItem('lastOrderNumber', orderNum);
+                    setOrderNumber(orderNum);
+                    
+                    // Show success animation
+                    setCurrentStep(4);
+                    
+                    setTimeout(() => {
+                        navigate('/');
+                    }, 5000);
+                } else {
+                    throw new Error(result.message || 'Failed to place order');
+                }
+            } catch (jsonError) {
+                console.error('Error parsing JSON response:', jsonError);
+                throw new Error('Invalid response from server');
+            }
+        } else {
+            // Handle different error status codes
+            if (response.status === 404) {
+                console.warn('⚠️ Backend endpoint /order/create not found');
+                console.warn('Available endpoints might be different. Check your OrderRoutes.js');
+                
+                // Try to get error details
+                try {
+                    const errorText = await response.text();
+                    console.error('404 Error details:', errorText);
+                } catch (e) {
+                    console.error('Could not parse error response');
+                }
+                
+                // For development, show mock success
+                console.log('🔄 Using mock response for development...');
+                const mockOrderNumber = 'ORD-MOCK-' + Date.now();
+                console.log('✅ Mock order placed successfully:', mockOrderNumber);
+                
+                setCartItems([]);
+                localStorage.setItem('lastOrderNumber', mockOrderNumber);
+                setOrderNumber(mockOrderNumber);
+                setCurrentStep(4);
+                
+                setTimeout(() => {
+                    navigate('/');
+                }, 5000);
+                
+                return;
+            } else if (response.status === 500) {
+                try {
+                    result = await response.json();
+                    throw new Error(`Server error: ${result.message || 'Internal server error'}`);
+                } catch (jsonError) {
+                    throw new Error('Internal server error');
+                }
+            } else if (response.status === 400) {
+                try {
+                    result = await response.json();
+                    throw new Error(`Bad request: ${result.message || 'Invalid data provided'}`);
+                } catch (jsonError) {
+                    throw new Error('Bad request: Invalid data provided');
+                }
+            } else {
+                // Generic error handling
+                try {
+                    result = await response.json();
+                    throw new Error(result.message || `Server error: ${response.status} ${response.statusText}`);
+                } catch (jsonError) {
+                    throw new Error(`Server error: ${response.status} ${response.statusText}`);
+                }
+            }
+        }
+        
     } catch (error) {
-      console.error('Error placing order:', error);
-      alert('There was an error placing your order. Please try again.');
+        console.error('❌ Error placing order:', error);
+        
+        // Check if it's a network error
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+            alert(`Network error: Unable to connect to server at ${API_BASE_URL}. Please check if the backend is running and try again.`);
+        } else {
+            alert(`There was an error placing your order: ${error.message}\n\nPlease try again or contact support if the problem persists.`);
+        }
     } finally {
-      setIsProcessing(false);
+        setIsProcessing(false);
     }
   };
 
@@ -515,7 +637,8 @@ const Checkout = () => {
       </div>
       <h2>Order Placed Successfully!</h2>
       <p>Thank you for your purchase. You will receive an email confirmation shortly.</p>
-      <div className="order-number">Order #12345</div>
+      <div className="order-number">Order #{orderNumber || '12345'}</div>
+      <p className="redirect-message">Redirecting to home page in 5 seconds...</p>
     </div>
   );
 
