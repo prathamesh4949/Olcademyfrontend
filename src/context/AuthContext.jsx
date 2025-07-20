@@ -1,5 +1,5 @@
 // context/AuthContext.jsx
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { USER_API_END_POINT } from '@/api/constant';
 
@@ -204,6 +204,11 @@ export const AuthProvider = ({ children }) => {
     delete axios.defaults.headers.common['Authorization'];
   };
 
+  // Get token function
+  const getToken = () => {
+    return localStorage.getItem('token');
+  };
+
   const value = {
     user,
     loading,
@@ -212,7 +217,9 @@ export const AuthProvider = ({ children }) => {
     logout,
     checkUsernameAvailability,
     verifyEmail,
-    resendOtp
+    resendOtp,
+    token: getToken(), // Add token to context value
+    getToken
   };
 
   return (
@@ -220,4 +227,13 @@ export const AuthProvider = ({ children }) => {
       {children}
     </AuthContext.Provider>
   );
+};
+
+// Add the useAuth hook that was missing
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };

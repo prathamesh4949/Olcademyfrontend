@@ -11,7 +11,7 @@ const Checkout = () => {
   const [darkMode, setDarkMode] = useState(false);
   const { cartItems, setCartItems } = useCart();
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useContext(AuthContext); // Get both user and isAuthenticated
+  const { user, isAuthenticated } = useContext(AuthContext);
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [errors, setErrors] = useState({});
@@ -54,33 +54,23 @@ const Checkout = () => {
     'SUMMER15': 15
   };
 
-  // Check authentication when component mounts
   useEffect(() => {
-    // Only redirect if user is definitely not authenticated and not on success page
     const checkAuth = () => {
       const token = localStorage.getItem('token');
-      
-      // If no user context, no token, and not on success page - redirect to login
       if (!user && !token && currentStep !== 4) {
         console.log('User not authenticated, redirecting to login');
         navigate('/login', { state: { from: '/checkout' } });
         return;
       }
-
-      // If we have a token but no user context yet, wait for auth context to load
       if (token && !user && currentStep !== 4) {
         console.log('Token found but user context loading...');
-        // Don't redirect immediately, give auth context time to load
         return;
       }
-
       console.log('User authenticated:', user ? user.email : 'Loading...');
     };
-
     checkAuth();
   }, [user, navigate, currentStep]);
 
-  // Update email when user context loads
   useEffect(() => {
     if (user && user.email && !customerInfo.email) {
       setCustomerInfo(prev => ({
@@ -102,7 +92,6 @@ const Checkout = () => {
 
   const validateStep = useCallback((step) => {
     const newErrors = {};
-    
     if (step === 1) {
       if (!customerInfo.name.trim()) newErrors.name = 'Name is required';
       if (!customerInfo.email.trim()) newErrors.email = 'Email is required';
@@ -113,21 +102,18 @@ const Checkout = () => {
       if (!customerInfo.zipCode.trim()) newErrors.zipCode = 'Zip code is required';
       if (!customerInfo.country.trim()) newErrors.country = 'Country is required';
     }
-    
     if (step === 2 && paymentMethod === 'credit-card') {
       if (!paymentInfo.cardNumber.trim()) newErrors.cardNumber = 'Card number is required';
       if (!paymentInfo.expiryDate.trim()) newErrors.expiryDate = 'Expiry date is required';
       if (!paymentInfo.cvv.trim()) newErrors.cvv = 'CVV is required';
       if (!paymentInfo.cardName.trim()) newErrors.cardName = 'Cardholder name is required';
     }
-    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }, [customerInfo, paymentInfo, paymentMethod]);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    
     if (name in customerInfo) {
       setCustomerInfo(prev => ({
         ...prev,
@@ -139,8 +125,6 @@ const Checkout = () => {
         [name]: type === 'checkbox' ? checked : value
       }));
     }
-    
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -150,7 +134,7 @@ const Checkout = () => {
   };
 
   const calculateSubtotal = () => {
-    return cartItems.reduce((total, item) => total + parseFloat(item.price), 0);
+    return cartItems.reduce((total, item) => total + parseFloat(item.price) * (item.quantity || 1), 0);
   };
 
   const calculateShipping = () => {
@@ -167,6 +151,10 @@ const Checkout = () => {
     const tax = calculateTax();
     const discountAmount = (subtotal * discount) / 100;
     return subtotal + shipping + tax - discountAmount;
+  };
+
+  const calculateTotalItems = () => {
+    return cartItems.reduce((total, item) => total + (item.quantity || 1), 0);
   };
 
   const handlePromoCode = () => {
@@ -191,21 +179,15 @@ const Checkout = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Double-check authentication before placing order
     const token = localStorage.getItem('token');
     if (!user && !token) {
       console.log('User not authenticated at order submission, redirecting to login');
       navigate('/login', { state: { from: '/checkout' } });
       return;
     }
-
     if (!validateStep(3)) return;
-    
     setIsProcessing(true);
-    
     try {
-      // Prepare order data
       const orderData = {
         customerInfo,
         items: cartItems,
@@ -225,15 +207,10 @@ const Checkout = () => {
         },
         promoCode: promoCode || null
       };
-      
       const apiUrl = `${API_BASE_URL}/order/create`;
       console.log('Sending order data to:', apiUrl);
       console.log('Order data:', orderData);
-      
-      // Get fresh token
       const authToken = localStorage.getItem('token');
-      
-      // Send order to backend
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
@@ -243,31 +220,20 @@ const Checkout = () => {
         credentials: 'include',
         body: JSON.stringify(orderData)
       });
-      
       console.log('Response status:', response.status);
       console.log('Response ok:', response.ok);
-      
       let result;
-      
       if (response.ok) {
         try {
           result = await response.json();
           console.log('✅ Order response:', result);
-          
           if (result.success) {
             console.log('✅ Order placed successfully:', result.order?.orderNumber || result.orderNumber);
-            
-            // Clear cart
             setCartItems([]);
-            
-            // Store order number for display
             const orderNum = result.order?.orderNumber || result.orderNumber || 'ORD-' + Date.now();
             localStorage.setItem('lastOrderNumber', orderNum);
             setOrderNumber(orderNum);
-            
-            // Show success animation
             setCurrentStep(4);
-            
             setTimeout(() => {
               navigate('/');
             }, 5000);
@@ -279,37 +245,30 @@ const Checkout = () => {
           throw new Error('Invalid response from server');
         }
       } else {
-        // Handle different error status codes
         if (response.status === 401) {
           console.log('Authentication failed, clearing token and redirecting to login');
-          localStorage.removeItem('token'); // Clear invalid token
+          localStorage.removeItem('token');
           navigate('/login', { state: { from: '/checkout' } });
           throw new Error('Authentication required. Please log in again.');
         } else if (response.status === 404) {
           console.warn('⚠️ Backend endpoint /order/create not found');
           console.warn('Available endpoints might be different. Check your OrderRoutes.js');
-          
           try {
             const errorText = await response.text();
             console.error('404 Error details:', errorText);
           } catch (e) {
             console.error('Could not parse error response');
           }
-          
-          // For development, show mock success
           console.log('🔄 Using mock response for development...');
           const mockOrderNumber = 'ORD-MOCK-' + Date.now();
           console.log('✅ Mock order placed successfully:', mockOrderNumber);
-          
           setCartItems([]);
           localStorage.setItem('lastOrderNumber', mockOrderNumber);
           setOrderNumber(mockOrderNumber);
           setCurrentStep(4);
-          
           setTimeout(() => {
             navigate('/');
           }, 5000);
-          
           return;
         } else if (response.status === 500) {
           try {
@@ -334,11 +293,8 @@ const Checkout = () => {
           }
         }
       }
-      
     } catch (error) {
       console.error('❌ Error placing order:', error);
-      
-      // Check if it's a network error
       if (error.name === 'TypeError' && error.message.includes('fetch')) {
         alert(`Network error: Unable to connect to server at ${API_BASE_URL}. Please check if the backend is running and try again.`);
       } else {
@@ -380,7 +336,6 @@ const Checkout = () => {
           />
           {errors.name && <span className="error-message">{errors.name}</span>}
         </div>
-        
         <div className="form-group">
           <label>Email *</label>
           <input
@@ -394,7 +349,6 @@ const Checkout = () => {
           />
           {errors.email && <span className="error-message">{errors.email}</span>}
         </div>
-        
         <div className="form-group">
           <label>Phone *</label>
           <input
@@ -407,7 +361,6 @@ const Checkout = () => {
           />
           {errors.phone && <span className="error-message">{errors.phone}</span>}
         </div>
-        
         <div className="form-group full-width">
           <label>Address *</label>
           <input
@@ -420,7 +373,6 @@ const Checkout = () => {
           />
           {errors.address && <span className="error-message">{errors.address}</span>}
         </div>
-        
         <div className="form-group">
           <label>City *</label>
           <input
@@ -433,7 +385,6 @@ const Checkout = () => {
           />
           {errors.city && <span className="error-message">{errors.city}</span>}
         </div>
-        
         <div className="form-group">
           <label>State</label>
           <input
@@ -444,7 +395,6 @@ const Checkout = () => {
             placeholder="NY"
           />
         </div>
-        
         <div className="form-group">
           <label>Zip Code *</label>
           <input
@@ -457,7 +407,6 @@ const Checkout = () => {
           />
           {errors.zipCode && <span className="error-message">{errors.zipCode}</span>}
         </div>
-        
         <div className="form-group">
           <label>Country *</label>
           <input
@@ -471,7 +420,6 @@ const Checkout = () => {
           {errors.country && <span className="error-message">{errors.country}</span>}
         </div>
       </div>
-      
       <div className="shipping-options">
         <h4>Shipping Options</h4>
         {shippingOptions.map(option => (
@@ -500,7 +448,6 @@ const Checkout = () => {
   const renderPaymentForm = () => (
     <div className="form-section">
       <h3>Payment Information</h3>
-      
       <div className="payment-methods">
         <div className="payment-method">
           <input
@@ -536,7 +483,6 @@ const Checkout = () => {
           <label htmlFor="apple-pay">Apple Pay</label>
         </div>
       </div>
-      
       {paymentMethod === 'credit-card' && (
         <div className="form-grid">
           <div className="form-group full-width">
@@ -552,7 +498,6 @@ const Checkout = () => {
             />
             {errors.cardNumber && <span className="error-message">{errors.cardNumber}</span>}
           </div>
-          
           <div className="form-group">
             <label>Expiry Date *</label>
             <input
@@ -566,7 +511,6 @@ const Checkout = () => {
             />
             {errors.expiryDate && <span className="error-message">{errors.expiryDate}</span>}
           </div>
-          
           <div className="form-group">
             <label>CVV *</label>
             <input
@@ -580,7 +524,6 @@ const Checkout = () => {
             />
             {errors.cvv && <span className="error-message">{errors.cvv}</span>}
           </div>
-          
           <div className="form-group full-width">
             <label>Cardholder Name *</label>
             <input
@@ -593,7 +536,6 @@ const Checkout = () => {
             />
             {errors.cardName && <span className="error-message">{errors.cardName}</span>}
           </div>
-          
           <div className="form-group full-width">
             <label className="checkbox-label">
               <input
@@ -607,13 +549,11 @@ const Checkout = () => {
           </div>
         </div>
       )}
-      
       {paymentMethod === 'paypal' && (
         <div className="alternative-payment">
           <p>You will be redirected to PayPal to complete your payment.</p>
         </div>
       )}
-      
       {paymentMethod === 'apple-pay' && (
         <div className="alternative-payment">
           <p>Use Touch ID or Face ID to complete your payment.</p>
@@ -623,60 +563,79 @@ const Checkout = () => {
   );
 
   const renderOrderSummary = () => (
-    <div className="order-summary">
-      <h3>Order Summary</h3>
+    <div className="order-summary bg-white dark:bg-[#2c0a0a] p-6 rounded-lg shadow-xl border dark:border-gray-700">
+      <h3 className="text-2xl font-bold mb-6 text-center border-b pb-3 dark:border-gray-600">Order Summary</h3>
       
       <div className="cart-items">
         {cartItems.map((item, index) => (
-          <div key={index} className="cart-item">
-            <img src={item.image} alt={item.name} />
-            <div className="item-details">
-              <h4>{item.name}</h4>
-              <span className="item-price">${item.price}</span>
+          <div key={index} className="cart-item flex items-center mb-4">
+            <img src={item.image} alt={item.name} className="h-16 w-16 object-contain mr-4 rounded" />
+            <div className="item-details flex-1">
+              <h4 className="text-lg font-semibold">{item.name}</h4>
+              <div className="flex justify-between">
+                <span className="text-sm">Qty: {item.quantity || 1}</span>
+                <span className="text-sm font-bold text-green-600 dark:text-green-400">${(item.price * (item.quantity || 1)).toFixed(2)}</span>
+              </div>
             </div>
           </div>
         ))}
       </div>
       
-      <div className="promo-code">
-        <div className="promo-input">
+      <div className="promo-code mb-6">
+        <div className="promo-input flex">
           <input
             type="text"
             value={promoCode}
             onChange={(e) => setPromoCode(e.target.value)}
             placeholder="Enter promo code"
+            className="flex-1 border rounded-l-lg px-3 py-2 dark:border-gray-600 bg-gray-50 dark:bg-gray-800"
           />
-          <button onClick={handlePromoCode}>Apply</button>
+          <button
+            onClick={handlePromoCode}
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-r-lg"
+          >
+            Apply
+          </button>
         </div>
         {showPromoSuccess && (
-          <div className="promo-success">
+          <div className="promo-success text-green-600 dark:text-green-400 mt-2">
             Promo code applied! {discount}% discount
           </div>
         )}
       </div>
       
-      <div className="order-totals">
-        <div className="total-line">
-          <span>Subtotal:</span>
-          <span>${calculateSubtotal().toFixed(2)}</span>
+      <div className="order-totals space-y-4">
+        <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+          <span className="font-medium">Total Items:</span>
+          <span className="font-bold text-blue-600 dark:text-blue-400">{calculateTotalItems()}</span>
         </div>
-        <div className="total-line">
-          <span>Shipping:</span>
-          <span>${calculateShipping().toFixed(2)}</span>
+        <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+          <span className="font-medium">Subtotal:</span>
+          <span className="font-bold">${calculateSubtotal().toFixed(2)}</span>
         </div>
-        <div className="total-line">
-          <span>Tax:</span>
-          <span>${calculateTax().toFixed(2)}</span>
+        <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+          <span className="font-medium">Shipping:</span>
+          <span className="font-bold text-green-600 dark:text-green-400">${calculateShipping().toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+          <span className="font-medium">Tax:</span>
+          <span className="font-bold">${calculateTax().toFixed(2)}</span>
         </div>
         {discount > 0 && (
-          <div className="total-line discount">
-            <span>Discount ({discount}%):</span>
-            <span>-${((calculateSubtotal() * discount) / 100).toFixed(2)}</span>
+          <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+            <span className="font-medium">Discount ({discount}%):</span>
+            <span className="font-bold text-red-600 dark:text-red-400">
+              -${((calculateSubtotal() * discount) / 100).toFixed(2)}
+            </span>
           </div>
         )}
-        <div className="total-line total">
-          <span>Total:</span>
-          <span>${calculateTotal().toFixed(2)}</span>
+        <div className="border-t pt-4 mt-4 dark:border-gray-600">
+          <div className="flex justify-between items-center p-4 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-lg">
+            <span className="text-lg font-bold">Total:</span>
+            <span className="text-2xl font-bold text-green-600 dark:text-green-400">
+              ${calculateTotal().toFixed(2)}
+            </span>
+          </div>
         </div>
       </div>
     </div>
@@ -718,13 +677,11 @@ const Checkout = () => {
   return (
     <div className="checkout-container">
       <Header darkMode={darkMode} setDarkMode={setDarkMode} />
-      
       <div className="checkout-content">
         <div className="checkout-header">
           <h1>Checkout</h1>
           {currentStep !== 4 && renderStepIndicator()}
         </div>
-        
         {currentStep === 4 ? (
           renderSuccessMessage()
         ) : (
@@ -751,7 +708,6 @@ const Checkout = () => {
                   </div>
                 </div>
               )}
-              
               <div className="checkout-actions">
                 {currentStep > 1 && (
                   <button
@@ -763,7 +719,6 @@ const Checkout = () => {
                     Previous
                   </button>
                 )}
-                
                 {currentStep < 3 ? (
                   <button
                     type="button"
@@ -791,14 +746,12 @@ const Checkout = () => {
                 )}
               </div>
             </div>
-            
             <div className="checkout-sidebar">
               {renderOrderSummary()}
             </div>
           </div>
         )}
       </div>
-      
       <Footer />
     </div>
   );
