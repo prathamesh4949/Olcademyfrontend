@@ -2,7 +2,7 @@ import axios from 'axios';
 import React, { useState, useContext } from 'react';
 import { USER_API_END_POINT } from '@/api/constant';
 import { AuthContext } from '@/context/AuthContext';
-import { Loader2, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
+import { Loader2, Eye, EyeOff, AlertCircle, CheckCircle, Shield } from 'lucide-react';
 
 const Login = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
@@ -15,7 +15,7 @@ const Login = ({ isOpen, onClose }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   
-  const { login } = useContext(AuthContext);
+  const { login, user } = useContext(AuthContext);
 
   const changeInputHandler = (e) => {
     setInput({ ...input, [e.target.name]: e.target.value });
@@ -79,6 +79,14 @@ const Login = ({ isOpen, onClose }) => {
 
         {/* Form */}
         <div className="p-6">
+          {/* Admin Status Display (if user is logged in and is admin) */}
+          {user?.isAdmin && (
+            <div className="mb-4 p-3 rounded-lg bg-purple-50 border border-purple-200 flex items-center gap-2">
+              <Shield className="w-5 h-5 text-purple-600" />
+              <span className="text-sm font-medium text-purple-600">Admin Access Active</span>
+            </div>
+          )}
+
           {/* Message Display */}
           {message.text && (
             <div className={`mb-4 p-3 rounded-lg flex items-center gap-2 ${

@@ -14,33 +14,112 @@ import ProductPage from './pages/ProductPage';
 import { CartProvider } from './CartContext';
 import { Toaster } from 'react-hot-toast';
 import { WishlistProvider } from './WishlistContext';
+import { AuthProvider } from './context/AuthContext';
 import VerifyEmail from './components/common/VerifyEmail';
 import Login from './components/common/Login';
+import AdminPanel from './components/admin/AdminPanel';
+import ProtectedRoute from './components/common/ProtectedRoute';
+import AdminRoute from './components/common/AdminRoute';
 
 const AppRoutes = ({ darkMode, setDarkMode }) => {
   return (
     <Router>
-      <CartProvider>
-        <WishlistProvider>
-          <Routes>
-            <Route path="/" element={<HomePage darkMode={darkMode} setDarkMode={setDarkMode} />} />
-            <Route path="/universal-collection" element={<UniversalCollection />} />
-            <Route path="/mens-collection" element={<MensCollection />} />
-            <Route path="/womens-collection" element={<Womenscollection />} />
-            <Route path="/all-fragrances" element={<AllFragrancesSection />} />
-            <Route path="/product-cart" element={<ProductCartSection />} />
-            <Route path="/Checkout" element={<Checkout darkMode={darkMode} setDarkMode={setDarkMode} />} />
-            <Route path="/unisex-collection" element={<UnisexCollection />} />
-            <Route path="/gift-collection" element={<GiftCollection />} />
-            <Route path="/wishlist-collection" element={<Wishlist />} />
-            <Route path="/product-perfume" element={<ProductPage />} />
-            <Route path="/login" element={<Login isOpen={true} onClose={() => window.history.back()} />} />
-          </Routes>
-        </WishlistProvider>
-        <Toaster position="top-center" />
-      </CartProvider>
+      <AuthProvider>
+        <CartProvider>
+          <WishlistProvider>
+            <Routes>
+              {/* Public Routes */}
+              <Route 
+                path="/" 
+                element={<HomePage darkMode={darkMode} setDarkMode={setDarkMode} />} 
+              />
+              <Route path="/universal-collection" element={<UniversalCollection />} />
+              <Route path="/mens-collection" element={<MensCollection />} />
+              <Route path="/womens-collection" element={<Womenscollection />} />
+              <Route path="/all-fragrances" element={<AllFragrancesSection />} />
+              <Route path="/unisex-collection" element={<UnisexCollection />} />
+              <Route path="/gift-collection" element={<GiftCollection />} />
+              <Route path="/product-perfume" element={<ProductPage />} />
+              
+              {/* Authentication Routes */}
+              <Route 
+                path="/login" 
+                element={<Login isOpen={true} onClose={() => window.history.back()} />} 
+              />
+              <Route path="/verify-email" element={<VerifyEmail />} />
+              
+              {/* Protected Routes - Require Authentication */}
+              <Route 
+                path="/product-cart" 
+                element={
+                  <ProtectedRoute>
+                    <ProductCartSection />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/checkout" 
+                element={
+                  <ProtectedRoute>
+                    <Checkout darkMode={darkMode} setDarkMode={setDarkMode} />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/wishlist-collection" 
+                element={
+                  <ProtectedRoute>
+                    <Wishlist />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              {/* Admin Only Routes */}
+              <Route 
+                path="/admin" 
+                element={
+                  <AdminRoute>
+                    <AdminPanel />
+                  </AdminRoute>
+                } 
+              />
+              <Route 
+                path="/admin/panel" 
+                element={
+                  <AdminRoute>
+                    <AdminPanel />
+                  </AdminRoute>
+                } 
+              />
+              
+              {/* Catch all route - 404 Page */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <Toaster position="top-center" />
+          </WishlistProvider>
+        </CartProvider>
+      </AuthProvider>
     </Router>
-  ); 
+  );
+};
+
+// 404 Not Found Component
+const NotFound = () => {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center">
+        <h1 className="text-6xl font-bold text-gray-400 mb-4">404</h1>
+        <h2 className="text-2xl font-semibold text-gray-700 mb-2">Page Not Found</h2>
+        <p className="text-gray-600 mb-6">The page you're looking for doesn't exist.</p>
+        <a 
+          href="/" 
+          className="inline-block bg-gradient-to-r from-[#79300f] to-[#b14527] text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg transition-all duration-200"
+        >
+          Go Back Home
+        </a>
+      </div>
+    </div>
+  );
 };
 
 export default AppRoutes;
