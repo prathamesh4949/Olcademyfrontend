@@ -20,6 +20,9 @@ import Login from './components/common/Login';
 import AdminPanel from './components/admin/AdminPanel';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import AdminRoute from './components/common/AdminRoute';
+import Orders from './components/Orders'; // Import the Orders component
+import SearchResults from './pages/SearchResults';
+
 
 const AppRoutes = ({ darkMode, setDarkMode }) => {
   return (
@@ -40,6 +43,7 @@ const AppRoutes = ({ darkMode, setDarkMode }) => {
               <Route path="/unisex-collection" element={<UnisexCollection />} />
               <Route path="/gift-collection" element={<GiftCollection />} />
               <Route path="/product-perfume" element={<ProductPage />} />
+              <Route path="/search" element={<SearchResults />} />
               
               {/* Authentication Routes */}
               <Route 
@@ -70,6 +74,14 @@ const AppRoutes = ({ darkMode, setDarkMode }) => {
                 element={
                   <ProtectedRoute>
                     <Wishlist />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/orders" 
+                element={
+                  <ProtectedRoute>
+                    <Orders darkMode={darkMode} setDarkMode={setDarkMode} />
                   </ProtectedRoute>
                 } 
               />
