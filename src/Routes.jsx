@@ -11,6 +11,7 @@ import UnisexCollection from './pages/UnisexCollection';
 import GiftCollection from './pages/GiftCollection';
 import Wishlist from './components/common/Wishlist';
 import ProductPage from './pages/ProductPage';
+import ProductDetailPage from './pages/ProductDetailPage';
 import { CartProvider } from './CartContext';
 import { Toaster } from 'react-hot-toast';
 import { WishlistProvider } from './WishlistContext';
@@ -20,9 +21,8 @@ import Login from './components/common/Login';
 import AdminPanel from './components/admin/AdminPanel';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import AdminRoute from './components/common/AdminRoute';
-import Orders from './components/Orders'; // Import the Orders component
+import Orders from './components/Orders';
 import SearchResults from './pages/SearchResults';
-
 
 const AppRoutes = ({ darkMode, setDarkMode }) => {
   return (
@@ -42,8 +42,13 @@ const AppRoutes = ({ darkMode, setDarkMode }) => {
               <Route path="/all-fragrances" element={<AllFragrancesSection />} />
               <Route path="/unisex-collection" element={<UnisexCollection />} />
               <Route path="/gift-collection" element={<GiftCollection />} />
-              <Route path="/product-perfume" element={<ProductPage />} />
               <Route path="/search" element={<SearchResults />} />
+              
+              {/* IMPORTANT: Static routes BEFORE dynamic routes */}
+              <Route path="/product-perfume" element={<ProductPage />} />
+              
+              {/* Dynamic product route - MUST come after static routes */}
+              <Route path="/product/:id" element={<ProductDetailPage />} />
               
               {/* Authentication Routes */}
               <Route 
