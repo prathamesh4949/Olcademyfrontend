@@ -224,7 +224,7 @@ const UnisexCollection = () => {
 
     // Enhanced product validation
     const validateProduct = (product) => {
-      const requiredFields = ['_id', 'name', 'price'];
+      const requiredFields = ['_id', 'name', 'price', 'images'];
       const missingFields = requiredFields.filter(field => !product[field]);
       
       if (missingFields.length > 0) {
@@ -236,10 +236,18 @@ const UnisexCollection = () => {
         return false;
       }
       
+      // Validate ID format
+      const productId = product._id.toString();
+      const hexRegex = /^[0-9a-fA-F]{24}$/;
+      if (!hexRegex.test(productId)) {
+        console.error('❌ Invalid product ID format:', productId);
+        return false;
+      }
+      
       return true;
     };
 
-    const handleAddToCart = (e) => {
+    const handleAddToCart = async (e) => {
       e.stopPropagation();
       
       if (!validateProduct(product)) {
@@ -248,13 +256,24 @@ const UnisexCollection = () => {
       }
       
       const cartItem = {
-        ...product,
-        id: product._id,
-        quantity: 1
+        id: product._id.toString(), // Ensure ID is a string
+        name: product.name,
+        price: Number(product.price), // Ensure price is a number
+        image: product.images && product.images.length > 0 ? product.images[0] : '/images/default-perfume.png',
+        quantity: 1,
+        selectedSize: product.sizes && product.sizes.length > 0 ? product.sizes[0].size : null,
+        personalization: null
       };
       
       console.log('🛒 Adding to cart:', cartItem);
-      addToCart(cartItem);
+      try {
+        const success = await addToCart(cartItem);
+        if (!success) {
+          console.error('❌ Failed to add item to cart:', cartItem);
+        }
+      } catch (error) {
+        console.error('❌ Add to cart error:', error);
+      }
     };
 
     const handleWishlistToggle = (e) => {
@@ -610,17 +629,17 @@ const UnisexCollection = () => {
       <main>
         {/* Hero Section */}
         <motion.section
-          variants={fadeIn('up', 0.2)}
+          variants={fadeIn("up", 0.2)}
           initial="hidden"
           whileInView="show"
           viewport={{ once: false, amount: 0.4 }}
           className="text-center px-6 py-16 bg-gradient-to-b from-[#F2F2F2] to-[#E8E8E8] dark:from-[#0d0603] dark:to-[#1a1410]"
         >
-          <motion.h1 variants={fadeIn('up', 0.3)} className="text-[60px] font-dm-serif mb-6 dark:text-white">
+          <motion.h1 variants={fadeIn("up", 0.3)} className="text-[60px] font-dm-serif mb-6 dark:text-white">
             Unisex Fragrances
           </motion.h1>
           <motion.p
-            variants={fadeIn('up', 0.4)}
+            variants={fadeIn("up", 0.4)}
             className="text-[20px] leading-relaxed max-w-4xl mx-auto text-[#5a2408] dark:text-[#f6d110]"
           >
             Discover our carefully curated collection of unisex fragrances that transcend traditional boundaries. 

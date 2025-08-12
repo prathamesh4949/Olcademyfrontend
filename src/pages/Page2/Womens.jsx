@@ -224,7 +224,7 @@ const WomensCollection = () => {
 
     // Enhanced product validation
     const validateProduct = (product) => {
-      const requiredFields = ['_id', 'name', 'price'];
+      const requiredFields = ['_id', 'name', 'price', 'images'];
       const missingFields = requiredFields.filter(field => !product[field]);
       
       if (missingFields.length > 0) {
@@ -236,10 +236,18 @@ const WomensCollection = () => {
         return false;
       }
       
+      // Validate ID format
+      const productId = product._id.toString();
+      const hexRegex = /^[0-9a-fA-F]{24}$/;
+      if (!hexRegex.test(productId)) {
+        console.error('❌ Invalid product ID format:', productId);
+        return false;
+      }
+      
       return true;
     };
 
-    const handleAddToCart = (e) => {
+    const handleAddToCart = async (e) => {
       e.stopPropagation();
       
       if (!validateProduct(product)) {
@@ -248,13 +256,24 @@ const WomensCollection = () => {
       }
       
       const cartItem = {
-        ...product,
-        id: product._id,
-        quantity: 1
+        id: product._id.toString(), // Ensure ID is a string
+        name: product.name,
+        price: Number(product.price), // Ensure price is a number
+        image: product.images && product.images.length > 0 ? product.images[0] : '/images/default-perfume.png',
+        quantity: 1,
+        selectedSize: product.sizes && product.sizes.length > 0 ? product.sizes[0].size : null,
+        personalization: null
       };
       
       console.log('🛒 Adding to cart:', cartItem);
-      addToCart(cartItem);
+      try {
+        const success = await addToCart(cartItem);
+        if (!success) {
+          console.error('❌ Failed to add item to cart:', cartItem);
+        }
+      } catch (error) {
+        console.error('❌ Add to cart error:', error);
+      }
     };
 
     const handleWishlistToggle = (e) => {

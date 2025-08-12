@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import { useAuth } from './context/AuthContext'; // Updated import path
+import { useAuth } from './context/AuthContext';
 import axios from 'axios';
 import { USER_API_END_POINT } from '@/api/constant';
 
@@ -10,7 +10,7 @@ export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
   const [isInitialized, setIsInitialized] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { user, token } = useAuth(); // Get user and token from AuthContext
+  const { user, token } = useAuth();
 
   // API base URL for cart
   const CART_API_BASE = `${USER_API_END_POINT.replace('/user', '/cart')}`;
@@ -27,12 +27,31 @@ export const CartProvider = ({ children }) => {
   // Reset initialization when user changes (login/logout)
   useEffect(() => {
     setIsInitialized(false);
-  }, [user?.id]); // Track user ID changes
+  }, [user?.id]);
+
+  // Enhanced local storage cart with stock info - for demo purposes
+  const enhanceLocalCartWithStock = async (localCartItems) => {
+    if (!localCartItems || localCartItems.length === 0) return [];
+    
+    try {
+      // For local cart items, we'll set default stock info
+      // In production, you might want to fetch real stock from an API
+      return localCartItems.map(item => ({
+        ...item,
+        availableStock: item.availableStock || 10, // Default stock for demo
+        outOfStock: false,
+        exceedsStock: false
+      }));
+    } catch (error) {
+      console.error('Error enhancing local cart:', error);
+      return localCartItems;
+    }
+  };
 
   // Load cart from database when user is authenticated or from localStorage when not
   useEffect(() => {
     const loadCart = async () => {
-      if (isInitialized) return; // Prevent multiple initializations
+      if (isInitialized) return;
 
       try {
         setLoading(true);
@@ -41,7 +60,6 @@ export const CartProvider = ({ children }) => {
         if (user && token) {
           console.log('Loading cart for authenticated user:', user.email);
           
-          // First, get any existing cart from localStorage to sync
           const storedCart = typeof window !== "undefined" ? localStorage.getItem('cartItems') : null;
           let localItems = [];
           if (storedCart) {
@@ -53,18 +71,15 @@ export const CartProvider = ({ children }) => {
             }
           }
 
-          // Load cart from database
           const response = await axios.get(CART_API_BASE);
           if (response.data.success) {
             const dbItems = response.data.cartItems || [];
             console.log('Loaded cart from database:', dbItems.length, 'items');
             
-            // If we have local items, sync them to database
             if (localItems.length > 0) {
               console.log('Syncing local items to database...');
               await syncCartToDatabase(localItems);
               
-              // Reload cart after sync
               const syncResponse = await axios.get(CART_API_BASE);
               if (syncResponse.data.success) {
                 setCartItems(syncResponse.data.cartItems || []);
@@ -77,14 +92,14 @@ export const CartProvider = ({ children }) => {
             setCartItems([]);
           }
         } else {
-          // Load from localStorage for non-authenticated users
           console.log('Loading cart from localStorage for non-authenticated user');
           const storedCart = typeof window !== "undefined" ? localStorage.getItem('cartItems') : null;
           if (storedCart) {
             try {
               const localItems = JSON.parse(storedCart);
-              setCartItems(localItems);
-              console.log('Loaded cart from localStorage:', localItems.length, 'items');
+              const enhancedItems = await enhanceLocalCartWithStock(localItems);
+              setCartItems(enhancedItems);
+              console.log('Loaded cart from localStorage:', enhancedItems.length, 'items');
             } catch (err) {
               console.error('Error parsing cart:', err);
               setCartItems([]);
@@ -95,13 +110,13 @@ export const CartProvider = ({ children }) => {
         }
       } catch (error) {
         console.error('Error loading cart:', error);
-        // Fallback to localStorage if API fails
         const storedCart = typeof window !== "undefined" ? localStorage.getItem('cartItems') : null;
         if (storedCart) {
           try {
             const fallbackItems = JSON.parse(storedCart);
-            setCartItems(fallbackItems);
-            console.log('Using localStorage fallback:', fallbackItems.length, 'items');
+            const enhancedItems = await enhanceLocalCartWithStock(fallbackItems);
+            setCartItems(enhancedItems);
+            console.log('Using localStorage fallback:', enhancedItems.length, 'items');
           } catch (err) {
             console.error('Error parsing stored cart:', err);
             setCartItems([]);
@@ -121,7 +136,12 @@ export const CartProvider = ({ children }) => {
   // Save to localStorage for non-authenticated users
   useEffect(() => {
     if (isInitialized && !user && cartItems.length >= 0) {
-      localStorage.setItem('cartItems', JSON.stringify(cartItems));
+      // Remove stock info before saving to localStorage
+      const itemsToStore = cartItems.map(item => {
+        const { availableStock, outOfStock, exceedsStock, ...itemWithoutStock } = item;
+        return itemWithoutStock;
+      });
+      localStorage.setItem('cartItems', JSON.stringify(itemsToStore));
     }
   }, [cartItems, isInitialized, user]);
 
@@ -131,20 +151,25 @@ export const CartProvider = ({ children }) => {
 
     try {
       console.log('Syncing cart to database...');
-      // Add each item from localStorage to database
       for (const item of localCartItems) {
         try {
-          await axios.post(`${CART_API_BASE}/add`, item);
+          await axios.post(`${CART_API_BASE}/add`, {
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            image: item.image,
+            quantity: item.quantity || 1,
+            selectedSize: item.selectedSize || null,
+            personalization: item.personalization || null
+          });
           console.log('Synced item:', item.name);
         } catch (error) {
-          // Item might already exist, continue with next item
           if (error.response?.status !== 400) {
             console.error('Error syncing item to database:', error);
           }
         }
       }
       
-      // Clear localStorage after successful sync
       localStorage.removeItem('cartItems');
       console.log('Cart sync completed, localStorage cleared');
       
@@ -155,29 +180,53 @@ export const CartProvider = ({ children }) => {
 
   const addToCart = async (product) => {
     try {
+      // Validate required fields
+      if (!product.id || !product.name || !product.price || !product.image) {
+        throw new Error('All required product fields (id, name, price, image) must be provided');
+      }
+
       // Check if product already exists in cart
-      const exists = cartItems.find(item => item.id === product.id);
+      const exists = cartItems.find(item => item.id === product.id && item.selectedSize === product.selectedSize);
       if (exists) {
-        toast.error(`${product.name} is already in your cart!`);
-        return false; // Return false to indicate failure
+        toast.error(`${product.name} (${product.selectedSize || 'Default'}) is already in your cart!`);
+        return false;
       }
 
       if (user && token) {
         // Add to database
         setLoading(true);
-        const response = await axios.post(`${CART_API_BASE}/add`, product);
+        const response = await axios.post(`${CART_API_BASE}/add`, {
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          image: product.image,
+          quantity: product.quantity || 1,
+          selectedSize: product.selectedSize || null,
+          personalization: product.personalization || null
+        });
         if (response.data.success) {
           setCartItems(response.data.cartItems || []);
           toast.success(`${product.name} added to cart`);
-          return true; // Return true to indicate success
+          return true;
         }
       } else {
         // Add to localStorage for non-authenticated users
-        const newItem = { ...product, quantity: 1 }; // Ensure quantity is set
+        const newItem = {
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          image: product.image,
+          quantity: product.quantity || 1,
+          selectedSize: product.selectedSize || null,
+          personalization: product.personalization || null,
+          availableStock: 10, // Default for demo - in production fetch real stock
+          outOfStock: false,
+          exceedsStock: false
+        };
         const updatedCart = [...cartItems, newItem];
         setCartItems(updatedCart);
         toast.success(`${product.name} added to cart`);
-        return true; // Return true to indicate success
+        return true;
       }
     } catch (error) {
       console.error('Add to cart error:', error);
@@ -186,7 +235,7 @@ export const CartProvider = ({ children }) => {
       } else {
         toast.error('Failed to add item to cart');
       }
-      return false; // Return false to indicate failure
+      return false;
     } finally {
       setLoading(false);
     }
@@ -195,7 +244,6 @@ export const CartProvider = ({ children }) => {
   const removeFromCart = async (id) => {
     try {
       if (user && token) {
-        // Remove from database
         setLoading(true);
         const response = await axios.delete(`${CART_API_BASE}/remove/${id}`);
         if (response.data.success) {
@@ -203,7 +251,6 @@ export const CartProvider = ({ children }) => {
           toast.success(response.data.message);
         }
       } else {
-        // Remove from localStorage for non-authenticated users
         const product = cartItems.find(item => item.id === id);
         const updatedCart = cartItems.filter(item => item.id !== id);
         setCartItems(updatedCart);
@@ -224,7 +271,6 @@ export const CartProvider = ({ children }) => {
   const clearCart = async () => {
     try {
       if (user && token) {
-        // Clear database cart
         setLoading(true);
         const response = await axios.delete(`${CART_API_BASE}/clear`);
         if (response.data.success) {
@@ -232,7 +278,6 @@ export const CartProvider = ({ children }) => {
           toast.success(response.data.message);
         }
       } else {
-        // Clear localStorage cart for non-authenticated users
         setCartItems([]);
         toast.success('Cart cleared');
       }
@@ -253,24 +298,55 @@ export const CartProvider = ({ children }) => {
     
     try {
       if (user && token) {
-        // Update in database
+        // For authenticated users, make API call and update state immediately
         setLoading(true);
         const response = await axios.put(`${CART_API_BASE}/update/${id}`, { quantity });
         if (response.data.success) {
+          // Update the cart items with the response from the server
           setCartItems(response.data.cartItems || []);
-          // Don't show toast for every quantity update to avoid spam
+          toast.success('Quantity updated successfully');
+        } else {
+          throw new Error(response.data.message || 'Failed to update quantity');
         }
       } else {
-        // Update in localStorage for non-authenticated users
-        const updatedCart = cartItems.map(item => 
-          item.id === id ? { ...item, quantity } : item
-        );
-        setCartItems(updatedCart);
+        // For local storage, check stock limits
+        const itemIndex = cartItems.findIndex(item => item.id === id);
+        if (itemIndex !== -1) {
+          const item = cartItems[itemIndex];
+          const maxStock = item.availableStock || 10; // Use availableStock or default
+          
+          if (quantity > maxStock) {
+            toast.error(`Only ${maxStock} items available in stock`);
+            return;
+          }
+          
+          const updatedCart = cartItems.map(cartItem => 
+            cartItem.id === id ? { 
+              ...cartItem, 
+              quantity,
+              exceedsStock: quantity > maxStock
+            } : cartItem
+          );
+          setCartItems(updatedCart);
+          toast.success('Quantity updated successfully');
+        }
       }
     } catch (error) {
       console.error('Update quantity error:', error);
       if (error.response?.data?.message) {
         toast.error(error.response.data.message);
+        
+        // Handle out of stock scenario - refresh cart to get updated stock info
+        if (error.response.data.outOfStock && user && token) {
+          try {
+            const response = await axios.get(CART_API_BASE);
+            if (response.data.success) {
+              setCartItems(response.data.cartItems || []);
+            }
+          } catch (refreshError) {
+            console.error('Error refreshing cart:', refreshError);
+          }
+        }
       } else {
         toast.error('Failed to update quantity');
       }
@@ -279,14 +355,29 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  // Get cart count
   const getCartCount = () => {
     return cartItems.reduce((total, item) => total + (item.quantity || 1), 0);
   };
 
-  // Check if item exists in cart
-  const isInCart = (productId) => {
-    return cartItems.some(item => item.id === productId);
+  const isInCart = (productId, selectedSize = null) => {
+    return cartItems.some(item => item.id === productId && item.selectedSize === selectedSize);
+  };
+
+  // Refresh cart to get updated stock information
+  const refreshCart = async () => {
+    if (user && token) {
+      try {
+        setLoading(true);
+        const response = await axios.get(CART_API_BASE);
+        if (response.data.success) {
+          setCartItems(response.data.cartItems || []);
+        }
+      } catch (error) {
+        console.error('Error refreshing cart:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
   };
 
   return (
@@ -299,6 +390,7 @@ export const CartProvider = ({ children }) => {
       updateQuantity,
       getCartCount,
       isInCart,
+      refreshCart,
       loading,
       isInitialized
     }}>

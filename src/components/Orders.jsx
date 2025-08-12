@@ -81,7 +81,7 @@ const Orders = () => {
     return status.charAt(0).toUpperCase() + status.slice(1);
   };
 
-  // Get status color and icon - matching the theme
+  // Get status color and icon - adapted to warm theme
   const getStatusInfo = (status) => {
     switch (status.toLowerCase()) {
       case 'delivered':
@@ -103,9 +103,9 @@ const Orders = () => {
         };
       case 'shipped':
         return {
-          color: 'from-blue-500 to-indigo-600',
-          textColor: 'text-blue-700',
-          bgColor: 'bg-blue-50 border-blue-200',
+          color: 'from-[#79300f] to-[#5a2408]',
+          textColor: 'text-[#79300f]',
+          bgColor: 'bg-[#F5E9DC]/50 border-[#79300f]/20',
           icon: Truck,
           badge: 'Shipped'
         };
@@ -119,9 +119,9 @@ const Orders = () => {
         };
       default:
         return {
-          color: 'from-blue-500 to-indigo-600',
-          textColor: 'text-blue-700',
-          bgColor: 'bg-blue-50 border-blue-200',
+          color: 'from-[#79300f] to-[#5a2408]',
+          textColor: 'text-[#79300f]',
+          bgColor: 'bg-[#F5E9DC]/50 border-[#79300f]/20',
           icon: Package,
           badge: 'Pending'
         };
@@ -134,7 +134,7 @@ const Orders = () => {
     setShowOrderDetails(true);
   };
 
-  // Animation variants matching the theme
+  // Animation variants
   const fadeInVariant = {
     hidden: { opacity: 0, y: 20 },
     show: { 
@@ -149,19 +149,19 @@ const Orders = () => {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-blue-900 dark:to-indigo-900 flex flex-col">
+      <div className="min-h-screen bg-[#F5F5F5] dark:bg-[#220104] flex flex-col font-sans text-[#3b220c] dark:text-[#f6d110]">
         <Header />
         <div className="flex-1 flex items-center justify-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="flex flex-col items-center gap-6 bg-white/80 backdrop-blur-sm border border-white/20 rounded-3xl p-8 shadow-xl"
+            className="flex flex-col items-center gap-6 bg-gradient-to-br from-[#F5E9DC] to-[#E7DDC6] dark:from-[#3d1a0a] dark:to-[#2c0f06] border border-[#79300f]/20 dark:border-[#f6d110]/30 rounded-lg p-8 shadow-lg"
           >
             <div className="relative">
-              <div className="w-16 h-16 border-4 border-blue-200 rounded-full"></div>
-              <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
+              <div className="w-16 h-16 border-4 border-[#79300f]/20 dark:border-[#f6d110]/20 rounded-full"></div>
+              <div className="w-16 h-16 border-4 border-[#79300f] dark:border-[#f6d110] border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
             </div>
-            <div className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            <div className="text-2xl font-bold bg-gradient-to-r from-[#79300f] to-[#5a2408] bg-clip-text text-transparent dark:from-[#f6d110] dark:to-[#d4af37]">
               Loading your orders...
             </div>
           </motion.div>
@@ -173,29 +173,29 @@ const Orders = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-blue-900 dark:to-indigo-900 flex flex-col">
+      <div className="min-h-screen bg-[#F5F5F5] dark:bg-[#220104] flex flex-col font-sans text-[#3b220c] dark:text-[#f6d110]">
         <Header />
         <div className="flex-1 flex items-center justify-center p-6">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center p-12 bg-white/80 backdrop-blur-sm border border-white/20 rounded-3xl shadow-xl max-w-lg relative overflow-hidden"
+            className="text-center p-12 bg-gradient-to-br from-[#F5E9DC] to-[#E7DDC6] dark:from-[#3d1a0a] dark:to-[#2c0f06] border border-[#79300f]/20 dark:border-[#f6d110]/30 rounded-lg shadow-lg max-w-lg relative overflow-hidden"
           >
             {/* Background sparkle */}
             <div className="absolute top-6 right-6 opacity-20">
-              <Sparkles className="w-8 h-8 text-blue-400" />
+              <Sparkles className="w-8 h-8 text-[#79300f] dark:text-[#f6d110]" />
             </div>
             
             <div className="text-8xl mb-6">🔐</div>
-            <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-4">
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-[#79300f] to-[#5a2408] bg-clip-text text-transparent dark:from-[#f6d110] dark:to-[#d4af37] mb-4">
               Sign In Required
             </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
+            <p className="text-lg text-[#5a2408] dark:text-[#d4af37] mb-8 leading-relaxed">
               Please log in to view your order history and track your purchases with our premium fragrance collection.
             </p>
             <Link 
               to="/login" 
-              className="inline-block bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white font-bold px-8 py-4 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-1"
+              className="inline-block bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] dark:from-[#f6d110] dark:to-[#d4af37] dark:hover:from-[#d4af37] dark:hover:to-[#f6d110] text-white font-bold px-8 py-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-1"
             >
               <span className="flex items-center gap-2">
                 <ShoppingBag className="w-5 h-5" />
@@ -210,7 +210,7 @@ const Orders = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-blue-900 dark:to-indigo-900 flex flex-col">
+    <div className="min-h-screen bg-[#F5F5F5] dark:bg-[#220104] flex flex-col font-sans text-[#3b220c] dark:text-[#f6d110]">
       <Header />
       <div className="flex-1">
         {/* Hero Section */}
@@ -220,7 +220,7 @@ const Orders = () => {
           animate="show"
           className="py-20 px-6 relative overflow-hidden"
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-100/30 via-indigo-100/30 to-purple-100/30 dark:from-blue-900/10 dark:via-indigo-900/10 dark:to-purple-900/10" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#F5E9DC]/30 to-[#E7DDC6]/30 dark:from-[#3d1a0a]/30 dark:to-[#2c0f06]/30" />
           
           <div className="max-w-7xl mx-auto text-center relative z-10">
             <motion.div
@@ -228,11 +228,11 @@ const Orders = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
             >
-              <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-4">
+              <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-[#79300f] to-[#5a2408] bg-clip-text text-transparent dark:from-[#f6d110] dark:to-[#d4af37] mb-4">
                 My Orders
               </h1>
-              <div className="w-24 h-1 bg-gradient-to-r from-blue-500 to-indigo-500 mx-auto rounded-full mb-4" />
-              <p className="text-lg text-gray-600 dark:text-gray-300 leading-relaxed max-w-2xl mx-auto">
+              <div className="w-24 h-1 bg-gradient-to-r from-[#79300f] to-[#5a2408] dark:from-[#f6d110] dark:to-[#d4af37] mx-auto rounded-full mb-4" />
+              <p className="text-lg text-[#5a2408] dark:text-[#d4af37] leading-relaxed max-w-2xl mx-auto">
                 Track and manage your premium fragrance purchases. Experience luxury delivered to your doorstep.
               </p>
             </motion.div>
@@ -248,47 +248,47 @@ const Orders = () => {
             viewport={{ once: true, amount: 0.2 }}
             className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12"
           >
-            <div className="group bg-white/80 backdrop-blur-sm border border-white/20 rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-indigo-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+            <div className="group bg-gradient-to-br from-[#F5E9DC] to-[#E7DDC6] dark:from-[#3d1a0a] dark:to-[#2c0f06] border border-[#79300f]/20 dark:border-[#f6d110]/30 rounded-lg p-8 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-[#79300f]/5 to-[#5a2408]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 dark:from-[#f6d110]/5 dark:to-[#d4af37]/5" />
               <div className="flex items-center gap-6 relative z-10">
-                <div className="p-4 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl shadow-lg">
+                <div className="p-4 bg-gradient-to-r from-[#79300f] to-[#5a2408] dark:from-[#f6d110] dark:to-[#d4af37] rounded-lg shadow-lg">
                   <Package className="w-8 h-8 text-white" />
                 </div>
                 <div>
-                  <p className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                  <p className="text-3xl font-bold bg-gradient-to-r from-[#79300f] to-[#5a2408] bg-clip-text text-transparent dark:from-[#f6d110] dark:to-[#d4af37]">
                     {pagination.totalOrders}
                   </p>
-                  <p className="text-gray-600 dark:text-gray-300 font-medium">Total Orders</p>
+                  <p className="text-[#5a2408] dark:text-[#d4af37] font-medium">Total Orders</p>
                 </div>
               </div>
             </div>
 
-            <div className="group bg-white/80 backdrop-blur-sm border border-white/20 rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden">
+            <div className="group bg-gradient-to-br from-[#F5E9DC] to-[#E7DDC6] dark:from-[#3d1a0a] dark:to-[#2c0f06] border border-[#79300f]/20 dark:border-[#f6d110]/30 rounded-lg p-8 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-green-500/5 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
               <div className="flex items-center gap-6 relative z-10">
-                <div className="p-4 bg-gradient-to-r from-emerald-500 to-green-600 rounded-2xl shadow-lg">
+                <div className="p-4 bg-gradient-to-r from-emerald-500 to-green-600 rounded-lg shadow-lg">
                   <CheckCircle className="w-8 h-8 text-white" />
                 </div>
                 <div>
                   <p className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">
                     {orders.filter(order => order.status === 'delivered').length}
                   </p>
-                  <p className="text-gray-600 dark:text-gray-300 font-medium">Delivered</p>
+                  <p className="text-[#5a2408] dark:text-[#d4af37] font-medium">Delivered</p>
                 </div>
               </div>
             </div>
 
-            <div className="group bg-white/80 backdrop-blur-sm border border-white/20 rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden">
+            <div className="group bg-gradient-to-br from-[#F5E9DC] to-[#E7DDC6] dark:from-[#3d1a0a] dark:to-[#2c0f06] border border-[#79300f]/20 dark:border-[#f6d110]/30 rounded-lg p-8 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-orange-500/5 to-yellow-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
               <div className="flex items-center gap-6 relative z-10">
-                <div className="p-4 bg-gradient-to-r from-amber-500 to-orange-600 rounded-2xl shadow-lg">
+                <div className="p-4 bg-gradient-to-r from-amber-500 to-orange-600 rounded-lg shadow-lg">
                   <Truck className="w-8 h-8 text-white" />
                 </div>
                 <div>
                   <p className="text-3xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
                     {orders.filter(order => ['processing', 'shipped'].includes(order.status)).length}
                   </p>
-                  <p className="text-gray-600 dark:text-gray-300 font-medium">In Progress</p>
+                  <p className="text-[#5a2408] dark:text-[#d4af37] font-medium">In Progress</p>
                 </div>
               </div>
             </div>
@@ -302,10 +302,10 @@ const Orders = () => {
               className="flex flex-col items-center justify-center py-20"
             >
               <div className="relative mb-8">
-                <div className="w-20 h-20 border-4 border-blue-200 rounded-full"></div>
-                <div className="w-20 h-20 border-4 border-blue-600 border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
+                <div className="w-20 h-20 border-4 border-[#79300f]/20 dark:border-[#f6d110]/20 rounded-full"></div>
+                <div className="w-20 h-20 border-4 border-[#79300f] dark:border-[#f6d110] border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
               </div>
-              <p className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              <p className="text-xl font-bold bg-gradient-to-r from-[#79300f] to-[#5a2408] bg-clip-text text-transparent dark:from-[#f6d110] dark:to-[#d4af37]">
                 Loading your orders...
               </p>
             </motion.div>
@@ -316,14 +316,14 @@ const Orders = () => {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-white/80 backdrop-blur-sm border border-red-200 rounded-3xl p-8 text-center mb-8 shadow-xl"
+              className="bg-gradient-to-br from-[#F5E9DC] to-[#E7DDC6] dark:from-[#3d1a0a] dark:to-[#2c0f06] border border-red-200 dark:border-red-600 rounded-lg p-8 text-center mb-8 shadow-lg"
             >
               <div className="text-6xl mb-6">⚠️</div>
-              <h3 className="text-2xl font-bold text-red-600 mb-4">Something went wrong</h3>
-              <p className="text-red-500 mb-6 text-lg">{error}</p>
+              <h3 className="text-2xl font-bold text-red-600 dark:text-red-400 mb-4">Something went wrong</h3>
+              <p className="text-red-500 dark:text-red-400 mb-6 text-lg">{error}</p>
               <button
                 onClick={() => fetchOrders(pagination.currentPage)}
-                className="bg-gradient-to-r from-red-500 to-rose-600 text-white font-bold px-8 py-3 rounded-2xl hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1"
+                className="bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white font-bold px-8 py-3 rounded-lg hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1"
               >
                 Try Again
               </button>
@@ -338,20 +338,20 @@ const Orders = () => {
               className="text-center py-20"
             >
               <div className="text-9xl mb-8">🛍️</div>
-              <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-6">
+              <h2 className="text-4xl font-bold bg-gradient-to-r from-[#79300f] to-[#5a2408] bg-clip-text text-transparent dark:from-[#f6d110] dark:to-[#d4af37] mb-6">
                 No Orders Yet
               </h2>
-              <p className="text-xl text-gray-600 dark:text-gray-300 mb-10 max-w-md mx-auto leading-relaxed">
+              <p className="text-xl text-[#5a2408] dark:text-[#d4af37] mb-10 max-w-md mx-auto leading-relaxed">
                 Ready to place your first order? Discover our exquisite collection of premium fragrances!
               </p>
               <Link
                 to="/"
-                className="inline-block bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white font-bold px-10 py-4 rounded-2xl text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300"
+                className="inline-block bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] dark:from-[#f6d110] dark:to-[#d4af37] dark:hover:from-[#d4af37] dark:hover:to-[#f6d110] text-white font-bold px-10 py-4 rounded-lg text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300"
               >
-                <span-cart className="flex items-center gap-3">
+                <span className="flex items-center gap-3">
                   <ShoppingBag className="w-6 h-6" />
                   Start Shopping
-                </span-cart>
+                </span>
               </Link>
             </motion.div>
           )}
@@ -370,28 +370,28 @@ const Orders = () => {
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: index * 0.1 }}
                     viewport={{ once: true }}
-                    className="group bg-white/80 backdrop-blur-sm border border-white/20 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden relative"
+                    className="group bg-gradient-to-br from-[#F5E9DC] to-[#E7DDC6] dark:from-[#3d1a0a] dark:to-[#2c0f06] border border-[#79300f]/20 dark:border-[#f6d110]/30 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden relative"
                   >
                     {/* Background gradient on hover */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-indigo-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#79300f]/5 to-[#5a2408]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 dark:from-[#f6d110]/5 dark:to-[#d4af37]/5" />
                     
                     {/* Sparkle decoration */}
                     <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                      <Sparkles className="w-6 h-6 text-blue-400" />
+                      <Sparkles className="w-6 h-6 text-[#79300f] dark:text-[#f6d110]" />
                     </div>
 
                     {/* Order Header */}
-                    <div className="bg-gradient-to-r from-gray-50/80 to-gray-100/80 backdrop-blur-sm p-8 border-b border-white/20 relative z-10">
+                    <div className="bg-gradient-to-r from-[#F5E9DC]/80 to-[#E7DDC6]/80 dark:from-[#3d1a0a]/80 dark:to-[#2c0f06]/80 p-8 border-b border-[#79300f]/20 dark:border-[#f6d110]/20 relative z-10">
                       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
                         <div className="flex items-center gap-6">
-                          <div className={`p-4 bg-gradient-to-r ${statusInfo.color} rounded-2xl shadow-lg`}>
+                          <div className={`p-4 bg-gradient-to-r ${statusInfo.color} rounded-lg shadow-lg`}>
                             <StatusIcon className="w-8 h-8 text-white" />
                           </div>
                           <div>
-                            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                            <h3 className="text-2xl font-bold text-[#79300f] dark:text-[#f6d110] mb-2">
                               Order #{order.orderNumber}
                             </h3>
-                            <p className="text-gray-600 dark:text-gray-400 text-lg">
+                            <p className="text-[#5a2408] dark:text-[#d4af37] text-lg">
                               Placed on {formatDate(order.createdAt)}
                             </p>
                           </div>
@@ -402,10 +402,10 @@ const Orders = () => {
                             {statusInfo.badge}
                           </div>
                           <div className="text-right">
-                            <p className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                            <p className="text-3xl font-bold bg-gradient-to-r from-[#79300f] to-[#5a2408] bg-clip-text text-transparent dark:from-[#f6d110] dark:to-[#d4af37]">
                               ${order.pricing.total.toFixed(2)}
                             </p>
-                            <p className="text-gray-500 dark:text-gray-400">
+                            <p className="text-[#5a2408] dark:text-[#d4af37]">
                               {order.items.length} item{order.items.length !== 1 ? 's' : ''}
                             </p>
                           </div>
@@ -417,27 +417,27 @@ const Orders = () => {
                     <div className="p-8 relative z-10">
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
                         {order.items.slice(0, 3).map((item, itemIndex) => (
-                          <div key={itemIndex} className="flex items-center gap-4 bg-gray-50/80 backdrop-blur-sm p-4 rounded-2xl border border-white/20">
+                          <div key={itemIndex} className="flex items-center gap-4 bg-[#F5E9DC]/80 dark:bg-[#3d1a0a]/80 p-4 rounded-lg border border-[#79300f]/20 dark:border-[#f6d110]/20">
                             <div className="relative">
                               <img
                                 src={item.image}
                                 alt={item.name}
-                                className="w-16 h-16 object-cover rounded-xl shadow-md"
+                                className="w-16 h-16 object-cover rounded-lg shadow-md"
                               />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="font-bold text-gray-900 dark:text-white truncate text-lg">
+                              <p className="font-bold text-[#79300f] dark:text-[#f6d110] truncate text-lg">
                                 {item.name}
                               </p>
-                              <p className="text-gray-500 dark:text-gray-400">
+                              <p className="text-[#5a2408] dark:text-[#d4af37]">
                                 Qty: {item.quantity} • ${item.price}
                               </p>
                             </div>
                           </div>
                         ))}
                         {order.items.length > 3 && (
-                          <div className="flex items-center justify-center bg-gradient-to-r from-blue-100/80 to-indigo-100/80 backdrop-blur-sm p-4 rounded-2xl border border-white/20">
-                            <span className="font-bold text-blue-600 text-lg">
+                          <div className="flex items-center justify-center bg-[#F5E9DC]/80 dark:bg-[#3d1a0a]/80 p-4 rounded-lg border border-[#79300f]/20 dark:border-[#f6d110]/20">
+                            <span className="font-bold text-[#79300f] dark:text-[#f6d110] text-lg">
                               +{order.items.length - 3} more items
                             </span>
                           </div>
@@ -448,12 +448,12 @@ const Orders = () => {
                       <div className="flex flex-col sm:flex-row gap-4">
                         <button
                           onClick={() => handleViewDetails(order)}
-                          className="flex-1 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white font-bold py-4 px-6 rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center justify-center gap-3"
+                          className="flex-1 bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] dark:from-[#f6d110] dark:to-[#d4af37] dark:hover:from-[#d4af37] dark:hover:to-[#f6d110] text-white font-bold py-4 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center justify-center gap-3"
                         >
                           <Eye className="w-5 h-5" />
                           View Details
                         </button>
-                        <button className="flex-1 bg-white/90 backdrop-blur-sm border border-white/20 text-gray-900 dark:text-white font-bold py-4 px-6 rounded-2xl hover:bg-white hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-3">
+                        <button className="flex-1 bg-gradient-to-br from-[#F5E9DC] to-[#E7DDC6] dark:from-[#3d1a0a] dark:to-[#2c0f06] border border-[#79300f]/20 dark:border-[#f6d110]/30 text-[#79300f] dark:text-[#f6d110] font-bold py-4 px-6 rounded-lg hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-3">
                           <MapPin className="w-5 h-5" />
                           Track Package
                         </button>
@@ -472,16 +472,16 @@ const Orders = () => {
               whileInView={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
               viewport={{ once: true }}
-              className="flex flex-col sm:flex-row justify-between items-center gap-8 mt-16 p-8 bg-white/80 backdrop-blur-sm border border-white/20 rounded-3xl shadow-lg"
+              className="flex flex-col sm:flex-row justify-between items-center gap-8 mt-16 p-8 bg-gradient-to-br from-[#F5E9DC] to-[#E7DDC6] dark:from-[#3d1a0a] dark:to-[#2c0f06] border border-[#79300f]/20 dark:border-[#f6d110]/30 rounded-lg shadow-lg"
             >
-              <div className="text-gray-600 dark:text-gray-300 text-lg">
+              <div className="text-[#5a2408] dark:text-[#d4af37] text-lg">
                 Showing {((pagination.currentPage - 1) * 10) + 1} to {Math.min(pagination.currentPage * 10, pagination.totalOrders)} of {pagination.totalOrders} orders
               </div>
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => handlePageChange(pagination.currentPage - 1)}
                   disabled={!pagination.hasPrev}
-                  className="flex items-center gap-2 px-6 py-3 bg-white/90 backdrop-blur-sm border border-white/20 text-gray-700 rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white hover:shadow-lg transition-all duration-200 font-medium"
+                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-br from-[#F5E9DC] to-[#E7DDC6] dark:from-[#3d1a0a] dark:to-[#2c0f06] border border-[#79300f]/20 dark:border-[#f6d110]/30 text-[#79300f] dark:text-[#f6d110] rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg transition-all duration-200 font-medium"
                 >
                   <ChevronLeft className="w-5 h-5" />
                   Previous
@@ -494,10 +494,10 @@ const Orders = () => {
                       <button
                         key={pageNum}
                         onClick={() => handlePageChange(pageNum)}
-                        className={`w-12 h-12 rounded-2xl font-bold transition-all duration-200 ${
-                          pageNum === pagination.currentPage
-                            ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
-                            : 'bg-white/90 backdrop-blur-sm border border-white/20 text-gray-700 hover:bg-white hover:shadow-lg'
+                        className={`w-12 h-12 rounded-lg font-bold transition-all duration-200 ${
+                         pageNum === pagination.currentPage
+                            ? 'bg-gradient-to-r from-[#79300f] to-[#5a2408] text-white shadow-lg dark:from-[#f6d110] dark:to-[#d4af37]'
+                            : 'bg-gradient-to-br from-[#F5E9DC] to-[#E7DDC6] dark:from-[#3d1a0a] dark:to-[#2c0f06] border border-[#79300f]/20 dark:border-[#f6d110]/30 text-[#79300f] dark:text-[#f6d110] hover:shadow-lg'
                         }`}
                       >
                         {pageNum}
@@ -509,7 +509,7 @@ const Orders = () => {
                 <button
                   onClick={() => handlePageChange(pagination.currentPage + 1)}
                   disabled={!pagination.hasNext}
-                  className="flex items-center gap-2 px-6 py-3 bg-white/90 backdrop-blur-sm border border-white/20 text-gray-700 rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white hover:shadow-lg transition-all duration-200 font-medium"
+                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-br from-[#F5E9DC] to-[#E7DDC6] dark:from-[#3d1a0a] dark:to-[#2c0f06] border border-[#79300f]/20 dark:border-[#f6d110]/30 text-[#79300f] dark:text-[#f6d110] rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg transition-all duration-200 font-medium"
                 >
                   Next
                   <ChevronRight className="w-5 h-5" />
@@ -534,10 +534,10 @@ const Orders = () => {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
                 onClick={(e) => e.stopPropagation()}
-                className="bg-white/95 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto relative"
+                className="bg-gradient-to-br from-[#F5E9DC] to-[#E7DDC6] dark:from-[#3d1a0a] dark:to-[#2c0f06] border border-[#79300f]/20 dark:border-[#f6d110]/30 rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto relative"
               >
                 {/* Modal Header */}
-                <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white p-8 rounded-t-3xl relative">
+                <div className="bg-gradient-to-r from-[#79300f] to-[#5a2408] dark:from-[#f6d110] dark:to-[#d4af37] text-white p-8 rounded-t-lg relative">
                   <div className="absolute top-4 right-4 opacity-20">
                     <Sparkles className="w-8 h-8" />
                   </div>
@@ -548,7 +548,7 @@ const Orders = () => {
                     </div>
                     <button
                       onClick={() => setShowOrderDetails(false)}
-                      className="p-3 hover:bg-white/20 rounded-2xl transition-colors"
+                      className="p-3 hover:bg-white/20 rounded-lg transition-colors"
                     >
                       <span className="text-3xl">×</span>
                     </button>
@@ -560,20 +560,20 @@ const Orders = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
                     <div className="space-y-6">
                       <div>
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Order Date</h3>
-                        <p className="text-gray-600 dark:text-gray-400 text-lg">{formatDate(selectedOrder.createdAt)}</p>
+                        <h3 className="text-xl font-bold text-[#79300f] dark:text-[#f6d110] mb-4">Order Date</h3>
+                        <p className="text-[#5a2408] dark:text-[#d4af37] text-lg">{formatDate(selectedOrder.createdAt)}</p>
                       </div>
                     </div>
                     <div className="space-y-6">
                       <div>
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Total Amount</h3>
-                        <p className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                        <h3 className="text-xl font-bold text-[#79300f] dark:text-[#f6d110] mb-4">Total Amount</h3>
+                        <p className="text-4xl font-bold bg-gradient-to-r from-[#79300f] to-[#5a2408] bg-clip-text text-transparent dark:from-[#f6d110] dark:to-[#d4af37]">
                           ${selectedOrder.pricing.total.toFixed(2)}
                         </p>
                       </div>
                       <div>
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Items</h3>
-                        <p className="text-gray-600 dark:text-gray-400 text-lg">
+                        <h3 className="text-xl font-bold text-[#79300f] dark:text-[#f6d110] mb-4">Items</h3>
+                        <p className="text-[#5a2408] dark:text-[#d4af37] text-lg">
                           {selectedOrder.items.length} item{selectedOrder.items.length !== 1 ? 's' : ''}
                         </p>
                       </div>
@@ -582,25 +582,25 @@ const Orders = () => {
 
                   {/* Order Items */}
                   <div className="mb-10">
-                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Order Items</h3>
+                    <h3 className="text-2xl font-bold text-[#79300f] dark:text-[#f6d110] mb-6">Order Items</h3>
                     <div className="space-y-4">
                       {selectedOrder.items.map((item, index) => (
-                        <div key={index} className="flex items-center gap-6 p-6 bg-gray-50/80 backdrop-blur-sm border border-white/20 rounded-2xl hover:bg-gray-100/80 transition-colors duration-200">
+                        <div key={index} className="flex items-center gap-6 p-6 bg-[#F5E9DC]/80 dark:bg-[#3d1a0a]/80 border border-[#79300f]/20 dark:border-[#f6d110]/20 rounded-lg hover:bg-[#E7DDC6]/80 dark:hover:bg-[#2c0f06]/80 transition-colors duration-200">
                           <div className="relative">
                             <img
                               src={item.image}
                               alt={item.name}
-                              className="w-24 h-24 object-cover rounded-2xl shadow-lg"
+                              className="w-24 h-24 object-cover rounded-lg shadow-lg"
                             />
                           </div>
                           <div className="flex-1">
-                            <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{item.name}</h4>
-                            <p className="text-gray-600 dark:text-gray-400 text-lg">
+                            <h4 className="text-xl font-bold text-[#79300f] dark:text-[#f6d110] mb-2">{item.name}</h4>
+                            <p className="text-[#5a2408] dark:text-[#d4af37] text-lg">
                               ${item.price.toFixed(2)} × {item.quantity}
                             </p>
                           </div>
                           <div className="text-right">
-                            <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                            <p className="text-2xl font-bold bg-gradient-to-r from-[#79300f] to-[#5a2408] bg-clip-text text-transparent dark:from-[#f6d110] dark:to-[#d4af37]">
                               ${(item.price * item.quantity).toFixed(2)}
                             </p>
                           </div>
@@ -610,24 +610,24 @@ const Orders = () => {
                   </div>
 
                   {/* Pricing Breakdown */}
-                  <div className="bg-gradient-to-r from-gray-50/80 to-gray-100/80 backdrop-blur-sm border border-white/20 p-8 rounded-3xl mb-8">
-                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Order Summary</h3>
+                  <div className="bg-gradient-to-r from-[#F5E9DC]/80 to-[#E7DDC6]/80 dark:from-[#3d1a0a]/80 dark:to-[#2c0f06]/80 border border-[#79300f]/20 dark:border-[#f6d110]/20 p-8 rounded-lg mb-8">
+                    <h3 className="text-2xl font-bold text-[#79300f] dark:text-[#f6d110] mb-6">Order Summary</h3>
                     <div className="space-y-4">
                       <div className="flex justify-between items-center py-2">
-                        <span className="text-gray-600 dark:text-gray-400 text-lg">Subtotal</span>
-                        <span className="text-xl font-bold text-gray-900 dark:text-white">
+                        <span className="text-[#5a2408] dark:text-[#d4af37] text-lg">Subtotal</span>
+                        <span className="text-xl font-bold text-[#79300f] dark:text-[#f6d110]">
                           ${selectedOrder.pricing.subtotal.toFixed(2)}
                         </span>
                       </div>
                       <div className="flex justify-between items-center py-2">
-                        <span className="text-gray-600 dark:text-gray-400 text-lg">Shipping</span>
-                        <span className="text-xl font-bold text-gray-900 dark:text-white">
+                        <span className="text-[#5a2408] dark:text-[#d4af37] text-lg">Shipping</span>
+                        <span className="text-xl font-bold text-[#79300f] dark:text-[#f6d110]">
                           ${selectedOrder.pricing.shipping.toFixed(2)}
                         </span>
                       </div>
                       <div className="flex justify-between items-center py-2">
-                        <span className="text-gray-600 dark:text-gray-400 text-lg">Tax</span>
-                        <span className="text-xl font-bold text-gray-900 dark:text-white">
+                        <span className="text-[#5a2408] dark:text-[#d4af37] text-lg">Tax</span>
+                        <span className="text-xl font-bold text-[#79300f] dark:text-[#f6d110]">
                           ${selectedOrder.pricing.tax.toFixed(2)}
                         </span>
                       </div>
@@ -639,10 +639,10 @@ const Orders = () => {
                           </span>
                         </div>
                       )}
-                      <div className="border-t border-gray-200 dark:border-gray-600 pt-4 mt-4">
+                      <div className="border-t border-[#79300f]/20 dark:border-[#f6d110]/20 pt-4 mt-4">
                         <div className="flex justify-between items-center">
-                          <span className="text-2xl font-bold text-gray-900 dark:text-white">Total</span>
-                          <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                          <span className="text-2xl font-bold text-[#79300f] dark:text-[#f6d110]">Total</span>
+                          <span className="text-3xl font-bold bg-gradient-to-r from-[#79300f] to-[#5a2408] bg-clip-text text-transparent dark:from-[#f6d110] dark:to-[#d4af37]">
                             ${selectedOrder.pricing.total.toFixed(2)}
                           </span>
                         </div>
@@ -652,11 +652,11 @@ const Orders = () => {
 
                   {/* Action Buttons */}
                   <div className="flex flex-col sm:flex-row gap-4">
-                    <button className="flex-1 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white font-bold py-4 px-6 rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center justify-center gap-3">
+                    <button className="flex-1 bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] dark:from-[#f6d110] dark:to-[#d4af37] dark:hover:from-[#d4af37] dark:hover:to-[#f6d110] text-white font-bold py-4 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center justify-center gap-3">
                       <MapPin className="w-5 h-5" />
                       Track Package
                     </button>
-                    <button className="flex-1 bg-white/90 backdrop-blur-sm border border-white/20 text-gray-900 dark:text-white font-bold py-4 px-6 rounded-2xl hover:bg-white hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-3">
+                    <button className="flex-1 bg-gradient-to-br from-[#F5E9DC] to-[#E7DDC6] dark:from-[#3d1a0a] dark:to-[#2c0f06] border border-[#79300f]/20 dark:border-[#f6d110]/30 text-[#79300f] dark:text-[#f6d110] font-bold py-4 px-6 rounded-lg hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-3">
                       <Download className="w-5 h-5" />
                       Download Invoice
                     </button>
