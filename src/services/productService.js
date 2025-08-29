@@ -1,3 +1,7 @@
+// 3) ProductService.js
+// No changes needed here, as FormData append for multiple 'images' is correct.
+// Ensure your backend requires auth if needed, and token is stored correctly.
+
 import { API_BASE_URL } from '../api/constant';
 
 class ProductService {
@@ -6,12 +10,71 @@ class ProductService {
     try {
       console.log('🌐 Making API call to:', `${API_BASE_URL}${endpoint}`);
       
+      const token = localStorage.getItem('token'); // Adjust key if your token is stored differently
+      
+      const headers = {
+        'Content-Type': 'application/json',
+        ...options.headers
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
       const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...options.headers
-        },
+        headers,
         ...options
+      });
+      
+      console.log('📡 Response status:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ API Error Response:', errorText);
+        let errorMessage;
+        
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.message || `HTTP ${response.status}: API call failed`;
+        } catch (parseError) {
+          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        }
+        
+        throw new Error(errorMessage);
+      }
+
+      const data = await response.json();
+      console.log('📡 Response data:', JSON.stringify(data, null, 2));
+      
+      return data;
+    } catch (error) {
+      console.error('❌ API Error:', {
+        endpoint,
+        message: error.message,
+        stack: error.stack
+      });
+      throw error;
+    }
+  }
+
+  // Base API call for FormData (file uploads)
+  async apiCallFormData(endpoint, options = {}) {
+    try {
+      console.log('🌐 Making FormData API call to:', `${API_BASE_URL}${endpoint}`);
+      
+      const token = localStorage.getItem('token'); // Adjust key if your token is stored differently
+      
+      const headers = {
+        ...options.headers
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        ...options,
+        headers
       });
       
       console.log('📡 Response status:', response.status);
@@ -57,7 +120,116 @@ class ProductService {
     }));
   }
 
-  // ===== PRODUCT METHODS =====
+  // ===== ADMIN PRODUCT MANAGEMENT METHODS =====
+  
+  // Get all products with filters and pagination
+  async getAllProducts(params = {}) {
+    try {
+      const queryString = new URLSearchParams(params).toString();
+      const endpoint = `/api/products${queryString ? `?${queryString}` : ''}`;
+      return await this.apiCall(endpoint);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Create new product
+  async createProduct(productData) {
+    try {
+      const formData = new FormData();
+      
+      // Append all product fields
+      Object.keys(productData).forEach(key => {
+        if (key === 'images' && productData[key]) {
+          Array.from(productData[key]).forEach(file => {
+            formData.append('images', file);
+          });
+        } else if (key === 'sizes' || key === 'fragrance_notes' || key === 'personalization') {
+          formData.append(key, JSON.stringify(productData[key]));
+        } else if (Array.isArray(productData[key])) {
+          formData.append(key, productData[key].join(','));
+        } else if (productData[key] !== null && productData[key] !== undefined) {
+          formData.append(key, productData[key]);
+        }
+      });
+
+      return await this.apiCallFormData('/api/products', {
+        method: 'POST',
+        body: formData
+      });
+    } catch (error) {
+      console.error('Error creating product:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Update product
+  async updateProduct(productId, productData) {
+    try {
+      const formData = new FormData();
+      
+      Object.keys(productData).forEach(key => {
+        if (key === 'images' && productData[key]) {
+          Array.from(productData[key]).forEach(file => {
+            formData.append('images', file);
+          });
+        } else if (key === 'sizes' || key === 'fragrance_notes' || key === 'personalization') {
+          formData.append(key, JSON.stringify(productData[key]));
+        } else if (Array.isArray(productData[key])) {
+          formData.append(key, productData[key].join(','));
+        } else if (productData[key] !== null && productData[key] !== undefined) {
+          formData.append(key, productData[key]);
+        }
+      });
+
+      return await this.apiCallFormData(`/api/products/${productId}`, {
+        method: 'PUT',
+        body: formData
+      });
+    } catch (error) {
+      console.error('Error updating product:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Delete product
+  async deleteProduct(productId) {
+    try {
+      return await this.apiCall(`/api/products/${productId}`, {
+        method: 'DELETE'
+      });
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Toggle product status
+  async toggleProductStatus(productId) {
+    try {
+      return await this.apiCall(`/api/products/${productId}/toggle-status`, {
+        method: 'POST'
+      });
+    } catch (error) {
+      console.error('Error toggling product status:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Delete product image
+  async deleteProductImage(productId, imageIndex) {
+    try {
+      return await this.apiCall(`/api/products/${productId}/image/${imageIndex}`, {
+        method: 'DELETE'
+      });
+    } catch (error) {
+      console.error('Error deleting product image:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // ===== COLLECTION METHODS =====
   async getWomensCollections() {
     return this.apiCall('/api/products/women/collections');
   }
@@ -70,6 +242,11 @@ class ProductService {
     return this.apiCall('/api/products/unisex/collections');
   }
 
+  async getGiftCollections() {
+    return this.apiCall('/api/products/gifts/collections');
+  }
+
+  // ===== PRODUCT FETCHING METHODS =====
   async getProducts(filters = {}) {
     const queryParams = new URLSearchParams();
     
@@ -87,7 +264,7 @@ class ProductService {
 
   async getProductsByCollection(category, collection, limit = 6) {
     return this.getProducts({
-      category,
+      category: category.toLowerCase(),
       collection,
       limit
     });
@@ -147,7 +324,6 @@ class ProductService {
         throw new Error('Invalid response format - missing product data');
       }
       
-      // Normalize sizes data
       response.data.product.sizes = this.normalizeSizes(response.data.product.sizes || []);
       console.log('🔍 Normalized sizes:', response.data.product.sizes);
       
@@ -231,7 +407,13 @@ class ProductService {
     const queryString = queryParams.toString();
     const endpoint = `/api/banners${queryString ? `?${queryString}` : ''}`;
     
-    return this.apiCall(endpoint);
+    try {
+      const response = await this.apiCall(endpoint);
+      return response || { success: false, data: [], message: 'No banners found' };
+    } catch (error) {
+      console.error('❌ Failed to fetch banners:', error.message);
+      return { success: false, data: [], message: error.message };
+    }
   }
 
   async getBannersByCategory(category, type = null) {
@@ -239,13 +421,26 @@ class ProductService {
     if (type) queryParams.append('type', type);
     
     const queryString = queryParams.toString();
-    const endpoint = `/api/banners/${category}${queryString ? `?${queryString}` : ''}`;
+    const endpoint = `/api/banners/${category.toLowerCase()}${queryString ? `?${queryString}` : ''}`;
     
-    return this.apiCall(endpoint);
+    try {
+      const response = await this.apiCall(endpoint);
+      return response || { success: false, data: [], message: `No banners found for category: ${category}` };
+    } catch (error) {
+      console.error(`❌ Failed to fetch banners for category ${category}:`, error.message);
+      return { success: false, data: [], message: error.message };
+    }
   }
 
   async getBanner(category, type) {
-    return this.apiCall(`/api/banners/${category}/${type}`);
+    const endpoint = `/api/banners/${category.toLowerCase()}/${type}`;
+    try {
+      const response = await this.apiCall(endpoint);
+      return response || { success: false, data: null, message: `No banner found for ${category}/${type}` };
+    } catch (error) {
+      console.error(`❌ Failed to fetch banner for ${category}/${type}:`, error.message);
+      return { success: false, data: null, message: error.message };
+    }
   }
 
   async getWomensBanners() {
@@ -260,6 +455,24 @@ class ProductService {
     return this.getBannersByCategory('unisex');
   }
 
+  async getGiftBanners() {
+    try {
+      // First try 'gifts' (plural)
+      const response = await this.getBannersByCategory('gifts');
+      if (response.success && response.data && response.data.length > 0) {
+        return response;
+      }
+      
+      // Fallback to 'gift' (singular) if no data found
+      console.log('🔄 No banners found with "gifts", trying "gift"...');
+      return await this.getBannersByCategory('gift');
+    } catch (error) {
+      console.error('❌ Error fetching gift banners, trying fallback:', error);
+      // Fallback to 'gift' (singular)
+      return await this.getBannersByCategory('gift');
+    }
+  }
+
   async getHeroBanner(category) {
     return this.getBanner(category, 'hero');
   }
@@ -272,16 +485,45 @@ class ProductService {
     return this.getBannersByCategory(category, 'collection_highlight');
   }
 
+  async getGiftHighlightBanners() {
+    try {
+      // First try 'gifts' (plural)
+      const response = await this.getBannersByCategory('gifts', 'gift_highlight');
+      if (response.success && response.data && response.data.length > 0) {
+        return response;
+      }
+      
+      // Fallback to 'gift' (singular) if no data found
+      console.log('🔄 No gift highlight banners found with "gifts", trying "gift"...');
+      return await this.getBannersByCategory('gift', 'gift_highlight');
+    } catch (error) {
+      console.error('❌ Error fetching gift highlight banners, trying fallback:', error);
+      // Fallback to 'gift' (singular)
+      return await this.getBannersByCategory('gift', 'gift_highlight');
+    }
+  }
+
   async trackBannerClick(bannerId) {
-    return this.apiCall(`/api/banners/${bannerId}/click`, {
-      method: 'POST'
-    });
+    try {
+      return await this.apiCall(`/api/banners/${bannerId}/click`, {
+        method: 'POST'
+      });
+    } catch (error) {
+      console.error('❌ Failed to track banner click:', error.message);
+      return { success: false, message: error.message };
+    }
   }
 
   async getBannerDebugCounts() {
-    return this.apiCall('/api/banners/debug/count');
+    try {
+      return await this.apiCall('/api/banners/debug/count');
+    } catch (error) {
+      console.error('❌ Failed to fetch banner debug counts:', error.message);
+      return { success: false, data: {}, message: error.message };
+    }
   }
 
+  // ===== PAGE DATA METHODS =====
   async getMensPageData() {
     try {
       const [collections, banners] = await Promise.all([
@@ -292,13 +534,13 @@ class ProductService {
       return {
         success: true,
         data: {
-          collections: collections.data,
-          banners: banners.data
+          collections: collections.data || [],
+          banners: banners.data || []
         }
       };
     } catch (error) {
       console.error('Error fetching men\'s page data:', error);
-      throw error;
+      return { success: false, data: { collections: [], banners: [] }, message: error.message };
     }
   }
 
@@ -312,13 +554,13 @@ class ProductService {
       return {
         success: true,
         data: {
-          collections: collections.data,
-          banners: banners.data
+          collections: collections.data || [],
+          banners: banners.data || []
         }
       };
     } catch (error) {
       console.error('Error fetching women\'s page data:', error);
-      throw error;
+      return { success: false, data: { collections: [], banners: [] }, message: error.message };
     }
   }
 
@@ -332,16 +574,48 @@ class ProductService {
       return {
         success: true,
         data: {
-          collections: collections.data,
-          banners: banners.data
+          collections: collections.data || [],
+          banners: banners.data || []
         }
       };
     } catch (error) {
       console.error('Error fetching unisex page data:', error);
-      throw error;
+      return { success: false, data: { collections: [], banners: [] }, message: error.message };
     }
   }
 
+  async getGiftPageData() {
+    try {
+      console.log('🎁 Fetching gift page data...');
+      
+      const [collections, banners] = await Promise.all([
+        this.getGiftCollections().catch(err => {
+          console.error('❌ Gift collections error:', err);
+          return { success: false, data: {}, error: err.message };
+        }),
+        this.getGiftBanners().catch(err => {
+          console.error('❌ Gift banners error:', err);
+          return { success: false, data: [], error: err.message };
+        })
+      ]);
+
+      console.log('🎁 Gift collections response:', collections);
+      console.log('🎁 Gift banners response:', banners);
+
+      return {
+        success: true,
+        data: {
+          collections: collections.data || {},
+          banners: banners.data || []
+        }
+      };
+    } catch (error) {
+      console.error('Error fetching gift page data:', error);
+      return { success: false, data: { collections: {}, banners: [] }, message: error.message };
+    }
+  }
+
+  // ===== UTILITY METHODS =====
   async testConnection() {
     try {
       console.log('🧪 Testing API connection...');
@@ -404,6 +678,88 @@ class ProductService {
         debug: { error: error.stack }
       };
     }
+  }
+
+  // ===== DEBUG METHODS =====
+  async debugGiftData() {
+    console.log('🔍 Starting comprehensive gift data debug...');
+    
+    try {
+      // Test different banner endpoints
+      const bannerTests = [
+        { endpoint: '/api/banners/gift', name: 'gift (singular)' },
+        { endpoint: '/api/banners/gifts', name: 'gifts (plural)' },
+        { endpoint: '/api/banners', name: 'all banners' }
+      ];
+      
+      console.log('🔍 Testing banner endpoints...');
+      for (const test of bannerTests) {
+        try {
+          const response = await this.apiCall(test.endpoint);
+          console.log(`✅ ${test.name} endpoint:`, response);
+        } catch (error) {
+          console.log(`❌ ${test.name} endpoint failed:`, error.message);
+        }
+      }
+      
+      // Test gift collections endpoint
+      console.log('🔍 Testing gift collections endpoint...');
+      try {
+        const collections = await this.apiCall('/api/products/gifts/collections');
+        console.log('✅ Gift collections:', collections);
+      } catch (error) {
+        console.log('❌ Gift collections failed:', error.message);
+      }
+      
+      // Test debug counts
+      console.log('🔍 Testing debug counts...');
+      try {
+        const debugCounts = await this.getDebugCounts();
+        console.log('✅ Debug counts:', debugCounts);
+      } catch (error) {
+        console.log('❌ Debug counts failed:', error.message);
+      }
+      
+      return {
+        success: true,
+        message: 'Debug completed - check console for detailed logs'
+      };
+    } catch (error) {
+      console.error('❌ Debug failed:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  async debugBannerEndpoints() {
+    console.log('🔍 Testing all possible banner endpoints...');
+    
+    const endpoints = [
+      '/api/banners',
+      '/api/banners/gift',
+      '/api/banners/gifts',
+      '/api/banners/gift/hero',
+      '/api/banners/gifts/hero',
+      '/api/banners/gift/gift_highlight',
+      '/api/banners/gifts/gift_highlight'
+    ];
+    
+    const results = {};
+    
+    for (const endpoint of endpoints) {
+      try {
+        const response = await this.apiCall(endpoint);
+        results[endpoint] = { success: true, data: response };
+        console.log(`✅ ${endpoint}:`, response);
+      } catch (error) {
+        results[endpoint] = { success: false, error: error.message };
+        console.log(`❌ ${endpoint}:`, error.message);
+      }
+    }
+    
+    return results;
   }
 }
 

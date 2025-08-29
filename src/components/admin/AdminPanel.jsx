@@ -42,6 +42,9 @@ import {
   Palette
 } from 'lucide-react';
 
+// Import the Products Section Component
+import AdminProductsSection from './AdminProductsSection'; // This would be the component we just created
+
 const ModernAdminPanel = () => {
   const { 
     user, 
@@ -347,9 +350,9 @@ const ModernAdminPanel = () => {
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home, isActive: true },
+    { id: 'products', label: 'Products', icon: Package2, isActive: true }, // Now active
     { id: 'orders', label: 'Orders', icon: ShoppingBag, isActive: true },
     { id: 'users', label: 'Users', icon: Users, isActive: true },
-    { id: 'products', label: 'Products', icon: Package2, isActive: false },
     { id: 'analytics', label: 'Analytics', icon: BarChart3, isActive: false },
     { id: 'inventory', label: 'Inventory', icon: Package, isActive: false },
     { id: 'marketing', label: 'Marketing', icon: Palette, isActive: false },
@@ -387,8 +390,6 @@ const ModernAdminPanel = () => {
             );
           })}
         </nav>
-        
-        
       </div>
 
       {/* Main Content */}
@@ -446,19 +447,6 @@ const ModernAdminPanel = () => {
                     <p><strong>Users Array Length:</strong> {users.length}</p>
                   </div>
                 </div>
-                {debugInfo.orderApiResponse && (
-                  <details className="mt-2">
-                    <summary className="cursor-pointer text-blue-800">Last Order API Response</summary>
-                    <pre className="mt-1 p-2 bg-gray-100 rounded text-xs overflow-auto max-h-40">
-                      {debugInfo.orderApiResponse}
-                    </pre>
-                  </details>
-                )}
-                {debugInfo.orderApiError && (
-                  <div className="mt-2 p-2 bg-red-100 rounded">
-                    <p className="text-red-800"><strong>Order API Error:</strong> {debugInfo.orderApiError}</p>
-                  </div>
-                )}
               </div>
             </details>
           </div>
@@ -608,15 +596,33 @@ const ModernAdminPanel = () => {
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   {[
-                    { label: 'Add Product', icon: Package2, color: 'from-blue-500 to-blue-600' },
-                    { label: 'Manage Inventory', icon: Package, color: 'from-emerald-500 to-emerald-600' },
-                    { label: 'View Reports', icon: BarChart3, color: 'from-purple-500 to-purple-600' },
-                    { label: 'Marketing', icon: Palette, color: 'from-pink-500 to-pink-600' }
+                    { 
+                      label: 'Add Product', 
+                      icon: Package2, 
+                      color: 'from-blue-500 to-blue-600',
+                      action: () => setActiveTab('products')
+                    },
+                    { 
+                      label: 'Manage Inventory', 
+                      icon: Package, 
+                      color: 'from-emerald-500 to-emerald-600' 
+                    },
+                    { 
+                      label: 'View Reports', 
+                      icon: BarChart3, 
+                      color: 'from-purple-500 to-purple-600' 
+                    },
+                    { 
+                      label: 'Marketing', 
+                      icon: Palette, 
+                      color: 'from-pink-500 to-pink-600' 
+                    }
                   ].map((action, index) => {
                     const Icon = action.icon;
                     return (
                       <button
                         key={index}
+                        onClick={action.action}
                         className="p-6 bg-gray-50 hover:bg-gray-100 rounded-xl transition-all duration-200 hover:shadow-md group"
                       >
                         <div className={`w-12 h-12 bg-gradient-to-r ${action.color} rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
@@ -630,6 +636,9 @@ const ModernAdminPanel = () => {
               </div>
             </div>
           )}
+
+          {/* Products Tab - NEW SECTION */}
+          {activeTab === 'products' && <AdminProductsSection />}
 
           {/* Orders Tab */}
           {activeTab === 'orders' && (

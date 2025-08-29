@@ -46,6 +46,15 @@ const ProductDetailPage = () => {
   const [showNotification, setShowNotification] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
 
+  // Scroll to top when component mounts or product ID changes
+  useEffect(() => {
+    window.scrollTo({ 
+      top: 0, 
+      left: 0, 
+      behavior: 'smooth' 
+    });
+  }, [id]);
+
   // Load theme preference
   useEffect(() => {
     const stored = localStorage.getItem('darkMode');
@@ -876,8 +885,6 @@ const ProductDetailPage = () => {
                 </div>
               </motion.button>
             </motion.div>
-
-           
 
             {/* Product Details Accordion */}
             <motion.div

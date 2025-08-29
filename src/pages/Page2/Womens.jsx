@@ -1,13 +1,13 @@
-import React, { useState, useEffect, memo } from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/common/Header';
 import Footer from '@/components/common/Footer';
 import Button from '../../components/ui/Button';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { fadeIn } from '../../variants';
 import { useCart } from '@/CartContext';
 import { useWishlist } from '@/WishlistContext';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Star, RefreshCw, ShoppingBag, Eye, CheckCircle, AlertCircle, Heart } from 'lucide-react';
 import { FiHeart } from 'react-icons/fi';
 import ProductService from '../../services/productService';
 
@@ -38,6 +38,19 @@ const WomensCollection = () => {
   const [justArrivedIndex, setJustArrivedIndex] = useState(0);
   const [bestSellersIndex, setBestSellersIndex] = useState(0);
   const [premiumIndex, setPremiumIndex] = useState(0);
+
+  // Enhanced state management from Gift
+  const [cartNotifications, setCartNotifications] = useState([]);
+  const [quickViewProduct, setQuickViewProduct] = useState(null);
+
+  // Enhanced notification system from Gift
+  const addNotification = useCallback((message, type = 'success') => {
+    const id = Date.now();
+    setCartNotifications(prev => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setCartNotifications(prev => prev.filter(n => n.id !== id));
+    }, 3000);
+  }, []);
 
   // Load theme preference
   useEffect(() => {
@@ -212,170 +225,271 @@ const WomensCollection = () => {
     }
   };
 
-  // Enhanced Product Card Component with improved navigation and error handling
-  const ProductCard = memo(({ product, isCompact = false }) => {
+  // Product Card from GiftCollection
+  const ProductCard = memo(({ product, isCompact = false, collectionName = '' }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [imageError, setImageError] = useState(false);
-    
+    const [isAddingToCart, setIsAddingToCart] = useState(false);
+    const [imageLoading, setImageLoading] = useState(true);
+
     if (!product) {
-      console.warn('⚠️ ProductCard: No product data provided');
-      return null;
+      return (
+        <div className={`${isCompact ? 'w-[300px]' : 'w-full'} bg-gray-200 dark:bg-gray-700 animate-pulse rounded-2xl p-6`}>
+          <div className="h-[200px] bg-gray-300 dark:bg-gray-600 rounded-xl mb-4"></div>
+          <div className="space-y-3">
+            <div className="h-6 bg-gray-300 dark:bg-gray-600 rounded"></div>
+            <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-3/4"></div>
+            <div className="h-8 bg-gray-300 dark:bg-gray-600 rounded"></div>
+          </div>
+        </div>
+      );
     }
 
-    // Enhanced product validation
     const validateProduct = (product) => {
-      const requiredFields = ['_id', 'name', 'price', 'images'];
-      const missingFields = requiredFields.filter(field => !product[field]);
-      
-      if (missingFields.length > 0) {
-        console.warn('⚠️ Product missing required fields:', {
-          productId: product._id,
-          missingFields,
-          product
-        });
-        return false;
-      }
-      
-      // Validate ID format
-      const productId = product._id.toString();
-      const hexRegex = /^[0-9a-fA-F]{24}$/;
-      if (!hexRegex.test(productId)) {
-        console.error('❌ Invalid product ID format:', productId);
-        return false;
-      }
-      
-      return true;
+      const requiredFields = ['_id', 'name', 'price'];
+      return requiredFields.every(field => product[field]);
     };
 
     const handleAddToCart = async (e) => {
       e.stopPropagation();
-      
+
       if (!validateProduct(product)) {
-        console.error('❌ Cannot add invalid product to cart');
+        addNotification('Product information is incomplete', 'error');
         return;
       }
-      
+
+      setIsAddingToCart(true);
+
       const cartItem = {
-        id: product._id.toString(), // Ensure ID is a string
+        id: product._id.toString(),
         name: product.name,
-        price: Number(product.price), // Ensure price is a number
-        image: product.images && product.images.length > 0 ? product.images[0] : '/images/default-perfume.png',
+        price: Number(product.price),
+        image: product.images && product.images.length > 0 ? product.images[0] : '/images/default-gift.png',
         quantity: 1,
         selectedSize: product.sizes && product.sizes.length > 0 ? product.sizes[0].size : null,
         personalization: null
       };
-      
-      console.log('🛒 Adding to cart:', cartItem);
+
       try {
         const success = await addToCart(cartItem);
-        if (!success) {
-          console.error('❌ Failed to add item to cart:', cartItem);
+        if (success) {
+          addNotification(`Added ${product.name} to cart!`, 'success');
+        } else {
+          addNotification('Failed to add item to cart', 'error');
         }
       } catch (error) {
         console.error('❌ Add to cart error:', error);
+        addNotification('Something went wrong. Please try again.', 'error');
+      } finally {
+        setIsAddingToCart(false);
       }
     };
 
     const handleWishlistToggle = (e) => {
       e.stopPropagation();
-      
+
       if (!product._id) {
-        console.error('❌ Cannot toggle wishlist for product without ID');
+        addNotification('Unable to add to wishlist', 'error');
         return;
       }
-      
-      console.log('❤️ Toggling wishlist for:', product._id);
-      toggleWishlist(product);
+
+      try {
+        const wasInWishlist = isInWishlist(product._id);
+        toggleWishlist(product);
+        addNotification(
+          wasInWishlist ? 'Removed from wishlist' : 'Added to wishlist!',
+          'success'
+        );
+      } catch (error) {
+        addNotification('Failed to update wishlist', 'error');
+      }
     };
 
     const handleCardClick = () => {
-      console.log('🖱️ Product card clicked:', product._id);
-      handleProductClick(product);
+      if (!product._id) {
+        addNotification('Product not available', 'error');
+        return;
+      }
+
+      const productId = product._id.toString();
+      try {
+        navigate(`/product/${productId}`);
+      } catch (error) {
+        console.error('❌ Navigation error:', error);
+        window.location.href = `/product/${productId}`;
+      }
+    };
+
+    const handleQuickView = (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      console.log('Quick View clicked for product:', product._id, product.name);
+      if (product && product._id) {
+        setQuickViewProduct(product);
+      } else {
+        console.error('❌ Invalid product for Quick View:', product);
+        addNotification('Unable to show quick view', 'error');
+      }
     };
 
     const getProductImage = () => {
-      if (imageError) {
-        return '/images/default-perfume.png';
-      }
-      
-      if (isHovered && product.hoverImage) {
-        return product.hoverImage;
-      }
-      
+      if (imageError) return '/images/default-gift.png';
+      if (isHovered && product.hoverImage) return product.hoverImage;
       if (product.images && Array.isArray(product.images) && product.images.length > 0) {
         return product.images[0];
       }
-      
-      return '/images/default-perfume.png';
+      return '/images/default-gift.png';
     };
 
     const handleImageError = (e) => {
-      console.warn('⚠️ Image failed to load:', e.target.src);
       setImageError(true);
-      e.target.src = '/images/default-perfume.png';
+      setImageLoading(false);
+      e.target.src = '/images/default-gift.png';
     };
-    
+
+    const handleImageLoad = () => {
+      setImageLoading(false);
+    };
+
     return (
-      <div 
-        className={`bg-gradient-to-br from-[#F5E9DC] to-[#E7DDC6] dark:from-gray-800 dark:to-gray-700 p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 text-left relative flex-shrink-0 border border-[#D4C5A9] dark:border-gray-600 group hover:scale-105 cursor-pointer ${isCompact ? 'w-[300px]' : 'w-full'}`}
+      <motion.div
+        layout
+        whileHover={{ scale: 1.02, y: -5 }}
+        transition={{ duration: 0.3, type: "spring", stiffness: 300 }}
+        className={`bg-gradient-to-br from-[#F5E9DC] to-[#E7DDC6] dark:from-gray-800 dark:to-gray-700 p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 text-left relative flex-shrink-0 border border-[#D4C5A9] dark:border-gray-600 group cursor-pointer ${isCompact ? 'w-[300px]' : 'w-full'} backdrop-blur-sm flex flex-col`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         onClick={handleCardClick}
       >
-        <button
+        {/* Wishlist Button */}
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
           onClick={handleWishlistToggle}
-          className="absolute top-4 right-4 text-[#79300f] hover:text-red-600 dark:text-[#f6d110] dark:hover:text-red-400 z-10 bg-white/80 dark:bg-black/80 backdrop-blur-sm rounded-full p-2 shadow-md transition-all duration-200 hover:bg-white dark:hover:bg-black"
+          className="absolute top-4 right-4 text-[#79300f] hover:text-red-600 dark:text-[#f6d110] dark:hover:text-red-400 z-10 bg-white/90 dark:bg-black/90 backdrop-blur-sm rounded-full p-2 shadow-md transition-all duration-200"
+          aria-label={isInWishlist(product._id) ? 'Remove from wishlist' : 'Add to wishlist'}
         >
-          <FiHeart 
-            size={18} 
-            className={isInWishlist(product._id) ? 'fill-red-600 text-red-600' : ''} 
+          <FiHeart
+            size={18}
+            className={isInWishlist(product._id) ? 'fill-red-600 text-red-600' : ''}
           />
-        </button>
-        
-        <div className="bg-white/50 dark:bg-black/20 backdrop-blur-sm rounded-xl p-4 mb-4 shadow-inner">
-          <img 
+        </motion.button>
+
+        {/* Quick View Button */}
+        <AnimatePresence>
+          {isHovered && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={handleQuickView}
+              className="absolute top-4 right-16 bg-white/90 dark:bg-black/90 backdrop-blur-sm rounded-full p-2 shadow-md transition-all duration-200 z-10"
+              aria-label="Quick view"
+            >
+              <Eye size={18} className="text-[#79300f] dark:text-[#f6d110]" />
+            </motion.button>
+          )}
+        </AnimatePresence>
+
+        {/* Product Badge */}
+        {product.isNew && (
+          <div className="absolute top-4 left-4 bg-gradient-to-r from-green-500 to-green-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md z-10">
+            NEW
+          </div>
+        )}
+
+        {/* Image Container */}
+        <div className="bg-white/50 dark:bg-black/20 backdrop-blur-sm rounded-xl p-4 mb-4 shadow-inner relative overflow-hidden">
+          {imageLoading && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#79300f]"></div>
+            </div>
+          )}
+          <img
             src={getProductImage()}
-            alt={product.name || 'Product'} 
-            className={`${isCompact ? 'h-[200px]' : 'h-[300px]'} w-full object-contain transition-all duration-300 group-hover:scale-105`}
+            alt={product.name || 'Gift'}
+            className={`${isCompact ? 'h-[200px]' : 'h-[300px]'} w-full object-contain transition-all duration-500 group-hover:scale-105 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
             onError={handleImageError}
-            onLoad={() => setImageError(false)}
+            onLoad={handleImageLoad}
+            loading="lazy"
           />
+          
+          {/* Overlay on hover */}
+          <AnimatePresence>
+            {isHovered && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent rounded-xl flex items-end justify-center pb-4"
+              >
+                <span className="text-white text-sm font-medium bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm">
+                  Click to view details
+                </span>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-        
-        <div className="space-y-2">
-          <h3 className={`${isCompact ? 'text-[20px]' : 'text-[30px]'} font-alata text-[#5a2408] dark:text-gray-200 font-bold`}>
-            {product.name || 'Unnamed Product'}
-          </h3>
-          <p className={`${isCompact ? 'text-[12px]' : 'text-[16px]'} text-[#8b4513] dark:text-gray-400 italic leading-relaxed line-clamp-2`}>
-            {product.description || 'No description available'}
-          </p>
-          <div className="flex items-center justify-between pt-2">
-            <p className={`${isCompact ? 'text-[20px]' : 'text-[26px]'} font-bold text-[#79300f] dark:text-[#f6d110]`}>
-              ${typeof product.price === 'number' ? product.price.toFixed(2) : product.price || '0.00'}
+
+        {/* Product Info */}
+        <div className="space-y-3 flex-1">
+          <div className="flex items-start justify-between">
+            <h3 className={`${isCompact ? 'text-lg' : 'text-xl'} font-alata text-[#5a2408] dark:text-gray-200 font-bold leading-tight`}>
+              {product.name || 'Unnamed Gift'}
+            </h3>
+            {product.rating && (
+              <div className="flex items-center space-x-1">
+                <Star size={14} className="text-yellow-500 fill-current" />
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  {product.rating.toFixed(1)}
+                </span>
+              </div>
+            )}
+          </div>
+          
+          {product.description && (
+            <p className={`${isCompact ? 'text-xs' : 'text-sm'} text-[#8b4513] dark:text-gray-400 leading-relaxed line-clamp-2`}>
+              {product.description}
             </p>
+          )}
+          
+          <div className="flex items-center justify-between pt-2">
+            <div className="flex flex-col">
+              <p className={`${isCompact ? 'text-lg' : 'text-xl'} font-bold text-[#79300f] dark:text-[#f6d110]`}>
+                ${typeof product.price === 'number' ? product.price.toFixed(2) : '0.00'}
+              </p>
+              {product.originalPrice && product.originalPrice > product.price && (
+                <p className="text-sm text-gray-500 dark:text-gray-400 line-through">
+                  ${product.originalPrice.toFixed(2)}
+                </p>
+              )}
+            </div>
             <div className="bg-[#79300f]/10 dark:bg-[#f6d110]/10 px-2 py-1 rounded-full">
               <span className="text-xs text-[#79300f] dark:text-[#f6d110] font-medium">
-                {product.brand?.toUpperCase() || 'PREMIUM'}
+                PREMIUM
               </span>
             </div>
           </div>
-          {product.rating && (
-            <div className="flex items-center gap-1">
-              <span className="text-yellow-500">★</span>
-              <span className="text-sm text-[#79300f] dark:text-[#f6d110]">
-                {product.rating}/5
-              </span>
-            </div>
-          )}
         </div>
-        
-        <Button 
+
+        {/* Action Button */}
+        <motion.button
           onClick={handleAddToCart}
-          className="w-full mt-4 bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white font-semibold py-3 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg"
+          disabled={isAddingToCart}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="w-full bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white font-semibold py-3 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 mt-auto"
         >
-          Add to Cart
-        </Button>
-      </div>
+          {isAddingToCart ? (
+            <RefreshCw size={18} className="animate-spin" />
+          ) : (
+            <ShoppingBag size={18} />
+          )}
+          <span>{isAddingToCart ? 'Adding...' : 'Add to Cart'}</span>
+        </motion.button>
+      </motion.div>
     );
   });
 
@@ -487,7 +601,9 @@ const WomensCollection = () => {
               <div className="text-white max-w-2xl">
                 <h2 className="text-[48px] font-dm-serif mb-6 leading-tight" style={{ color: banner.textColor || '#FFFFFF' }}>
                   {banner.title} <br />
-                  <span style={{ color: banner.highlightColor || '#f6d110' }}>{banner.titleHighlight}</span>
+                  <span style={{ color: banner.highlightColor || '#f6d110' }}>
+                    {banner.titleHighlight}
+                  </span>
                 </h2>
                 <p className="text-[20px] mb-8 text-gray-200">
                   {banner.description}
@@ -517,11 +633,13 @@ const WomensCollection = () => {
           <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-8 items-center">
             <div className="text-left">
               {banner.subtitle && (
-                <h3 className="text-lg text-[#79300f] font-semibold uppercase mb-3 dark:text-[#f6d110]">
+                <h3 className="text-lg text-[#79300f] dark:text-[#f6d110] font-semibold uppercase mb-3">
                   {banner.subtitle}
                 </h3>
               )}
-              <h2 className="text-[42px] font-dm-serif mb-6 text-[#79300f] dark:text-[#f6d110]">{banner.title}</h2>
+              <h2 className="text-[42px] font-dm-serif mb-6 text-[#79300f] dark:text-[#f6d110]">
+                {banner.title}
+              </h2>
               <p className="text-[18px] mb-6 text-[#5a2408] dark:text-gray-300 leading-relaxed">
                 {banner.description}
               </p>
@@ -558,13 +676,15 @@ const WomensCollection = () => {
           <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
             <div className="text-left">
               {banner.subtitle && (
-                <h3 className="text-lg text-[#79300f] font-semibold uppercase mb-3 dark:text-[#f6d110]">
+                <h3 className="text-lg text-[#79300f] dark:text-[#f6d110] font-semibold uppercase mb-3">
                   {banner.subtitle}
                 </h3>
               )}
               <h2 className="text-[42px] font-dm-serif mb-6 text-[#79300f] dark:text-[#f6d110]">
                 {banner.title} <br />
-                <span className="text-[#79300f] dark:text-[#f6d110]">{banner.titleHighlight}</span>
+                <span className="text-[#79300f] dark:text-[#f6d110]">
+                  {banner.titleHighlight}
+                </span>
               </h2>
               <p className="text-[18px] mb-6 text-[#5a2408] dark:text-gray-300 leading-relaxed">
                 {banner.description}
@@ -592,6 +712,143 @@ const WomensCollection = () => {
 
     return null;
   };
+
+  // Quick View Modal from Gift
+  const QuickViewModal = () => {
+    if (!quickViewProduct) {
+      console.log('QuickViewModal: No product selected');
+      return null;
+    }
+
+    const handleClose = () => {
+      console.log('Closing QuickViewModal for product:', quickViewProduct._id);
+      setQuickViewProduct(null);
+    };
+
+    return (
+      <AnimatePresence>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={handleClose}
+        >
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.8, opacity: 0 }}
+            className="bg-white dark:bg-gray-800 rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-bold text-[#79300f] dark:text-[#f6d110]">
+                Quick View
+              </h3>
+              <button
+                onClick={handleClose}
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                aria-label="Close quick view"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="grid md:grid-cols-2 gap-8">
+              <div>
+                <img
+                  src={quickViewProduct.images?.[0] || '/images/default-gift.png'}
+                  alt={quickViewProduct.name || 'Product'}
+                  className="w-full h-64 object-contain rounded-2xl bg-gray-100 dark:bg-gray-700"
+                  onError={(e) => {
+                    console.warn('QuickViewModal image error:', quickViewProduct.name);
+                    e.target.src = '/images/default-gift.png';
+                  }}
+                />
+              </div>
+              
+              <div className="space-y-4">
+                <h4 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                  {quickViewProduct.name || 'Unnamed Product'}
+                </h4>
+                <p className="text-gray-600 dark:text-gray-400">
+                  {quickViewProduct.description || 'No description available'}
+                </p>
+                <p className="text-2xl font-bold text-[#79300f] dark:text-[#f6d110]">
+                  ${quickViewProduct.price ? quickViewProduct.price.toFixed(2) : '0.00'}
+                </p>
+                
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => {
+                      console.log('Navigating to product details from QuickView:', quickViewProduct._id || 'No ID');
+                      if (quickViewProduct._id) {
+                        navigate(`/product/${quickViewProduct._id}`);
+                        handleClose();
+                      } else {
+                        addNotification('Product details not available', 'error');
+                      }
+                    }}
+                    className="flex-1 bg-gradient-to-r from-[#79300f] to-[#5a2408] text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
+                  >
+                    View Details
+                  </button>
+                  <button
+                    onClick={() => {
+                      console.log('Toggling wishlist from QuickView:', quickViewProduct._id || 'No ID');
+                      if (quickViewProduct._id) {
+                        toggleWishlist(quickViewProduct);
+                        addNotification(
+                          isInWishlist(quickViewProduct._id) ? 'Removed from wishlist' : 'Added to wishlist!',
+                          'success'
+                        );
+                      } else {
+                        addNotification('Unable to update wishlist', 'error');
+                      }
+                    }}
+                    className="px-4 py-3 border-2 border-[#79300f] text-[#79300f] rounded-xl hover:bg-[#79300f] hover:text-white transition-all duration-300"
+                    aria-label="Add to wishlist"
+                  >
+                    <Heart size={20} className={isInWishlist(quickViewProduct._id) ? 'fill-red-600 text-red-600' : ''} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      </AnimatePresence>
+    );
+  };
+
+  // Notification System from Gift
+  const NotificationSystem = () => (
+    <div className="fixed top-4 right-4 z-50 space-y-2">
+      <AnimatePresence>
+        {cartNotifications.map((notification) => (
+          <motion.div
+            key={notification.id}
+            initial={{ opacity: 0, x: 100, scale: 0.8 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 100, scale: 0.8 }}
+            className={`p-4 rounded-2xl shadow-lg backdrop-blur-sm border max-w-sm ${
+              notification.type === 'success' 
+                ? 'bg-green-500/90 text-white border-green-400' 
+                : 'bg-red-500/90 text-white border-red-400'
+            }`}
+          >
+            <div className="flex items-center space-x-3">
+              {notification.type === 'success' ? (
+                <CheckCircle size={20} />
+              ) : (
+                <AlertCircle size={20} />
+              )}
+              <span className="font-medium">{notification.message}</span>
+            </div>
+          </motion.div>
+        ))}
+      </AnimatePresence>
+    </div>
+  );
 
   if (error) {
     return (
@@ -625,6 +882,8 @@ const WomensCollection = () => {
   return (
     <div className="min-h-screen bg-[#F2F2F2] text-[#79300f] dark:bg-[#0d0603] dark:text-[#f6d110]">
       <Header darkMode={darkMode} setDarkMode={setDarkMode} />
+      <NotificationSystem />
+      <QuickViewModal />
       
       <main>
         {/* Hero Section */}
@@ -635,7 +894,10 @@ const WomensCollection = () => {
           viewport={{ once: false, amount: 0.4 }}
           className="text-center px-6 py-16 bg-gradient-to-b from-[#F2F2F2] to-[#E8E8E8] dark:from-[#0d0603] dark:to-[#1a1410]"
         >
-          <motion.h1 variants={fadeIn('up', 0.3)} className="text-[60px] font-dm-serif mb-6 text-[#79300f] dark:text-[#f6d110]">
+          <motion.h1 
+            variants={fadeIn('up', 0.3)} 
+            className="text-[60px] font-dm-serif mb-6 text-[#79300f] dark:text-[#f6d110]"
+          >
             Women's Fragrances
           </motion.h1>
           <motion.p
@@ -692,4 +954,4 @@ const WomensCollection = () => {
   );
 };
 
-export default WomensCollection;
+export default WomensCollection; 

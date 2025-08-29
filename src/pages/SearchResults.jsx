@@ -8,7 +8,7 @@ import { fadeIn } from '../variants';
 import { useCart } from '@/CartContext';
 import { useWishlist } from '@/WishlistContext';
 import { FiHeart, FiFilter, FiX } from 'react-icons/fi';
-import { searchProducts } from '../data/productData';
+import ProductService from '../services/productService';
 
 const SearchResults = () => {
   const [darkMode, setDarkMode] = useState(false);
@@ -49,37 +49,37 @@ const SearchResults = () => {
     performSearch(query);
   }, [location.search]);
 
-  // Perform search
+  // Perform search using ProductService
   const performSearch = async (query) => {
     setIsLoading(true);
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      const results = searchProducts(query, filters);
-      setSearchResults(results);
-      setFilteredResults(results);
+      const response = await ProductService.searchProducts(query, {
+        category: filters.category,
+        minPrice: filters.priceRange.min,
+        maxPrice: filters.priceRange.max,
+        limit: 20
+      });
+
+      if (response.success) {
+        setSearchResults(response.data);
+        setFilteredResults(response.data);
+      } else {
+        console.error('Search failed:', response.message);
+        setSearchResults([]);
+        setFilteredResults([]);
+      }
     } catch (error) {
       console.error('Search error:', error);
+      setSearchResults([]);
+      setFilteredResults([]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Apply filters and sorting
+  // Apply client-side sorting
   useEffect(() => {
     let filtered = [...searchResults];
-
-    // Apply category filter
-    if (filters.category) {
-      filtered = filtered.filter(product => product.category === filters.category);
-    }
-
-    // Apply price range filter
-    filtered = filtered.filter(product => 
-      product.price >= filters.priceRange.min && 
-      product.price <= filters.priceRange.max
-    );
 
     // Apply sorting
     filtered.sort((a, b) => {
@@ -95,7 +95,7 @@ const SearchResults = () => {
     });
 
     setFilteredResults(filtered);
-  }, [searchResults, filters]);
+  }, [searchResults, filters.sortBy]);
 
   // Handle new search
   const handleSearch = (e) => {
@@ -109,6 +109,8 @@ const SearchResults = () => {
       ...prev,
       [key]: value
     }));
+    // Trigger new search with updated filters
+    performSearch(searchQuery);
   };
 
   // Clear filters
@@ -118,6 +120,12 @@ const SearchResults = () => {
       priceRange: { min: 0, max: 1000 },
       sortBy: 'name'
     });
+    performSearch(searchQuery);
+  };
+
+  // Handle product click to navigate to product detail page
+  const handleProductClick = (productId) => {
+    navigate(`/product/${productId}`);
   };
 
   // Product Card Component
@@ -137,14 +145,15 @@ const SearchResults = () => {
           onClick={() => toggleWishlist(product)}
           className="absolute top-4 right-4 text-[#79300f] hover:text-red-600 z-10 bg-white/80 backdrop-blur-sm rounded-full p-2 shadow-md transition-all duration-200 hover:bg-white"
         >
-          <FiHeart size={18} className={isInWishlist(product.id) ? 'fill-red-600' : ''} />
+          <FiHeart size={18} className={isInWishlist(product._id) ? 'fill-red-600' : ''} />
         </button>
 
         <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 mb-4 shadow-inner">
           <img 
-            src={isHovered && product.hoverImage ? product.hoverImage : product.image} 
+            src={isHovered && product.hoverImage ? product.hoverImage : (product.images?.[0] || '/images/placeholder-image.jpg?url')} 
             alt={product.name} 
-            className="h-[200px] w-full object-contain transition-all duration-300 group-hover:scale-105" 
+            className="h-[200px] w-full object-contain transition-all duration-300 group-hover:scale-105 cursor-pointer" 
+            onClick={() => handleProductClick(product._id)}
           />
         </div>
 
@@ -158,14 +167,19 @@ const SearchResults = () => {
             }`}>
               {product.category.toUpperCase()}
             </span>
-            {product.collection && (
+            {product.productCollection && (
               <span className="px-2 py-1 text-xs rounded-full bg-[#79300f]/10 text-[#79300f] font-medium">
-                {product.collection.replace('-', ' ').toUpperCase()}
+                {product.productCollection.replace('-', ' ').toUpperCase()}
               </span>
             )}
           </div>
           
-          <h3 className="text-[20px] font-alata text-[#5a2408] font-bold">{product.name}</h3>
+          <h3 
+            className="text-[20px] font-alata text-[#5a2408] font-bold cursor-pointer hover:underline"
+            onClick={() => handleProductClick(product._id)}
+          >
+            {product.name}
+          </h3>
           <p className="text-[12px] text-[#8b4513] italic leading-relaxed">
             {product.description}
           </p>
@@ -354,16 +368,6 @@ const SearchResults = () => {
                     Clear Filters
                   </Button>
                 </div>
-                
-                {/* Suggestions */}
-                <div className="mt-8">
-                  <h4 className="font-semibold mb-4 dark:text-white">You might like:</h4>
-                  <div className="flex flex-wrap justify-center gap-2">
-                    <Link to="/mens-collection" className="px-4 py-2 bg-[#79300f]/10 text-[#79300f] rounded-full hover:bg-[#79300f]/20 transition-colors">Men's Collection</Link>
-                    <Link to="/womens-collection" className="px-4 py-2 bg-[#79300f]/10 text-[#79300f] rounded-full hover:bg-[#79300f]/20 transition-colors">Women's Collection</Link>
-                    <Link to="/unisex-collection" className="px-4 py-2 bg-[#79300f]/10 text-[#79300f] rounded-full hover:bg-[#79300f]/20 transition-colors">Unisex Collection</Link>
-                  </div>
-                </div>
               </motion.div>
             ) : (
               <motion.div
@@ -373,7 +377,7 @@ const SearchResults = () => {
                 className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
               >
                 {filteredResults.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                  <ProductCard key={product._id} product={product} />
                 ))}
               </motion.div>
             )}
