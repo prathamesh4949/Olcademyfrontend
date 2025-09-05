@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import Header from '../components/common/Header';
 import Footer from '../components/common/Footer';
 import Button from '../components/ui/Button';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { fadeIn } from '../variants';
 import { useCart } from '@/CartContext';
 import { useWishlist } from '@/WishlistContext';
 import { FiHeart, FiFilter, FiX } from 'react-icons/fi';
+import { CheckCircle, AlertCircle, RefreshCw, ShoppingBag } from 'lucide-react';
 import ProductService from '../services/productService';
 
 const SearchResults = () => {
@@ -24,12 +25,24 @@ const SearchResults = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   
+  // Enhanced notification system
+  const [cartNotifications, setCartNotifications] = useState([]);
+  
   // Filter states
   const [filters, setFilters] = useState({
     category: '',
     priceRange: { min: 0, max: 1000 },
     sortBy: 'name'
   });
+
+  // Enhanced notification system
+  const addNotification = useCallback((message, type = 'success') => {
+    const id = Date.now();
+    setCartNotifications(prev => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setCartNotifications(prev => prev.filter(n => n.id !== id));
+    }, 3000);
+  }, []);
 
   useEffect(() => {
     const stored = localStorage.getItem('darkMode');
@@ -128,9 +141,75 @@ const SearchResults = () => {
     navigate(`/product/${productId}`);
   };
 
-  // Product Card Component
+  // Product validation function
+  const validateProduct = (product) => {
+    const requiredFields = ['_id', 'name', 'price'];
+    return requiredFields.every(field => product[field]);
+  };
+
+  // Product Card Component with enhanced add to cart functionality
   const ProductCard = ({ product }) => {
     const [isHovered, setIsHovered] = useState(false);
+    const [isAddingToCart, setIsAddingToCart] = useState(false);
+
+    // Enhanced add to cart handler
+    const handleAddToCart = async (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+
+      if (!validateProduct(product)) {
+        addNotification('Product information is incomplete', 'error');
+        return;
+      }
+
+      setIsAddingToCart(true);
+
+      const cartItem = {
+        id: product._id.toString(),
+        name: product.name,
+        price: Number(product.price),
+        image: product.images && product.images.length > 0 ? product.images[0] : '/images/placeholder-image.jpg',
+        quantity: 1,
+        selectedSize: product.sizes && product.sizes.length > 0 ? product.sizes[0].size : null,
+        personalization: null
+      };
+
+      try {
+        const success = await addToCart(cartItem);
+        if (success !== false) {
+          addNotification(`Added ${product.name} to cart!`, 'success');
+        } else {
+          addNotification('Failed to add item to cart', 'error');
+        }
+      } catch (error) {
+        console.error('Add to cart error:', error);
+        addNotification('Something went wrong. Please try again.', 'error');
+      } finally {
+        setIsAddingToCart(false);
+      }
+    };
+
+    // Enhanced wishlist handler
+    const handleWishlistToggle = (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+
+      if (!product._id) {
+        addNotification('Unable to add to wishlist', 'error');
+        return;
+      }
+
+      try {
+        const wasInWishlist = isInWishlist(product._id);
+        toggleWishlist(product);
+        addNotification(
+          wasInWishlist ? 'Removed from wishlist' : 'Added to wishlist!',
+          'success'
+        );
+      } catch (error) {
+        addNotification('Failed to update wishlist', 'error');
+      }
+    };
     
     return (
       <motion.div
@@ -142,7 +221,7 @@ const SearchResults = () => {
         onMouseLeave={() => setIsHovered(false)}
       >
         <button
-          onClick={() => toggleWishlist(product)}
+          onClick={handleWishlistToggle}
           className="absolute top-4 right-4 text-[#79300f] hover:text-red-600 z-10 bg-white/80 backdrop-blur-sm rounded-full p-2 shadow-md transition-all duration-200 hover:bg-white"
         >
           <FiHeart size={18} className={isInWishlist(product._id) ? 'fill-red-600' : ''} />
@@ -150,10 +229,13 @@ const SearchResults = () => {
 
         <div className="bg-white/50 backdrop-blur-sm rounded-xl p-4 mb-4 shadow-inner">
           <img 
-            src={isHovered && product.hoverImage ? product.hoverImage : (product.images?.[0] || '/images/placeholder-image.jpg?url')} 
+            src={isHovered && product.hoverImage ? product.hoverImage : (product.images?.[0] || '/images/placeholder-image.jpg')} 
             alt={product.name} 
             className="h-[200px] w-full object-contain transition-all duration-300 group-hover:scale-105 cursor-pointer" 
             onClick={() => handleProductClick(product._id)}
+            onError={(e) => {
+              e.target.src = '/images/placeholder-image.jpg';
+            }}
           />
         </div>
 
@@ -165,7 +247,7 @@ const SearchResults = () => {
               product.category === 'unisex' ? 'bg-purple-100 text-purple-800' :
               'bg-gray-100 text-gray-800'
             }`}>
-              {product.category.toUpperCase()}
+              {product.category ? product.category.toUpperCase() : 'PRODUCT'}
             </span>
             {product.productCollection && (
               <span className="px-2 py-1 text-xs rounded-full bg-[#79300f]/10 text-[#79300f] font-medium">
@@ -185,26 +267,67 @@ const SearchResults = () => {
           </p>
           
           <div className="flex items-center justify-between pt-2">
-            <p className="text-[20px] font-bold text-[#79300f]">${product.price}</p>
+            <p className="text-[20px] font-bold text-[#79300f]">
+              ${typeof product.price === 'number' ? product.price.toFixed(2) : '0.00'}
+            </p>
             <div className="bg-[#79300f]/10 px-2 py-1 rounded-full">
               <span className="text-xs text-[#79300f] font-medium">PREMIUM</span>
             </div>
           </div>
         </div>
 
-        <Button 
-          onClick={() => addToCart(product)} 
-          className="w-full mt-4 bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white font-semibold py-3 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg"
+        <motion.button
+          onClick={handleAddToCart}
+          disabled={isAddingToCart}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="w-full mt-4 bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white font-semibold py-3 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
         >
-          Add to Cart
-        </Button>
+          {isAddingToCart ? (
+            <RefreshCw size={18} className="animate-spin" />
+          ) : (
+            <ShoppingBag size={18} />
+          )}
+          <span>{isAddingToCart ? 'Adding...' : 'Add to Cart'}</span>
+        </motion.button>
       </motion.div>
     );
   };
 
+  // Notification System Component
+  const NotificationSystem = () => (
+    <div className="fixed top-4 right-4 z-50 space-y-2">
+      <AnimatePresence>
+        {cartNotifications.map((notification) => (
+          <motion.div
+            key={notification.id}
+            initial={{ opacity: 0, x: 100, scale: 0.8 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 100, scale: 0.8 }}
+            className={`p-4 rounded-2xl shadow-lg backdrop-blur-sm border max-w-sm ${
+              notification.type === 'success' 
+                ? 'bg-green-500/90 text-white border-green-400' 
+                : 'bg-red-500/90 text-white border-red-400'
+            }`}
+          >
+            <div className="flex items-center space-x-3">
+              {notification.type === 'success' ? (
+                <CheckCircle size={20} />
+              ) : (
+                <AlertCircle size={20} />
+              )}
+              <span className="font-medium">{notification.message}</span>
+            </div>
+          </motion.div>
+        ))}
+      </AnimatePresence>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-[#F2F2F2] text-[#79300f] dark:bg-[#0d0603] dark:text-[#f6d110]">
       <Header darkMode={darkMode} setDarkMode={setDarkMode} />
+      <NotificationSystem />
       
       <main className="max-w-7xl mx-auto px-4 py-8">
         {/* Search Header */}

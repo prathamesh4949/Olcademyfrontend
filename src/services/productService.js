@@ -1,7 +1,4 @@
-// 3) ProductService.js
-// No changes needed here, as FormData append for multiple 'images' is correct.
-// Ensure your backend requires auth if needed, and token is stored correctly.
-
+// ProductService.js
 import { API_BASE_URL } from '../api/constant';
 
 class ProductService {
@@ -145,6 +142,8 @@ class ProductService {
           Array.from(productData[key]).forEach(file => {
             formData.append('images', file);
           });
+        } else if (key === 'hoverImage' && productData[key]) {
+          formData.append('hoverImage', productData[key]); // Append single hover image
         } else if (key === 'sizes' || key === 'fragrance_notes' || key === 'personalization') {
           formData.append(key, JSON.stringify(productData[key]));
         } else if (Array.isArray(productData[key])) {
@@ -174,6 +173,8 @@ class ProductService {
           Array.from(productData[key]).forEach(file => {
             formData.append('images', file);
           });
+        } else if (key === 'hoverImage' && productData[key]) {
+          formData.append('hoverImage', productData[key]); // Append single hover image
         } else if (key === 'sizes' || key === 'fragrance_notes' || key === 'personalization') {
           formData.append(key, JSON.stringify(productData[key]));
         } else if (Array.isArray(productData[key])) {
@@ -225,6 +226,18 @@ class ProductService {
       });
     } catch (error) {
       console.error('Error deleting product image:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Delete product hover image
+  async deleteProductHoverImage(productId) {
+    try {
+      return await this.apiCall(`/api/products/${productId}/hover-image`, {
+        method: 'DELETE'
+      });
+    } catch (error) {
+      console.error('Error deleting product hover image:', error);
       return { success: false, error: error.message };
     }
   }

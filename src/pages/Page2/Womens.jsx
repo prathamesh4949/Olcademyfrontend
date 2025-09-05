@@ -7,14 +7,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { fadeIn } from '../../variants';
 import { useCart } from '@/CartContext';
 import { useWishlist } from '@/WishlistContext';
-import { ChevronLeft, ChevronRight, Star, RefreshCw, ShoppingBag, Eye, CheckCircle, AlertCircle, Heart } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Star, RefreshCw, ShoppingBag, Eye, CheckCircle, AlertCircle, Heart, ShoppingCart } from 'lucide-react';
 import { FiHeart } from 'react-icons/fi';
 import ProductService from '../../services/productService';
 
 const WomensCollection = () => {
   const navigate = useNavigate();
   const [darkMode, setDarkMode] = useState(false);
-  const { addToCart } = useCart();
+  const { addToCart, isInCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   
   // State for products from backend
@@ -39,11 +39,11 @@ const WomensCollection = () => {
   const [bestSellersIndex, setBestSellersIndex] = useState(0);
   const [premiumIndex, setPremiumIndex] = useState(0);
 
-  // Enhanced state management from Gift
+  // Enhanced state management
   const [cartNotifications, setCartNotifications] = useState([]);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
 
-  // Enhanced notification system from Gift
+  // Enhanced notification system
   const addNotification = useCallback((message, type = 'success') => {
     const id = Date.now();
     setCartNotifications(prev => [...prev, { id, message, type }]);
@@ -225,14 +225,15 @@ const WomensCollection = () => {
     }
   };
 
-  // Product Card from GiftCollection
+  // Product Card Component
   const ProductCard = memo(({ product, isCompact = false, collectionName = '' }) => {
     const [isHovered, setIsHovered] = useState(false);
-    const [imageError, setImageError] = useState(false);
+    const [imageError, setImageError] = useState({ primary: false, hover: false });
     const [isAddingToCart, setIsAddingToCart] = useState(false);
     const [imageLoading, setImageLoading] = useState(true);
 
     if (!product) {
+      console.warn('ProductCard: No product data provided');
       return (
         <div className={`${isCompact ? 'w-[300px]' : 'w-full'} bg-gray-200 dark:bg-gray-700 animate-pulse rounded-2xl p-6`}>
           <div className="h-[200px] bg-gray-300 dark:bg-gray-600 rounded-xl mb-4"></div>
@@ -249,6 +250,9 @@ const WomensCollection = () => {
       const requiredFields = ['_id', 'name', 'price'];
       return requiredFields.every(field => product[field]);
     };
+
+    // Check if product is in cart
+    const productInCart = isInCart(product._id?.toString(), product.sizes && product.sizes.length > 0 ? product.sizes[0].size : null);
 
     const handleAddToCart = async (e) => {
       e.stopPropagation();
@@ -285,6 +289,11 @@ const WomensCollection = () => {
       }
     };
 
+    const handleViewInCart = (e) => {
+      e.stopPropagation();
+      navigate('/product-cart');
+    };
+
     const handleWishlistToggle = (e) => {
       e.stopPropagation();
 
@@ -295,12 +304,25 @@ const WomensCollection = () => {
 
       try {
         const wasInWishlist = isInWishlist(product._id);
-        toggleWishlist(product);
+        
+        // Transform the product object to match WishlistContext expectations
+        const wishlistProduct = {
+          id: product._id.toString(),
+          name: product.name,
+          price: product.price,
+          image: product.images && product.images.length > 0 ? product.images[0] : '/images/default-gift.png',
+          description: product.description || '',
+          category: product.category || '',
+          selectedSize: null
+        };
+        
+        toggleWishlist(wishlistProduct);
         addNotification(
           wasInWishlist ? 'Removed from wishlist' : 'Added to wishlist!',
           'success'
         );
       } catch (error) {
+        console.error('Wishlist toggle error:', error);
         addNotification('Failed to update wishlist', 'error');
       }
     };
@@ -333,16 +355,18 @@ const WomensCollection = () => {
     };
 
     const getProductImage = () => {
-      if (imageError) return '/images/default-gift.png';
-      if (isHovered && product.hoverImage) return product.hoverImage;
-      if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+      if (isHovered && product.hoverImage && !imageError.hover) {
+        return product.hoverImage;
+      }
+      if (product.images && Array.isArray(product.images) && product.images.length > 0 && !imageError.primary) {
         return product.images[0];
       }
       return '/images/default-gift.png';
     };
 
-    const handleImageError = (e) => {
-      setImageError(true);
+    const handleImageError = (e, type = 'primary') => {
+      console.warn(`ProductCard (${product._id}): Image error for ${type} image`, e.target.src);
+      setImageError(prev => ({ ...prev, [type]: true }));
       setImageLoading(false);
       e.target.src = '/images/default-gift.png';
     };
@@ -400,6 +424,13 @@ const WomensCollection = () => {
           </div>
         )}
 
+        {/* In Cart Badge - Updated Color */}
+        {productInCart && (
+          <div className="absolute top-4 left-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md z-10 border border-emerald-400">
+            ✓ IN CART
+          </div>
+        )}
+
         {/* Image Container */}
         <div className="bg-white/50 dark:bg-black/20 backdrop-blur-sm rounded-xl p-4 mb-4 shadow-inner relative overflow-hidden">
           {imageLoading && (
@@ -411,7 +442,7 @@ const WomensCollection = () => {
             src={getProductImage()}
             alt={product.name || 'Gift'}
             className={`${isCompact ? 'h-[200px]' : 'h-[300px]'} w-full object-contain transition-all duration-500 group-hover:scale-105 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
-            onError={handleImageError}
+            onError={(e) => handleImageError(e, isHovered ? 'hover' : 'primary')}
             onLoad={handleImageLoad}
             loading="lazy"
           />
@@ -474,20 +505,28 @@ const WomensCollection = () => {
           </div>
         </div>
 
-        {/* Action Button */}
+        {/* Action Button - Updated Colors */}
         <motion.button
-          onClick={handleAddToCart}
+          onClick={productInCart ? handleViewInCart : handleAddToCart}
           disabled={isAddingToCart}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="w-full bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white font-semibold py-3 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 mt-auto"
+          className={`w-full font-semibold py-3 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 mt-auto ${
+            productInCart 
+              ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-700 hover:via-teal-700 hover:to-cyan-700 text-white border border-emerald-400/30 shadow-emerald-500/20'
+              : 'bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white'
+          }`}
         >
           {isAddingToCart ? (
             <RefreshCw size={18} className="animate-spin" />
+          ) : productInCart ? (
+            <ShoppingCart size={18} />
           ) : (
             <ShoppingBag size={18} />
           )}
-          <span>{isAddingToCart ? 'Adding...' : 'Add to Cart'}</span>
+          <span>
+            {isAddingToCart ? 'Adding...' : productInCart ? 'View in Cart' : 'Add to Cart'}
+          </span>
         </motion.button>
       </motion.div>
     );
@@ -638,7 +677,10 @@ const WomensCollection = () => {
                 </h3>
               )}
               <h2 className="text-[42px] font-dm-serif mb-6 text-[#79300f] dark:text-[#f6d110]">
-                {banner.title}
+                {banner.title} <br />
+                <span className="text-[#79300f] dark:text-[#f6d110]">
+                  {banner.titleHighlight}
+                </span>
               </h2>
               <p className="text-[18px] mb-6 text-[#5a2408] dark:text-gray-300 leading-relaxed">
                 {banner.description}
@@ -651,11 +693,11 @@ const WomensCollection = () => {
               </Button>
             </div>
             <div className="relative">
-              <div className="bg-gradient-to-br from-[#f6d110]/20 to-[#79300f]/20 rounded-2xl p-8">
+              <div className="bg-gradient-to-br from-[#79300f]/10 to-[#5a2408]/10 rounded-2xl p-8">
                 <img
-                  src={banner.image || '/images/baner2.jpeg'}
+                  src={banner.image || '/images/newimg1.PNG'}
                   alt={banner.altText || banner.title}
-                  className="w-full h-[400px] object-cover rounded-xl shadow-lg"
+                  className="w-full h-[400px] object-contain rounded-xl"
                 />
               </div>
             </div>
@@ -713,17 +755,74 @@ const WomensCollection = () => {
     return null;
   };
 
-  // Quick View Modal from Gift
+  // Quick View Modal
   const QuickViewModal = () => {
     if (!quickViewProduct) {
-      console.log('QuickViewModal: No product selected');
       return null;
     }
 
     const handleClose = () => {
-      console.log('Closing QuickViewModal for product:', quickViewProduct._id);
       setQuickViewProduct(null);
     };
+
+    const handleQuickViewWishlist = () => {
+      if (quickViewProduct._id) {
+        try {
+          const wishlistProduct = {
+            id: quickViewProduct._id.toString(),
+            name: quickViewProduct.name,
+            price: quickViewProduct.price,
+            image: quickViewProduct.images && quickViewProduct.images.length > 0 ? quickViewProduct.images[0] : '/images/default-gift.png',
+            description: quickViewProduct.description || '',
+            category: quickViewProduct.category || '',
+            selectedSize: null
+          };
+          
+          toggleWishlist(wishlistProduct);
+          addNotification(
+            isInWishlist(quickViewProduct._id) ? 'Removed from wishlist' : 'Added to wishlist!',
+            'success'
+          );
+        } catch (error) {
+          console.error('Wishlist toggle error:', error);
+          addNotification('Failed to update wishlist', 'error');
+        }
+      } else {
+        addNotification('Unable to update wishlist', 'error');
+      }
+    };
+
+    const handleQuickViewAddToCart = async () => {
+      if (!quickViewProduct._id) {
+        addNotification('Product not available', 'error');
+        return;
+      }
+
+      const cartItem = {
+        id: quickViewProduct._id.toString(),
+        name: quickViewProduct.name,
+        price: Number(quickViewProduct.price),
+        image: quickViewProduct.images && quickViewProduct.images.length > 0 ? quickViewProduct.images[0] : '/images/default-gift.png',
+        quantity: 1,
+        selectedSize: quickViewProduct.sizes && quickViewProduct.sizes.length > 0 ? quickViewProduct.sizes[0].size : null,
+        personalization: null
+      };
+
+      try {
+        const success = await addToCart(cartItem);
+        if (success) {
+          addNotification(`Added ${quickViewProduct.name} to cart!`, 'success');
+          handleClose();
+        } else {
+          addNotification('Failed to add item to cart', 'error');
+        }
+      } catch (error) {
+        console.error('❌ Quick View Add to cart error:', error);
+        addNotification('Something went wrong. Please try again.', 'error');
+      }
+    };
+
+    const productInQuickViewCart = isInCart(quickViewProduct._id?.toString(), quickViewProduct.sizes && quickViewProduct.sizes.length > 0 ? quickViewProduct.sizes[0].size : null);
 
     return (
       <AnimatePresence>
@@ -747,10 +846,10 @@ const WomensCollection = () => {
               </h3>
               <button
                 onClick={handleClose}
-                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-2xl"
                 aria-label="Close quick view"
               >
-                ✕
+                ×
               </button>
             </div>
             
@@ -761,7 +860,6 @@ const WomensCollection = () => {
                   alt={quickViewProduct.name || 'Product'}
                   className="w-full h-64 object-contain rounded-2xl bg-gray-100 dark:bg-gray-700"
                   onError={(e) => {
-                    console.warn('QuickViewModal image error:', quickViewProduct.name);
                     e.target.src = '/images/default-gift.png';
                   }}
                 />
@@ -779,9 +877,35 @@ const WomensCollection = () => {
                 </p>
                 
                 <div className="flex gap-4">
+                  {productInQuickViewCart ? (
+                    <button
+                      onClick={() => {
+                        navigate('/product-cart');
+                        handleClose();
+                      }}
+                      className="flex-1 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-700 hover:via-teal-700 hover:to-cyan-700 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center space-x-2 border border-emerald-400/30 shadow-emerald-500/20"
+                    >
+                      <ShoppingCart size={20} />
+                      <span>View in Cart</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleQuickViewAddToCart}
+                      className="flex-1 bg-gradient-to-r from-[#79300f] to-[#5a2408] text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center space-x-2"
+                    >
+                      <ShoppingBag size={20} />
+                      <span>Add to Cart</span>
+                    </button>
+                  )}
+                  <button
+                    onClick={handleQuickViewWishlist}
+                    className="px-4 py-3 border-2 border-[#79300f] text-[#79300f] rounded-xl hover:bg-[#79300f] hover:text-white transition-all duration-300"
+                    aria-label="Add to wishlist"
+                  >
+                    <Heart size={20} className={isInWishlist(quickViewProduct._id) ? 'fill-red-600 text-red-600' : ''} />
+                  </button>
                   <button
                     onClick={() => {
-                      console.log('Navigating to product details from QuickView:', quickViewProduct._id || 'No ID');
                       if (quickViewProduct._id) {
                         navigate(`/product/${quickViewProduct._id}`);
                         handleClose();
@@ -789,27 +913,10 @@ const WomensCollection = () => {
                         addNotification('Product details not available', 'error');
                       }
                     }}
-                    className="flex-1 bg-gradient-to-r from-[#79300f] to-[#5a2408] text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
+                    className="px-4 py-3 border-2 border-gray-300 text-gray-600 rounded-xl hover:bg-gray-300 hover:text-gray-800 transition-all duration-300"
+                    aria-label="View full details"
                   >
-                    View Details
-                  </button>
-                  <button
-                    onClick={() => {
-                      console.log('Toggling wishlist from QuickView:', quickViewProduct._id || 'No ID');
-                      if (quickViewProduct._id) {
-                        toggleWishlist(quickViewProduct);
-                        addNotification(
-                          isInWishlist(quickViewProduct._id) ? 'Removed from wishlist' : 'Added to wishlist!',
-                          'success'
-                        );
-                      } else {
-                        addNotification('Unable to update wishlist', 'error');
-                      }
-                    }}
-                    className="px-4 py-3 border-2 border-[#79300f] text-[#79300f] rounded-xl hover:bg-[#79300f] hover:text-white transition-all duration-300"
-                    aria-label="Add to wishlist"
-                  >
-                    <Heart size={20} className={isInWishlist(quickViewProduct._id) ? 'fill-red-600 text-red-600' : ''} />
+                    <Eye size={20} />
                   </button>
                 </div>
               </div>
@@ -820,7 +927,7 @@ const WomensCollection = () => {
     );
   };
 
-  // Notification System from Gift
+  // Notification System
   const NotificationSystem = () => (
     <div className="fixed top-4 right-4 z-50 space-y-2">
       <AnimatePresence>
@@ -954,4 +1061,4 @@ const WomensCollection = () => {
   );
 };
 
-export default WomensCollection; 
+export default WomensCollection;

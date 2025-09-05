@@ -103,7 +103,7 @@ const ProductCartSection = () => {
         <Footer />
       </div>
     );
-  }
+  };
 
   return (
     <div className="bg-[#F5F5F5] dark:bg-[#220104] font-sans text-[#3b220c] dark:text-[#f6d110] min-h-screen">
@@ -115,7 +115,7 @@ const ProductCartSection = () => {
             <button
               onClick={clearCart}
               disabled={loading}
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded shadow disabled:opacity-50 transition-colors"
+              className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow disabled:opacity-50 transition-colors"
             >
               {loading ? 'Clearing...' : 'Clear Cart'}
             </button>
@@ -259,11 +259,11 @@ const ProductCartSection = () => {
                     </p>
                     
                     <div className="flex justify-center">
-                      {/* Remove Button */}
+                      {/* Remove Button - Updated with professional color */}
                       <button
                         onClick={() => removeFromCart(item.id)}
                         disabled={loading}
-                        className="bg-red-600 hover:bg-red-700 text-white text-sm font-medium py-2 px-6 rounded-lg shadow-md disabled:opacity-50 transition-colors duration-200"
+                        className="bg-slate-500 hover:bg-slate-600 text-white text-sm font-medium py-2 px-6 rounded-lg shadow-md disabled:opacity-50 transition-colors duration-200"
                       >
                         {loading ? 'Removing...' : 'Remove'}
                       </button>

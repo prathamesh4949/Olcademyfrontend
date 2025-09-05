@@ -1,4 +1,3 @@
-// ProductDetailPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../components/common/Header';
@@ -23,7 +22,9 @@ import {
   Sparkles,
   Shield,
   Truck,
-  RotateCcw
+  RotateCcw,
+  AlertCircle,
+  CheckCircle
 } from 'lucide-react';
 import ProductService from '../services/productService';
 
@@ -45,6 +46,7 @@ const ProductDetailPage = () => {
   const [showPersonalization, setShowPersonalization] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
+  const [wishlistNotifications, setWishlistNotifications] = useState([]);
 
   // Scroll to top when component mounts or product ID changes
   useEffect(() => {
@@ -130,7 +132,7 @@ const ProductDetailPage = () => {
     };
 
     fetchProduct();
-  }, [id]);
+  }, [id, isInWishlist]);
 
   // Reset quantity when size changes
   useEffect(() => {
@@ -140,6 +142,15 @@ const ProductDetailPage = () => {
     }
   }, [selectedSize]);
 
+  // Notification system for cart and wishlist
+  const addNotification = (message, type = 'success') => {
+    const id = Date.now();
+    setWishlistNotifications(prev => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setWishlistNotifications(prev => prev.filter(n => n.id !== id));
+    }, 3000);
+  };
+
   const showSuccessNotification = () => {
     setShowNotification(true);
     setTimeout(() => setShowNotification(false), 3000);
@@ -148,22 +159,25 @@ const ProductDetailPage = () => {
   const handleAddToCart = () => {
     if (!product) {
       console.error('❌ No product data available for cart');
+      addNotification('Product information is incomplete', 'error');
       return;
     }
     
     if (product.sizes?.length > 0 && !selectedSize) {
+      addNotification('Please select a size first', 'error');
       return;
     }
 
     if (selectedSize && selectedSize.stock === 0) {
+      addNotification('Selected size is out of stock', 'error');
       return;
     }
 
     if (selectedSize && quantity > selectedSize.stock) {
+      addNotification(`Only ${selectedSize.stock} items available`, 'error');
       return;
     }
 
-    // Construct cartItem with only required fields
     const cartItem = {
       id: product._id,
       name: product.name,
@@ -178,6 +192,8 @@ const ProductDetailPage = () => {
     addToCart(cartItem).then(success => {
       if (success) {
         showSuccessNotification();
+      } else {
+        addNotification('Failed to add item to cart', 'error');
       }
     });
   };
@@ -186,6 +202,7 @@ const ProductDetailPage = () => {
     setQuantity(prev => {
       const newQuantity = Math.max(1, prev + change);
       if (selectedSize && newQuantity > selectedSize.stock) {
+        addNotification(`Only ${selectedSize.stock} items available`, 'error');
         return prev;
       }
       return newQuantity;
@@ -197,6 +214,8 @@ const ProductDetailPage = () => {
       setSelectedSize(size);
       setQuantity(1);
       console.log('🔍 Selected size:', size);
+    } else {
+      addNotification('Selected size is not available', 'error');
     }
   };
 
@@ -213,12 +232,51 @@ const ProductDetailPage = () => {
       console.log('🔍 Navigating to related product:', relatedProduct._id);
     } else {
       console.error('❌ Invalid related product ID');
+      addNotification('Unable to view related product', 'error');
     }
   };
 
   const handleWishlistToggle = () => {
-    toggleWishlist(product);
-    setIsWishlisted(!isWishlisted);
+    if (!product) {
+      addNotification('Product information is incomplete', 'error');
+      return;
+    }
+
+    const wasInWishlist = isInWishlist(product._id);
+    
+    if (wasInWishlist) {
+      const wishlistProduct = {
+        id: product._id.toString(),
+        name: product.name,
+        price: product.price,
+        image: product.images && product.images.length > 0 ? product.images[0] : '/images/default-perfume.png',
+        description: product.description || '',
+        category: product.category || '',
+        selectedSize: null
+      };
+      toggleWishlist(wishlistProduct);
+      setIsWishlisted(false);
+      addNotification('Removed from wishlist', 'success');
+    } else {
+      if (isInWishlist(product._id)) {
+        addNotification('Product already in wishlist', 'error');
+        return;
+      }
+      
+      const wishlistProduct = {
+        id: product._id.toString(),
+        name: product.name,
+        price: product.price,
+        image: product.images && product.images.length > 0 ? product.images[0] : '/images/default-perfume.png',
+        description: product.description || '',
+        category: product.category || '',
+        selectedSize: null
+      };
+      
+      toggleWishlist(wishlistProduct);
+      setIsWishlisted(true);
+      addNotification('Added to wishlist!', 'success');
+    }
   };
 
   const nextImage = () => {
@@ -232,6 +290,36 @@ const ProductDetailPage = () => {
       setSelectedImage((prev) => (prev - 1 + product.images.length) % product.images.length);
     }
   };
+
+  // Notification System
+  const NotificationSystem = () => (
+    <div className="fixed top-20 right-4 z-50 space-y-2">
+      <AnimatePresence>
+        {wishlistNotifications.map((notification) => (
+          <motion.div
+            key={notification.id}
+            initial={{ opacity: 0, x: 100, scale: 0.8 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 100, scale: 0.8 }}
+            className={`p-4 rounded-2xl shadow-lg backdrop-blur-sm border max-w-sm ${
+              notification.type === 'success' 
+                ? 'bg-green-500/90 text-white border-green-400' 
+                : 'bg-red-500/90 text-white border-red-400'
+            }`}
+          >
+            <div className="flex items-center space-x-3">
+              {notification.type === 'success' ? (
+                <CheckCircle size={20} />
+              ) : (
+                <AlertCircle size={20} />
+              )}
+              <span className="font-medium">{notification.message}</span>
+            </div>
+          </motion.div>
+        ))}
+      </AnimatePresence>
+    </div>
+  );
 
   if (loading) {
     return (
@@ -352,7 +440,10 @@ const ProductDetailPage = () => {
 
       <Header darkMode={darkMode} setDarkMode={setDarkMode} />
       
-      {/* Success Notification */}
+      {/* Notification Systems */}
+      <NotificationSystem />
+      
+      {/* Success Notification for Cart */}
       <AnimatePresence>
         {showNotification && (
           <motion.div

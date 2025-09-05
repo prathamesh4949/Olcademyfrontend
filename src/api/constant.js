@@ -1,5 +1,5 @@
 // api/constants.js
-const isDevelopment = 
+const isDevelopment =
     process.env.NODE_ENV === 'development' ||
     (typeof window !== 'undefined' && window.location.hostname === 'localhost') ||
     (typeof window !== 'undefined' && window.location.hostname === '127.0.0.1');
@@ -12,6 +12,8 @@ export const API_BASE_URL = isDevelopment ? DEVELOPMENT_BASE_URL : PRODUCTION_BA
 // API Endpoints
 export const USER_API_END_POINT = `${API_BASE_URL}/user`;
 export const ORDER_API_END_POINT = `${API_BASE_URL}/order`;
+export const CART_API_END_POINT = `${API_BASE_URL}/cart`;
+export const WISHLIST_API_END_POINT = `${API_BASE_URL}/wishlist`;  // Add this line
 export const PRODUCT_API_END_POINT = `${API_BASE_URL}/api/products`;
 
 // Frontend URL

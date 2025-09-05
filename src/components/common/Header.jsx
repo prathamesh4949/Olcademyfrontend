@@ -9,7 +9,7 @@ import { AuthContext } from "../../context/AuthContext"; // Import AuthContext
 
 const navItems = [
   {
-    label: "New",
+    label: "Home",
     path: "/",
     items: [
       "Petal Whisper",
