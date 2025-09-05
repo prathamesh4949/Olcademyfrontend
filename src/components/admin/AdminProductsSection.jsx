@@ -1,9 +1,3 @@
-// 2) Updated AdminProductsSection.jsx
-// Changes:
-// - Added keepExistingImages to productForm (default true for edit to append images)
-// - In handleEditProduct, set keepExistingImages: true
-// - In ProductModal, added checkbox for keepExistingImages in media tab for edit mode
-
 import React, { useState, useEffect } from 'react';
 import { 
   Package2,
@@ -64,6 +58,7 @@ const AdminProductsSection = () => {
     rating: '',
     tags: [],
     images: null,
+    hoverImage: null,
     sizes: [{ size: '50ml', price: '', stock: '', available: true }],
     fragrance_notes: { top: [], middle: [], base: [] },
     personalization: { available: false, max_characters: 15, price: 0 },
@@ -321,6 +316,7 @@ const AdminProductsSection = () => {
       rating: product.rating || '',
       tags: product.tags || [],
       images: null, // Reset images for editing
+      hoverImage: null, // Reset hoverImage for editing
       sizes: product.sizes || [{ size: '50ml', price: '', stock: '', available: true }],
       fragrance_notes: product.fragrance_notes || { top: [], middle: [], base: [] },
       personalization: product.personalization || { available: false, max_characters: 15, price: 0 },
@@ -352,6 +348,7 @@ const AdminProductsSection = () => {
       rating: '',
       tags: [],
       images: null,
+      hoverImage: null,
       sizes: [{ size: '50ml', price: '', stock: '', available: true }],
       fragrance_notes: { top: [], middle: [], base: [] },
       personalization: { available: false, max_characters: 15, price: 0 },
@@ -990,6 +987,22 @@ const ProductModal = ({
     }
   };
 
+  const handleDeleteHoverImage = async () => {
+    if (!existingProduct) return;
+    try {
+      const result = await ProductService.deleteProductHoverImage(existingProduct._id);
+      if (result.success) {
+        fetchProducts(); // Refresh the product list
+        alert('Hover image deleted successfully. Please reopen the modal to see changes.');
+      } else {
+        alert(result.message || 'Failed to delete hover image');
+      }
+    } catch (error) {
+      console.error('Error deleting hover image:', error);
+      alert('Failed to delete hover image');
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
@@ -1539,6 +1552,63 @@ const ProductModal = ({
                     </div>
                     <p className="text-sm text-amber-600 mt-2">
                       💡 Tip: Upload new images to replace existing ones, or keep existing images by not selecting new ones
+                    </p>
+                  </div>
+                )}
+
+                {/* Hover Image Upload */}
+                <div className="mt-8">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Hover Image
+                  </label>
+                  <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-amber-500 transition-colors">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => onChange('hoverImage', e.target.files[0])}
+                      className="hidden"
+                      id="hover-image-upload"
+                    />
+                    <label htmlFor="hover-image-upload" className="cursor-pointer">
+                      <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-lg font-medium text-gray-600 mb-2">
+                        Click to upload hover image
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        PNG, JPG, JPEG up to 5MB (Single image, different from main image)
+                      </p>
+                    </label>
+                  </div>
+                  <p className="text-sm text-gray-500 mt-2">This image will be shown on hover in product cards (optional)</p>
+                </div>
+
+                {/* Show existing hover image if editing */}
+                {isEdit && existingProduct && existingProduct.hoverImage && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-4">
+                      Current Hover Image
+                    </label>
+                    <div className="relative group w-48">
+                      <img
+                        src={existingProduct.hoverImage}
+                        alt="Hover image"
+                        className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                        onError={(e) => {
+                          e.target.src = '/images/default-perfume.png';
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all rounded-lg flex items-center justify-center">
+                        <button
+                          type="button"
+                          onClick={handleDeleteHoverImage}
+                          className="opacity-0 group-hover:opacity-100 bg-red-600 text-white p-2 rounded-full hover:bg-red-700 transition-all"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                    <p className="text-sm text-amber-600 mt-2">
+                      💡 Tip: Upload a new hover image to replace the existing one
                     </p>
                   </div>
                 )}
