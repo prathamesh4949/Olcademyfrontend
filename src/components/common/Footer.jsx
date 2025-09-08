@@ -1,12 +1,10 @@
-
-
 import React from "react";
 import { FaInstagram, FaFacebookF, FaTiktok, FaYoutube, FaLinkedinIn, FaPhoneAlt } from "react-icons/fa";
 import { MdOutlineEmail, MdOutlineChatBubbleOutline } from "react-icons/md";
 
 const Footer = () => {
   return (
-    <footer className="bg-black text-[#f7f2e9] px-6 md:px-16 lg:px-32 py-12 font-serif relative border-t border-[#f7f2e9]/30">
+    <footer className="bg-gradient-to-br from-[#0d0603] to-[#1a1410] dark:from-[#F8F5F0] dark:to-[#F2F2F2] text-[#f7f2e9] px-6 md:px-16 lg:px-32 py-12 font-serif relative border-t border-[#f7f2e9]/30">
       <div className="flex flex-col md:flex-row justify-between mb-8 space-y-10 md:space-y-0">
         {/* Customer Service */}
         <div>

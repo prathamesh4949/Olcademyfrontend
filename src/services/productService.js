@@ -1,4 +1,3 @@
-// ProductService.js
 import { API_BASE_URL } from '../api/constant';
 
 class ProductService {
@@ -257,6 +256,87 @@ class ProductService {
 
   async getGiftCollections() {
     return this.apiCall('/api/products/gifts/collections');
+  }
+
+  // Fetch home page collections
+  async getHomeCollections() {
+    try {
+      const endpoint = '/api/products/home/collections';
+      const response = await this.apiCall(endpoint);
+      
+      if (!response.success || !response.data) {
+        console.warn('⚠️ No collections data returned');
+        return {
+          success: false,
+          data: {
+            fragrant_favourites: [],
+            summer_scents: [],
+            signature_collection: []
+          },
+          message: response.message || 'No collections found'
+        };
+      }
+
+      // Normalize the response data
+      const normalizedData = {
+        fragrant_favourites: this.normalizeSizesForCollection(response.data.fragrant_favourites || []),
+        summer_scents: this.normalizeSizesForCollection(response.data.summer_scents || []),
+        signature_collection: this.normalizeSizesForCollection(response.data.signature_collection || [])
+      };
+
+      console.log('✅ Home collections normalized:', normalizedData);
+      return {
+        success: true,
+        data: normalizedData
+      };
+    } catch (error) {
+      console.error('❌ Error fetching home collections:', error);
+      return {
+        success: false,
+        data: {
+          fragrant_favourites: [],
+          summer_scents: [],
+          signature_collection: []
+        },
+        message: error.message
+      };
+    }
+  }
+
+  // Helper to normalize sizes for a collection
+  normalizeSizesForCollection(products) {
+    if (!Array.isArray(products)) return [];
+    return products.map(product => ({
+      ...product,
+      sizes: this.normalizeSizes(product.sizes || [])
+    }));
+  }
+
+  // Fetch home page banners
+  async getHomeBanners() {
+    try {
+      const endpoint = '/api/banners/home';
+      const response = await this.apiCall(endpoint);
+      
+      if (!response.success || !response.data) {
+        console.warn('⚠️ No banners data returned');
+        return {
+          success: false,
+          data: [],
+          message: response.message || 'No banners found'
+        };
+      }
+
+      console.log('✅ Home banners fetched:', response.data);
+      return response;
+    } catch (error) {
+      console.error('❌ Error fetching home banners:', error);
+      return {
+        success: false,
+        data: [],
+        message: error.message
+      };
+    }
   }
 
   // ===== PRODUCT FETCHING METHODS =====
@@ -702,7 +782,8 @@ class ProductService {
       const bannerTests = [
         { endpoint: '/api/banners/gift', name: 'gift (singular)' },
         { endpoint: '/api/banners/gifts', name: 'gifts (plural)' },
-        { endpoint: '/api/banners', name: 'all banners' }
+        { endpoint: '/api/banners', name: 'all banners' },
+        { endpoint: '/api/banners/home', name: 'home banners' }
       ];
       
       console.log('🔍 Testing banner endpoints...');
@@ -722,6 +803,15 @@ class ProductService {
         console.log('✅ Gift collections:', collections);
       } catch (error) {
         console.log('❌ Gift collections failed:', error.message);
+      }
+      
+      // Test home collections endpoint
+      console.log('🔍 Testing home collections endpoint...');
+      try {
+        const homeCollections = await this.apiCall('/api/products/home/collections');
+        console.log('✅ Home collections:', homeCollections);
+      } catch (error) {
+        console.log('❌ Home collections failed:', error.message);
       }
       
       // Test debug counts
@@ -756,7 +846,8 @@ class ProductService {
       '/api/banners/gift/hero',
       '/api/banners/gifts/hero',
       '/api/banners/gift/gift_highlight',
-      '/api/banners/gifts/gift_highlight'
+      '/api/banners/gifts/gift_highlight',
+      '/api/banners/home'
     ];
     
     const results = {};
