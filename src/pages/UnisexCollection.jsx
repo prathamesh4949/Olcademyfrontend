@@ -1082,49 +1082,6 @@ const UnisexCollection = () => {
           navigation={bestSellersNav}
         />
 
-        {/* Dynamic Collection Highlight Banners */}
-        {banners.collection_highlight.length > 0 ? (
-          banners.collection_highlight.map((banner, index) => (
-            <DynamicBanner key={banner._id || index} banner={banner} type="collection_highlight" />
-          ))
-        ) : (
-          // Fallback Premium Collection Banner
-          <motion.section
-            variants={fadeIn("up", 0.2)}
-            initial="hidden"
-            whileInView="show"
-            className="bg-[#F2F2F2] dark:bg-[#0d0603] py-16 px-6"
-          >
-            <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
-              <div className="text-left">
-                <h3 className="text-lg text-[#79300f] dark:text-[#f6d110] font-semibold uppercase mb-3">Premium Collection</h3>
-                <h2 className="text-[42px] font-dm-serif mb-6 text-[#79300f] dark:text-[#f6d110]">
-                  CRAFTED FOR <br />
-                  <span className="text-[#79300f] dark:text-[#f6d110]">EVERYONE</span>
-                </h2>
-                <p className="text-[18px] mb-6 text-[#5a2408] dark:text-gray-300 leading-relaxed">
-                  Our premium unisex collection features rare and exotic ingredients sourced from around the world. 
-                  These sophisticated fragrances are designed for those who appreciate the finer things in life.
-                </p>
-                <Button 
-                  className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white px-8 py-4 text-lg font-semibold rounded-xl"
-                >
-                  Explore Premium Collection
-                </Button>
-              </div>
-              <div className="relative">
-                <div className="bg-gradient-to-br from-[#79300f]/10 to-[#5a2408]/10 rounded-2xl p-8">
-                  <img
-                    src="/images/newimg3.PNG"
-                    alt="Premium Unisex Collection"
-                    className="w-full h-[400px] object-contain rounded-xl"
-                  />
-                </div>
-              </div>
-            </div>
-          </motion.section>
-        )}
-
         {/* Huntsman Savile Row */}
         <CollectionSection 
           title="Huntsman Savile Row" 

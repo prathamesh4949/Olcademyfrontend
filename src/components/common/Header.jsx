@@ -100,23 +100,18 @@ const Header = ({ darkMode, setDarkMode }) => {
 
   return (
     <>
-      {/* Top Bar */}
-      <div className="bg-[#000000] text-white text-sm text-center py-2">
-        Free Delivery on Orders Over $990
-      </div>
-
       {/* Header */}
       <header className="bg-white dark:bg-black text-[#79300f] dark:text-white shadow-md z-50 sticky top-0">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center relative">
-          {/* Left Section */}
-          <div className="flex items-center gap-4">
-            <button onClick={toggleMenu} className="text-2xl z-50 md:hidden focus:outline-none">
+        <div className="w-full px-0 py-4 flex justify-between items-center relative">
+          {/* Left Section - Start from corner */}
+          <div className="flex items-center pl-4">
+            <button onClick={toggleMenu} className="text-2xl z-50 md:hidden focus:outline-none mr-4">
               {menuOpen ? <FiX /> : <FiMenu />}
             </button>
 
-            {/* Desktop Nav (Left Icons) */}
-            <nav className="hidden md:flex gap-6 items-center font-medium">
-              <Link to="/">Select Location</Link>
+            {/* Desktop Nav (Left Icons) - No gap, start from edge */}
+            <nav className="hidden md:flex items-center font-medium">
+              <Link to="/" className="mr-6">Select Location</Link>
               <button
                 onClick={toggleSearch}
                 className="flex items-center gap-2 hover:text-[#b14527] transition duration-200"
@@ -127,15 +122,17 @@ const Header = ({ darkMode, setDarkMode }) => {
             </nav>
           </div>
 
-          {/* Logo */}
-          <Link to="/">
-            <h1 className="text-3xl font-bold tracking-wider hover:text-[#b14527] transition duration-200">
-              Vesarii
-            </h1>
-          </Link>
+          {/* Logo - Centered */}
+          <div className="absolute left-1/2 transform -translate-x-1/2">
+            <Link to="/">
+              <h1 className="text-3xl font-bold tracking-wider hover:text-[#b14527] transition duration-200">
+                Vesarii
+              </h1>
+            </Link>
+          </div>
 
-          {/* Right Icons */}
-          <div className="flex items-center space-x-4 z-50">
+          {/* Right Icons - End at corner */}
+          <div className="flex items-center space-x-4 z-50 pr-4">
             {/* Mobile Search Icon */}
             <button onClick={toggleSearch} className="text-2xl md:hidden">
               <FiSearch className={darkMode ? "text-white" : "text-black"} />

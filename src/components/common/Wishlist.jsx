@@ -37,8 +37,31 @@ const Wishlist = () => {
     }
   }, [isInitialized]);
 
-  const handleProductClick = (productId) => {
-    navigate(`/product/${productId}`);
+  // Enhanced product click handler that works for both products and scents
+  const handleProductClick = (item) => {
+    if (!item || !item.id) {
+      console.error('Invalid item for navigation:', item);
+      return;
+    }
+
+    // Check if the item has source information
+    if (item.source === 'scent' || item.collection === 'trending' || item.collection === 'best-seller' || 
+        item.collection === 'signature' || item.collection === 'limited-edition') {
+      // Navigate to scent detail page
+      navigate(`/scent/${item.id}`);
+    } else if (item.source === 'product') {
+      // Navigate to product detail page
+      navigate(`/product/${item.id}`);
+    } else {
+      // Fallback: try to determine from the item structure
+      // If item has scent-specific fields, treat as scent
+      if (item.scentFamily || item.intensity || item.concentration || item.brand) {
+        navigate(`/scent/${item.id}`);
+      } else {
+        // Default to product page
+        navigate(`/product/${item.id}`);
+      }
+    }
   };
 
   const handleMoveToCart = async (item) => {
@@ -164,7 +187,7 @@ const Wishlist = () => {
                       alt={item.name}
                       className="h-[200px] w-full object-contain rounded-lg cursor-pointer"
                       loading="lazy"
-                      onClick={() => handleProductClick(item.id)}
+                      onClick={() => handleProductClick(item)}
                     />
                     <div className="absolute top-2 left-2">
                       <div className="bg-red-500 text-white p-2 rounded-full shadow-md">
@@ -176,7 +199,7 @@ const Wishlist = () => {
                   <div className="space-y-3">
                     <h3 
                       className="text-lg font-semibold line-clamp-2 text-[#79300f] dark:text-[#f6d110] cursor-pointer hover:underline"
-                      onClick={() => handleProductClick(item.id)}
+                      onClick={() => handleProductClick(item)}
                     >
                       {item.name}
                     </h3>
@@ -185,11 +208,38 @@ const Wishlist = () => {
                         {item.description}
                       </p>
                     )}
+                    {item.brand && (
+                      <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                        by {item.brand}
+                      </p>
+                    )}
                     {item.selectedSize && (
                       <p className="text-sm text-[#5a2408] dark:text-[#d4af37]">
                         Size: <span className="font-medium">{item.selectedSize}</span>
                       </p>
                     )}
+                    
+                    {/* Display scent-specific details if available */}
+                    {(item.scentFamily || item.intensity || item.concentration) && (
+                      <div className="flex flex-wrap gap-1 text-xs">
+                        {item.scentFamily && (
+                          <span className="bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2 py-1 rounded-full capitalize">
+                            {item.scentFamily}
+                          </span>
+                        )}
+                        {item.intensity && (
+                          <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full capitalize">
+                            {item.intensity}
+                          </span>
+                        )}
+                        {item.concentration && (
+                          <span className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-1 rounded-full capitalize">
+                            {item.concentration}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    
                     <p className="text-xl font-bold text-[#79300f] dark:text-[#f6d110]">
                       ${item.price}
                     </p>

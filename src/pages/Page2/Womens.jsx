@@ -1042,11 +1042,6 @@ const WomensCollection = () => {
           navigation={bestSellersNav}
         />
 
-        {/* Dynamic Collection Highlight Banners */}
-        {banners.collection_highlight.map((banner, index) => (
-          <DynamicBanner key={banner._id || index} banner={banner} type="collection_highlight" />
-        ))}
-
         {/* Huntsman Savile Row */}
         <CollectionSection 
           title="Huntsman Savile Row" 

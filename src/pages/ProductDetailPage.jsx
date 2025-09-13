@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import Header from '../components/common/Header';
 import Footer from '../components/common/Footer';
 import Button from '../components/ui/Button';
@@ -27,10 +27,12 @@ import {
   CheckCircle
 } from 'lucide-react';
 import ProductService from '../services/productService';
+import ScentService from '../services/scentService';
 
 const ProductDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   
@@ -47,6 +49,8 @@ const ProductDetailPage = () => {
   const [showNotification, setShowNotification] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [wishlistNotifications, setWishlistNotifications] = useState([]);
+
+  const isScent = location.pathname.startsWith('/scent/');
 
   // Scroll to top when component mounts or product ID changes
   useEffect(() => {
@@ -68,11 +72,11 @@ const ProductDetailPage = () => {
     document.documentElement.classList.toggle('dark', darkMode);
   }, [darkMode]);
 
-  // Product fetching with timeout and error handling
+  // Product/Scents fetching with timeout and error handling
   useEffect(() => {
-    const fetchProduct = async () => {
+    const fetchItem = async () => {
       if (!id) {
-        setError('No product ID provided');
+        setError('No item ID provided');
         setLoading(false);
         return;
       }
@@ -87,52 +91,77 @@ const ProductDetailPage = () => {
         setError(null);
 
         const cleanId = id.toString().trim();
-        console.log('🔍 ProductDetailPage: Fetching product with ID:', cleanId);
+        console.log(`🔍 ${isScent ? 'Scent' : 'Product'}DetailPage: Fetching item with ID:`, cleanId);
         if (cleanId.length !== 24 || !/^[0-9a-fA-F]{24}$/.test(cleanId)) {
-          throw new Error('Invalid product ID format');
+          throw new Error('Invalid item ID format');
         }
 
-        const existsResponse = await ProductService.checkProductExists(cleanId);
-        console.log('🔍 Product exists response:', existsResponse);
-        if (!existsResponse.success || !existsResponse.exists) {
-          throw new Error(`Product with ID ${cleanId} not found`);
-        }
+        let response;
+        if (isScent) {
+          response = await ScentService.getScentById(cleanId);
+          if (!response.success || !response.data) {
+            throw new Error(response.message || 'Failed to fetch scent');
+          }
+          const itemData = response.data;
+          setProduct(itemData);
+          setRelatedProducts([]); // No related for scents, or fetch separately if needed
+          setIsWishlisted(isInWishlist(itemData._id));
 
-        const response = await ProductService.getProduct(cleanId);
-        console.log('🔍 Product data:', JSON.stringify(response.data, null, 2));
-        if (response.success && response.data?.product) {
-          const productData = response.data.product;
-          console.log('🔍 Product sizes:', productData.sizes);
-          setProduct(productData);
-          setRelatedProducts(response.data.relatedProducts || []);
-          setIsWishlisted(isInWishlist(productData._id));
-
-          if (productData.sizes && productData.sizes.length > 0) {
-            const availableSize = productData.sizes.find(size => size.available);
+          if (itemData.sizes && itemData.sizes.length > 0) {
+            const availableSize = itemData.sizes.find(size => size.available);
             if (availableSize) {
               setSelectedSize(availableSize);
               setQuantity(1);
               console.log('🔍 Selected default size:', availableSize);
             } else {
-              console.warn('⚠️ No available sizes found for product:', productData.name);
+              console.warn('⚠️ No available sizes found for scent:', itemData.name);
             }
           } else {
-            console.warn('⚠️ No sizes array found for product:', productData.name);
+            console.warn('⚠️ No sizes array found for scent:', itemData.name);
           }
         } else {
-          throw new Error(response.message || 'Invalid response format');
+          const existsResponse = await ProductService.checkProductExists(cleanId);
+          console.log('🔍 Product exists response:', existsResponse);
+          if (!existsResponse.success || !existsResponse.exists) {
+            throw new Error(`Product with ID ${cleanId} not found`);
+          }
+
+          response = await ProductService.getProduct(cleanId);
+          console.log('🔍 Product data:', JSON.stringify(response.data, null, 2));
+          if (response.success && response.data?.product) {
+            const itemData = response.data.product;
+            console.log('🔍 Product sizes:', itemData.sizes);
+            setProduct(itemData);
+            setRelatedProducts(response.data.relatedProducts || []);
+            setIsWishlisted(isInWishlist(itemData._id));
+
+            if (itemData.sizes && itemData.sizes.length > 0) {
+              const availableSize = itemData.sizes.find(size => size.available);
+              if (availableSize) {
+                setSelectedSize(availableSize);
+                setQuantity(1);
+                console.log('🔍 Selected default size:', availableSize);
+              } else {
+                console.warn('⚠️ No available sizes found for product:', itemData.name);
+              }
+            } else {
+              console.warn('⚠️ No sizes array found for product:', itemData.name);
+            }
+          } else {
+            throw new Error(response.message || 'Invalid response format');
+          }
         }
       } catch (err) {
-        console.error('❌ Error fetching product:', err);
-        setError(`Failed to load product: ${err.message}`);
+        console.error('❌ Error fetching item:', err);
+        setError(`Failed to load item: ${err.message}`);
       } finally {
         clearTimeout(timeout);
         setLoading(false);
       }
     };
 
-    fetchProduct();
-  }, [id, isInWishlist]);
+    fetchItem();
+  }, [id, isInWishlist, isScent]);
 
   // Reset quantity when size changes
   useEffect(() => {
@@ -158,8 +187,8 @@ const ProductDetailPage = () => {
 
   const handleAddToCart = () => {
     if (!product) {
-      console.error('❌ No product data available for cart');
-      addNotification('Product information is incomplete', 'error');
+      console.error('❌ No item data available for cart');
+      addNotification('Item information is incomplete', 'error');
       return;
     }
     
@@ -228,24 +257,25 @@ const ProductDetailPage = () => {
 
   const handleRelatedProductClick = (relatedProduct) => {
     if (relatedProduct?._id) {
-      navigate(`/product/${relatedProduct._id}`);
-      console.log('🔍 Navigating to related product:', relatedProduct._id);
+      const routePrefix = isScent ? '/scent/' : '/product/';
+      navigate(`${routePrefix}${relatedProduct._id}`);
+      console.log('🔍 Navigating to related item:', relatedProduct._id);
     } else {
-      console.error('❌ Invalid related product ID');
-      addNotification('Unable to view related product', 'error');
+      console.error('❌ Invalid related item ID');
+      addNotification('Unable to view related item', 'error');
     }
   };
 
   const handleWishlistToggle = () => {
     if (!product) {
-      addNotification('Product information is incomplete', 'error');
+      addNotification('Item information is incomplete', 'error');
       return;
     }
 
     const wasInWishlist = isInWishlist(product._id);
     
     if (wasInWishlist) {
-      const wishlistProduct = {
+      const wishlistItem = {
         id: product._id.toString(),
         name: product.name,
         price: product.price,
@@ -254,16 +284,16 @@ const ProductDetailPage = () => {
         category: product.category || '',
         selectedSize: null
       };
-      toggleWishlist(wishlistProduct);
+      toggleWishlist(wishlistItem);
       setIsWishlisted(false);
       addNotification('Removed from wishlist', 'success');
     } else {
       if (isInWishlist(product._id)) {
-        addNotification('Product already in wishlist', 'error');
+        addNotification('Item already in wishlist', 'error');
         return;
       }
       
-      const wishlistProduct = {
+      const wishlistItem = {
         id: product._id.toString(),
         name: product.name,
         price: product.price,
@@ -273,7 +303,7 @@ const ProductDetailPage = () => {
         selectedSize: null
       };
       
-      toggleWishlist(wishlistProduct);
+      toggleWishlist(wishlistItem);
       setIsWishlisted(true);
       addNotification('Added to wishlist!', 'success');
     }
@@ -293,7 +323,7 @@ const ProductDetailPage = () => {
 
   // Notification System
   const NotificationSystem = () => (
-    <div className="fixed top-20 right-4 z-50 space-y-2">
+    <div className="fixed top-4 right-4 z-50 space-y-2">
       <AnimatePresence>
         {wishlistNotifications.map((notification) => (
           <motion.div
@@ -347,7 +377,7 @@ const ProductDetailPage = () => {
             >
               Loading your perfect fragrance...
             </motion.p>
-            <p className="text-sm text-amber-600 dark:text-amber-300">Product ID: {id}</p>
+            <p className="text-sm text-amber-600 dark:text-amber-300">ID: {id}</p>
           </motion.div>
         </div>
         <Footer />
@@ -499,7 +529,7 @@ const ProductDetailPage = () => {
         </motion.button>
 
         <div className="grid lg:grid-cols-2 gap-16 mb-20">
-          {/* Product Images */}
+          {/* Item Images */}
           <motion.div
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
@@ -592,7 +622,7 @@ const ProductDetailPage = () => {
             )}
           </motion.div>
 
-          {/* Product Details */}
+          {/* Item Details */}
           <motion.div
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
@@ -739,7 +769,7 @@ const ProductDetailPage = () => {
                         selectedSize?.size === size.size
                           ? 'border-amber-500 bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 text-amber-800 dark:text-amber-300 shadow-lg'
                           : size.available
-                          ? 'border-gray-200 dark:border-gray-600 hover:border-amber-300 bg-white/80 dark:bg-gray-800/80 hover:bg-amber-50 dark:hover:bg-amber-900/20 backdrop-blur-sm'
+                          ? 'border-gray-200 dark:border-gray-600 hover:border-amber-400 bg-white/80 dark:bg-gray-800/80 hover:bg-amber-50 dark:hover:bg-amber-900/20 backdrop-blur-sm'
                           : 'border-gray-100 dark:border-gray-700 text-gray-400 dark:text-gray-600 cursor-not-allowed bg-gray-50 dark:bg-gray-800/30'
                       }`}
                       whileHover={size.available ? { scale: 1.02, y: -2 } : {}}
@@ -977,7 +1007,7 @@ const ProductDetailPage = () => {
               </motion.button>
             </motion.div>
 
-            {/* Product Details Accordion */}
+            {/* Item Details Accordion */}
             <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -1055,7 +1085,7 @@ const ProductDetailPage = () => {
                 </div>
               )}
 
-              {/* Product Specifications */}
+              {/* Item Specifications */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 {product.concentration && (
                   <motion.div
@@ -1158,7 +1188,7 @@ const ProductDetailPage = () => {
           </motion.div>
         </div>
 
-        {/* Related Products */}
+        {/* Related Items */}
         {relatedProducts.length > 0 && (
           <motion.section
             initial={{ opacity: 0, y: 50 }}
@@ -1211,7 +1241,7 @@ const ProductDetailPage = () => {
                     >
                       <img
                         src={relatedProduct.images?.[0] || '/images/default-perfume.png'}
-                        alt={`${relatedProduct.name} - Related Product`}
+                        alt={`${relatedProduct.name} - Related Item`}
                         className="h-56 w-full object-contain transition-transform duration-500 group-hover:scale-110"
                         onError={(e) => {
                           e.target.src = '/images/default-perfume.png';

@@ -786,91 +786,127 @@ const GiftCollection = () => {
     );
   };
 
-  // Enhanced Featured Collection Banner
-  const FeaturedCollectionBanner = ({ banner, index }) => {
-    if (!banner) return null;
-
-    const handleClick = () => {
-      handleBannerClick(banner);
-      if (banner.buttonLink) {
-        if (banner.buttonLink.startsWith('#')) {
-          const element = document.querySelector(banner.buttonLink);
-          element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        } else {
-          window.location.href = banner.buttonLink;
-        }
+  // Bottom Banners Section - New component for 3 banners at the bottom
+  const BottomBannersSection = () => {
+    // Use first 3 gift_highlight banners for bottom section
+    const bottomBanners = banners.gift_highlight.slice(0, 3);
+    
+    // Default banners if none available from backend
+    const defaultBottomBanners = [
+      {
+        title: "Personalized Gifts",
+        description: "Make it uniquely theirs with custom engraving and personalization options.",
+        buttonText: "Personalize Now",
+        buttonLink: "/personalized-gifts",
+        image: "/images/personalized-banner.jpg"
+      },
+      {
+        title: "Gift Cards Available",
+        description: "When you can't decide, give them the choice with our luxury gift cards.",
+        buttonText: "Buy Gift Cards",
+        buttonLink: "/gift-cards", 
+        image: "/images/gift-cards-banner.jpg"
+      },
+      {
+        title: "Express Shipping",
+        description: "Last minute? We've got you covered with same-day and next-day delivery.",
+        buttonText: "Ship Express",
+        buttonLink: "/shipping",
+        image: "/images/express-shipping-banner.jpg"
       }
-    };
+    ];
 
-    const isReversed = index % 2 === 1;
+    const displayBanners = bottomBanners.length >= 3 ? bottomBanners : defaultBottomBanners;
 
     return (
       <motion.section
         variants={fadeIn('up', 0.3)}
         initial="hidden"
         whileInView="show"
-        viewport={{ once: false, amount: 0.3 }}
-        className="py-20 px-4 md:px-8 relative overflow-hidden"
+        viewport={{ once: false, amount: 0.2 }}
+        className="py-20 px-4 md:px-8 bg-gradient-to-br from-[#F5E9DC] to-[#E7DDC6] dark:from-gray-900 dark:to-gray-800"
       >
-        <div className="relative z-10 max-w-7xl mx-auto">
-          <div className={`grid lg:grid-cols-2 gap-16 items-center ${isReversed ? 'lg:grid-flow-col-dense' : ''}`}>
-            <motion.div
-              initial={{ opacity: 0, x: isReversed ? 50 : -50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8 }}
-              className={`space-y-8 ${isReversed ? 'lg:col-start-2 text-center lg:text-right' : 'text-center lg:text-left'}`}
-            >
-              {banner.subtitle && (
-                <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-[#F5E9DC] to-[#E7DDC6] dark:from-gray-800 dark:to-gray-700 px-6 py-3 rounded-full border border-[#D4C5A9] dark:border-gray-600">
-                  <Crown className="text-[#79300f] dark:text-[#f6d110]" size={16} />
-                  <span className="text-[#79300f] dark:text-[#f6d110] font-semibold text-sm uppercase tracking-wider">
-                    {banner.subtitle}
-                  </span>
-                </div>
-              )}
-              
-              <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-                <span className="bg-gradient-to-r from-[#79300f] to-[#5a2408] bg-clip-text text-transparent">
-                  {banner.title}
-                </span>
-              </h2>
-              
-              <p className="text-xl text-gray-600 dark:text-gray-300 leading-relaxed max-w-lg">
-                {banner.description}
-              </p>
-              
-              <motion.button
-                onClick={handleClick}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white font-bold py-4 px-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center space-x-3"
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl md:text-5xl font-dm-serif text-[#79300f] dark:text-[#f6d110] mb-4">
+              Why Choose Our Gifts?
+            </h2>
+            <div className="w-24 h-1 bg-gradient-to-r from-[#79300f] to-[#5a2408] rounded-full mx-auto"></div>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {displayBanners.map((banner, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.2 }}
+                whileHover={{ scale: 1.03, y: -5 }}
+                className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-500 border border-white/50 dark:border-gray-700/50 group cursor-pointer"
+                onClick={() => {
+                  if (banner._id) handleBannerClick(banner);
+                  if (banner.buttonLink) {
+                    if (banner.buttonLink.startsWith('#')) {
+                      const element = document.querySelector(banner.buttonLink);
+                      element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    } else {
+                      window.location.href = banner.buttonLink;
+                    }
+                  }
+                }}
               >
-                <span className="text-lg">{banner.buttonText || 'Explore Collection'}</span>
-                <ChevronRight size={20} />
-              </motion.button>
-            </motion.div>
-            
-            <motion.div
-              initial={{ opacity: 0, x: isReversed ? -50 : 50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className={`relative ${isReversed ? 'lg:col-start-1' : ''}`}
-            >
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl group">
-                <motion.img
-                  src={banner.image || '/images/default-gift.png'}
-                  alt={banner.altText || banner.title}
-                  className="w-full h-auto max-h-[500px] object-cover transition-transform duration-700 group-hover:scale-105"
-                  whileHover={{ scale: 1.02 }}
-                  transition={{ duration: 0.7 }}
-                  onError={(e) => {
-                    e.target.src = '/images/default-gift.png';
-                  }}
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 bg-gradient-to-tr from-[#79300f]/20 to-[#5a2408]/20 opacity-20 group-hover:opacity-30 transition-opacity duration-500"></div>
-              </div>
-            </motion.div>
+                <div className="space-y-6">
+                  <div className="relative overflow-hidden rounded-2xl">
+                    <motion.img
+                      src={banner.image || '/images/default-gift.png'}
+                      alt={banner.title}
+                      className="w-full h-48 object-cover transition-transform duration-700 group-hover:scale-105"
+                      onError={(e) => {
+                        e.target.src = '/images/default-gift.png';
+                      }}
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <h3 className="text-2xl font-bold text-[#79300f] dark:text-[#f6d110] group-hover:text-[#5a2408] dark:group-hover:text-[#f6d110] transition-colors duration-300">
+                      {banner.title}
+                    </h3>
+                    
+                    <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                      {banner.description}
+                    </p>
+                    
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-2 group-hover:scale-105"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (banner._id) handleBannerClick(banner);
+                        if (banner.buttonLink) {
+                          if (banner.buttonLink.startsWith('#')) {
+                            const element = document.querySelector(banner.buttonLink);
+                            element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                          } else {
+                            window.location.href = banner.buttonLink;
+                          }
+                        }
+                      }}
+                    >
+                      <span>{banner.buttonText}</span>
+                      <ChevronRight size={16} />
+                    </motion.button>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </div>
       </motion.section>
@@ -1156,10 +1192,6 @@ const GiftCollection = () => {
 
       <HeroBanner banner={banners.hero} />
 
-      {banners.gift_highlight.length > 0 && (
-        <FeaturedCollectionBanner banner={banners.gift_highlight[0]} index={0} />
-      )}
-
       <div id="collections">
         <CollectionSection
           title="Gifts For Her"
@@ -1168,10 +1200,6 @@ const GiftCollection = () => {
           accent="rose"
         />
       </div>
-
-      {banners.gift_highlight.length > 1 && (
-        <FeaturedCollectionBanner banner={banners.gift_highlight[1]} index={1} />
-      )}
 
       <CollectionSection
         title="Gifts For Him"
@@ -1206,65 +1234,6 @@ const GiftCollection = () => {
               </div>
             </div>
             <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">
-              Find the perfect gift within your budget - luxury doesn't have to break the bank
-            </p>
-            <div className="w-32 h-1 bg-gradient-to-r from-[#79300f] to-[#5a2408] rounded-full mx-auto mt-6"></div>
-          </motion.div>
-
-          <div className="space-y-24">
-            <CollectionSection
-              title="Under $50"
-              collectionKey="by_price_under_50"
-              visibleCount={4}
-              accent="emerald"
-            />
-            
-            {banners.gift_highlight.length > 2 && (
-              <FeaturedCollectionBanner banner={banners.gift_highlight[2]} index={2} />
-            )}
-            
-            <CollectionSection
-              title="Under $100"
-              collectionKey="by_price_under_100"
-              visibleCount={4}
-              accent="amber"
-            />
-            <CollectionSection
-              title="Under $200"
-              collectionKey="by_price_under_200"
-              visibleCount={4}
-              accent="purple"
-            />
-          </div>
-        </div>
-      </motion.section>
-
-      <motion.section
-        variants={fadeIn('up', 0.3)}
-        initial="hidden"
-        whileInView="show"
-        viewport={{ once: false }}
-        className="py-24 px-4 md:px-8 relative"
-      >
-        <div className="relative z-10 max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-20"
-          >
-            <div className="inline-flex items-center space-x-3 mb-6">
-              <div className="w-12 h-12 bg-gradient-to-br from-[#79300f] to-[#5a2408] rounded-full flex items-center justify-center">
-                <Heart className="text-white" size={24} />
-              </div>
-              <h2 className="text-4xl md:text-5xl font-dm-serif bg-gradient-to-r from-[#79300f] to-[#5a2408] bg-clip-text text-transparent">
-                Special Occasions
-              </h2>
-              <div className="w-12 h-12 bg-gradient-to-br from-[#5a2408] to-[#79300f] rounded-full flex items-center justify-center">
-                <Gift className="text-white" size={24} />
-              </div>
-            </div>
-            <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">
               Celebrate life's precious moments with gifts that create lasting memories
             </p>
             <div className="w-32 h-1 bg-gradient-to-r from-[#79300f] to-[#5a2408] rounded-full mx-auto mt-6"></div>
@@ -1292,6 +1261,9 @@ const GiftCollection = () => {
           </div>
         </div>
       </motion.section>
+
+      {/* Bottom Banners Section - 3 banners at the end */}
+      <BottomBannersSection />
 
       <Footer />
     </div>

@@ -83,8 +83,31 @@ const ProductCartSection = () => {
     navigate('/'); // Navigate to home page instead of products
   };
 
-  const handleProductClick = (productId) => {
-    navigate(`/product/${productId}`);
+  // Enhanced product click handler that works for both products and scents
+  const handleProductClick = (item) => {
+    if (!item || !item.id) {
+      console.error('Invalid item for navigation:', item);
+      return;
+    }
+
+    // Check if the item has source information
+    if (item.source === 'scent' || item.collection === 'trending' || item.collection === 'best-seller' || 
+        item.collection === 'signature' || item.collection === 'limited-edition') {
+      // Navigate to scent detail page
+      navigate(`/scent/${item.id}`);
+    } else if (item.source === 'product') {
+      // Navigate to product detail page
+      navigate(`/product/${item.id}`);
+    } else {
+      // Fallback: try to determine from the item structure
+      // If item has scent-specific fields, treat as scent
+      if (item.scentFamily || item.intensity || item.concentration || item.brand) {
+        navigate(`/scent/${item.id}`);
+      } else {
+        // Default to product page
+        navigate(`/product/${item.id}`);
+      }
+    }
   };
 
   // Show loading state while cart is initializing
@@ -166,11 +189,11 @@ const ProductCartSection = () => {
                       alt={item.name}
                       className="h-[200px] w-full object-contain mb-3 rounded-lg cursor-pointer"
                       loading="lazy"
-                      onClick={() => handleProductClick(item.id)}
+                      onClick={() => handleProductClick(item)}
                     />
                     <h3 
                       className="text-lg font-semibold mb-2 line-clamp-2 text-[#79300f] dark:text-[#f6d110] cursor-pointer hover:underline"
-                      onClick={() => handleProductClick(item.id)}
+                      onClick={() => handleProductClick(item)}
                     >
                       {item.name}
                     </h3>

@@ -12,8 +12,8 @@ export const WishlistProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const { user, token } = useAuth();
 
-  // API base URL for wishlist
-  const WISHLIST_API_BASE = `${USER_API_END_POINT.replace('/user', '/wishlist')}`;
+  // API base URL for wishlist - Updated to match your backend structure
+  const WISHLIST_API_BASE = `${USER_API_END_POINT}/wishlist`;
 
   // Configure axios defaults
   useEffect(() => {
@@ -52,25 +52,34 @@ export const WishlistProvider = ({ children }) => {
             }
           }
 
-          const response = await axios.get(WISHLIST_API_BASE);
-          if (response.data.success) {
-            const dbItems = response.data.wishlistItems || [];
-            console.log('Loaded wishlist from database:', dbItems.length, 'items');
-            
-            if (localItems.length > 0) {
-              console.log('Syncing local items to database...');
-              await syncWishlistToDatabase(localItems);
+          try {
+            const response = await axios.get(WISHLIST_API_BASE);
+            if (response.data.success) {
+              const dbItems = response.data.wishlistItems || [];
+              console.log('Loaded wishlist from database:', dbItems.length, 'items');
               
-              const syncResponse = await axios.get(WISHLIST_API_BASE);
-              if (syncResponse.data.success) {
-                setWishlistItems(syncResponse.data.wishlistItems || []);
-                console.log('Wishlist synced successfully');
+              if (localItems.length > 0) {
+                console.log('Syncing local items to database...');
+                await syncWishlistToDatabase(localItems);
+                
+                const syncResponse = await axios.get(WISHLIST_API_BASE);
+                if (syncResponse.data.success) {
+                  setWishlistItems(syncResponse.data.wishlistItems || []);
+                  console.log('Wishlist synced successfully');
+                }
+              } else {
+                setWishlistItems(dbItems);
               }
             } else {
-              setWishlistItems(dbItems);
+              setWishlistItems([]);
             }
-          } else {
-            setWishlistItems([]);
+          } catch (apiError) {
+            console.warn('Wishlist API not available, using localStorage only');
+            if (localItems.length > 0) {
+              setWishlistItems(localItems);
+            } else {
+              setWishlistItems([]);
+            }
           }
         } else {
           console.log('Loading wishlist from localStorage for non-authenticated user');
@@ -112,12 +121,12 @@ export const WishlistProvider = ({ children }) => {
     loadWishlist();
   }, [user, token, isInitialized, WISHLIST_API_BASE]);
 
-  // Save to localStorage for non-authenticated users
+  // Save to localStorage for all users (as fallback and for non-authenticated users)
   useEffect(() => {
-    if (isInitialized && !user && wishlistItems.length >= 0) {
+    if (isInitialized && wishlistItems.length >= 0) {
       localStorage.setItem('wishlistItems', JSON.stringify(wishlistItems));
     }
-  }, [wishlistItems, isInitialized, user]);
+  }, [wishlistItems, isInitialized]);
 
   // Sync localStorage wishlist to database when user logs in
   const syncWishlistToDatabase = async (localWishlistItems) => {
@@ -134,6 +143,7 @@ export const WishlistProvider = ({ children }) => {
             image: item.image,
             description: item.description || '',
             category: item.category || '',
+            brand: item.brand || '',
             selectedSize: item.selectedSize || null
           });
           console.log('Synced item:', item.name);
@@ -144,8 +154,8 @@ export const WishlistProvider = ({ children }) => {
         }
       }
       
-      localStorage.removeItem('wishlistItems');
-      console.log('Wishlist sync completed, localStorage cleared');
+      // Don't clear localStorage - keep as backup
+      console.log('Wishlist sync completed');
       
     } catch (error) {
       console.error('Error syncing wishlist to database:', error);
@@ -168,35 +178,38 @@ export const WishlistProvider = ({ children }) => {
         return false;
       }
 
+      const newItem = {
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        image: product.image,
+        description: product.description || '',
+        category: product.category || '',
+        brand: product.brand || '',
+        selectedSize: product.selectedSize || null,
+        addedAt: new Date().toISOString()
+      };
+
       if (user && token) {
-        // Add to database
-        setLoading(true);
-        const response = await axios.post(`${WISHLIST_API_BASE}/add`, {
-          id: product.id,
-          name: product.name,
-          price: product.price,
-          image: product.image,
-          description: product.description || '',
-          category: product.category || '',
-          selectedSize: product.selectedSize || null
-        });
-        if (response.data.success) {
-          setWishlistItems(response.data.wishlistItems || []);
+        // Try to add to database
+        try {
+          setLoading(true);
+          const response = await axios.post(`${WISHLIST_API_BASE}/add`, newItem);
+          if (response.data.success) {
+            setWishlistItems(response.data.wishlistItems || []);
+            toast.success(`${product.name} added to wishlist`);
+            return true;
+          }
+        } catch (apiError) {
+          console.warn('Wishlist API not available, using localStorage only');
+          // Fall back to localStorage
+          const updatedWishlist = [...wishlistItems, newItem];
+          setWishlistItems(updatedWishlist);
           toast.success(`${product.name} added to wishlist`);
           return true;
         }
       } else {
         // Add to localStorage for non-authenticated users
-        const newItem = {
-          id: product.id,
-          name: product.name,
-          price: product.price,
-          image: product.image,
-          description: product.description || '',
-          category: product.category || '',
-          selectedSize: product.selectedSize || null,
-          addedAt: new Date().toISOString()
-        };
         const updatedWishlist = [...wishlistItems, newItem];
         setWishlistItems(updatedWishlist);
         toast.success(`${product.name} added to wishlist`);
@@ -204,12 +217,28 @@ export const WishlistProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Add to wishlist error:', error);
-      if (error.response?.data?.message) {
-        toast.error(error.response.data.message);
-      } else {
+      // Always fall back to localStorage
+      try {
+        const newItem = {
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          image: product.image,
+          description: product.description || '',
+          category: product.category || '',
+          brand: product.brand || '',
+          selectedSize: product.selectedSize || null,
+          addedAt: new Date().toISOString()
+        };
+        const updatedWishlist = [...wishlistItems, newItem];
+        setWishlistItems(updatedWishlist);
+        toast.success(`${product.name} added to wishlist`);
+        return true;
+      } catch (localError) {
+        console.error('Failed to add to local wishlist:', localError);
         toast.error('Failed to add item to wishlist');
+        return false;
       }
-      return false;
     } finally {
       setLoading(false);
     }
@@ -217,26 +246,29 @@ export const WishlistProvider = ({ children }) => {
 
   const removeFromWishlist = async (id) => {
     try {
+      const product = wishlistItems.find(item => item.id === id);
+      
       if (user && token) {
-        setLoading(true);
-        const response = await axios.delete(`${WISHLIST_API_BASE}/remove/${id}`);
-        if (response.data.success) {
-          setWishlistItems(response.data.wishlistItems || []);
-          toast.success(response.data.message);
+        try {
+          setLoading(true);
+          const response = await axios.delete(`${WISHLIST_API_BASE}/remove/${id}`);
+          if (response.data.success) {
+            setWishlistItems(response.data.wishlistItems || []);
+            toast.success(response.data.message);
+            return;
+          }
+        } catch (apiError) {
+          console.warn('Wishlist API not available, using localStorage only');
         }
-      } else {
-        const product = wishlistItems.find(item => item.id === id);
-        const updatedWishlist = wishlistItems.filter(item => item.id !== id);
-        setWishlistItems(updatedWishlist);
-        toast.success(`${product?.name || 'Item'} removed from wishlist`);
       }
+      
+      // Fall back to localStorage removal
+      const updatedWishlist = wishlistItems.filter(item => item.id !== id);
+      setWishlistItems(updatedWishlist);
+      toast.success(`${product?.name || 'Item'} removed from wishlist`);
     } catch (error) {
       console.error('Remove from wishlist error:', error);
-      if (error.response?.data?.message) {
-        toast.error(error.response.data.message);
-      } else {
-        toast.error('Failed to remove item from wishlist');
-      }
+      toast.error('Failed to remove item from wishlist');
     } finally {
       setLoading(false);
     }
@@ -245,23 +277,25 @@ export const WishlistProvider = ({ children }) => {
   const clearWishlist = async () => {
     try {
       if (user && token) {
-        setLoading(true);
-        const response = await axios.delete(`${WISHLIST_API_BASE}/clear`);
-        if (response.data.success) {
-          setWishlistItems([]);
-          toast.success(response.data.message);
+        try {
+          setLoading(true);
+          const response = await axios.delete(`${WISHLIST_API_BASE}/clear`);
+          if (response.data.success) {
+            setWishlistItems([]);
+            toast.success(response.data.message);
+            return;
+          }
+        } catch (apiError) {
+          console.warn('Wishlist API not available, using localStorage only');
         }
-      } else {
-        setWishlistItems([]);
-        toast.success('Wishlist cleared');
       }
+      
+      // Fall back to localStorage clear
+      setWishlistItems([]);
+      toast.success('Wishlist cleared');
     } catch (error) {
       console.error('Clear wishlist error:', error);
-      if (error.response?.data?.message) {
-        toast.error(error.response.data.message);
-      } else {
-        toast.error('Failed to clear wishlist');
-      }
+      toast.error('Failed to clear wishlist');
     } finally {
       setLoading(false);
     }
@@ -270,30 +304,29 @@ export const WishlistProvider = ({ children }) => {
   const moveToCart = async (id) => {
     try {
       if (user && token) {
-        setLoading(true);
-        const response = await axios.post(`${WISHLIST_API_BASE}/move-to-cart/${id}`);
-        if (response.data.success) {
-          setWishlistItems(response.data.wishlistItems || []);
-          toast.success(response.data.message);
-          return true;
+        try {
+          setLoading(true);
+          const response = await axios.post(`${WISHLIST_API_BASE}/move-to-cart/${id}`);
+          if (response.data.success) {
+            setWishlistItems(response.data.wishlistItems || []);
+            toast.success(response.data.message);
+            return true;
+          }
+        } catch (apiError) {
+          console.warn('Move to cart API not available');
         }
-      } else {
-        // For non-authenticated users, we can't move to cart directly
-        // Just remove from wishlist and let user add to cart manually
-        const product = wishlistItems.find(item => item.id === id);
-        if (product) {
-          removeFromWishlist(id);
-          toast.success(`${product.name} removed from wishlist. Please add to cart manually.`);
-        }
-        return false;
       }
+      
+      // For non-authenticated users or API fallback, just remove from wishlist
+      const product = wishlistItems.find(item => item.id === id);
+      if (product) {
+        removeFromWishlist(id);
+        toast.success(`${product.name} removed from wishlist. Please add to cart manually.`);
+      }
+      return false;
     } catch (error) {
       console.error('Move to cart error:', error);
-      if (error.response?.data?.message) {
-        toast.error(error.response.data.message);
-      } else {
-        toast.error('Failed to move item to cart');
-      }
+      toast.error('Failed to move item to cart');
       return false;
     } finally {
       setLoading(false);
@@ -333,6 +366,7 @@ export const WishlistProvider = ({ children }) => {
         }
       } catch (error) {
         console.error('Error refreshing wishlist:', error);
+        // Keep current localStorage items if API fails
       } finally {
         setLoading(false);
       }

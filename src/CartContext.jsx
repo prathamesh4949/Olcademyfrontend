@@ -12,8 +12,8 @@ export const CartProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const { user, token } = useAuth();
 
-  // API base URL for cart
-  const CART_API_BASE = `${USER_API_END_POINT.replace('/user', '/cart')}`;
+  // API base URL for cart - Updated to match your backend structure
+  const CART_API_BASE = `${USER_API_END_POINT}/cart`;
 
   // Configure axios defaults
   useEffect(() => {
@@ -71,25 +71,31 @@ export const CartProvider = ({ children }) => {
             }
           }
 
-          const response = await axios.get(CART_API_BASE);
-          if (response.data.success) {
-            const dbItems = response.data.cartItems || [];
-            console.log('Loaded cart from database:', dbItems.length, 'items');
-            
-            if (localItems.length > 0) {
-              console.log('Syncing local items to database...');
-              await syncCartToDatabase(localItems);
+          try {
+            const response = await axios.get(CART_API_BASE);
+            if (response.data.success) {
+              const dbItems = response.data.cartItems || [];
+              console.log('Loaded cart from database:', dbItems.length, 'items');
               
-              const syncResponse = await axios.get(CART_API_BASE);
-              if (syncResponse.data.success) {
-                setCartItems(syncResponse.data.cartItems || []);
-                console.log('Cart synced successfully');
+              if (localItems.length > 0) {
+                console.log('Syncing local items to database...');
+                await syncCartToDatabase(localItems);
+                
+                const syncResponse = await axios.get(CART_API_BASE);
+                if (syncResponse.data.success) {
+                  setCartItems(syncResponse.data.cartItems || []);
+                  console.log('Cart synced successfully');
+                }
+              } else {
+                setCartItems(dbItems);
               }
             } else {
-              setCartItems(dbItems);
+              setCartItems([]);
             }
-          } else {
-            setCartItems([]);
+          } catch (apiError) {
+            console.warn('Cart API not available, using localStorage only');
+            const enhancedItems = await enhanceLocalCartWithStock(localItems);
+            setCartItems(enhancedItems);
           }
         } else {
           console.log('Loading cart from localStorage for non-authenticated user');
@@ -133,9 +139,9 @@ export const CartProvider = ({ children }) => {
     loadCart();
   }, [user, token, isInitialized, CART_API_BASE]);
 
-  // Save to localStorage for non-authenticated users
+  // Save to localStorage for all users (as fallback and for non-authenticated users)
   useEffect(() => {
-    if (isInitialized && !user && cartItems.length >= 0) {
+    if (isInitialized && cartItems.length >= 0) {
       // Remove stock info before saving to localStorage
       const itemsToStore = cartItems.map(item => {
         const { availableStock, outOfStock, exceedsStock, ...itemWithoutStock } = item;
@@ -143,7 +149,7 @@ export const CartProvider = ({ children }) => {
       });
       localStorage.setItem('cartItems', JSON.stringify(itemsToStore));
     }
-  }, [cartItems, isInitialized, user]);
+  }, [cartItems, isInitialized]);
 
   // Sync localStorage cart to database when user logs in
   const syncCartToDatabase = async (localCartItems) => {
@@ -160,7 +166,9 @@ export const CartProvider = ({ children }) => {
             image: item.image,
             quantity: item.quantity || 1,
             selectedSize: item.selectedSize || null,
-            personalization: item.personalization || null
+            personalization: item.personalization || null,
+            brand: item.brand || '',
+            sku: item.sku || ''
           });
           console.log('Synced item:', item.name);
         } catch (error) {
@@ -170,8 +178,8 @@ export const CartProvider = ({ children }) => {
         }
       }
       
-      localStorage.removeItem('cartItems');
-      console.log('Cart sync completed, localStorage cleared');
+      // Don't clear localStorage - keep as backup
+      console.log('Cart sync completed');
       
     } catch (error) {
       console.error('Error syncing cart to database:', error);
@@ -192,25 +200,60 @@ export const CartProvider = ({ children }) => {
         return false;
       }
 
+      const newItem = {
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        image: product.image,
+        quantity: product.quantity || 1,
+        selectedSize: product.selectedSize || null,
+        personalization: product.personalization || null,
+        brand: product.brand || '',
+        sku: product.sku || '',
+        availableStock: 10, // Default for demo - in production fetch real stock
+        outOfStock: false,
+        exceedsStock: false
+      };
+
       if (user && token) {
-        // Add to database
-        setLoading(true);
-        const response = await axios.post(`${CART_API_BASE}/add`, {
-          id: product.id,
-          name: product.name,
-          price: product.price,
-          image: product.image,
-          quantity: product.quantity || 1,
-          selectedSize: product.selectedSize || null,
-          personalization: product.personalization || null
-        });
-        if (response.data.success) {
-          setCartItems(response.data.cartItems || []);
+        // Try to add to database
+        try {
+          setLoading(true);
+          const response = await axios.post(`${CART_API_BASE}/add`, {
+            id: product.id,
+            name: product.name,
+            price: product.price,
+            image: product.image,
+            quantity: product.quantity || 1,
+            selectedSize: product.selectedSize || null,
+            personalization: product.personalization || null,
+            brand: product.brand || '',
+            sku: product.sku || ''
+          });
+          if (response.data.success) {
+            setCartItems(response.data.cartItems || []);
+            toast.success(`${product.name} added to cart`);
+            return true;
+          }
+        } catch (apiError) {
+          console.warn('Cart API not available, using localStorage only');
+          // Fall back to localStorage
+          const updatedCart = [...cartItems, newItem];
+          setCartItems(updatedCart);
           toast.success(`${product.name} added to cart`);
           return true;
         }
       } else {
         // Add to localStorage for non-authenticated users
+        const updatedCart = [...cartItems, newItem];
+        setCartItems(updatedCart);
+        toast.success(`${product.name} added to cart`);
+        return true;
+      }
+    } catch (error) {
+      console.error('Add to cart error:', error);
+      // Always fall back to localStorage
+      try {
         const newItem = {
           id: product.id,
           name: product.name,
@@ -219,7 +262,9 @@ export const CartProvider = ({ children }) => {
           quantity: product.quantity || 1,
           selectedSize: product.selectedSize || null,
           personalization: product.personalization || null,
-          availableStock: 10, // Default for demo - in production fetch real stock
+          brand: product.brand || '',
+          sku: product.sku || '',
+          availableStock: 10,
           outOfStock: false,
           exceedsStock: false
         };
@@ -227,15 +272,11 @@ export const CartProvider = ({ children }) => {
         setCartItems(updatedCart);
         toast.success(`${product.name} added to cart`);
         return true;
-      }
-    } catch (error) {
-      console.error('Add to cart error:', error);
-      if (error.response?.data?.message) {
-        toast.error(error.response.data.message);
-      } else {
+      } catch (localError) {
+        console.error('Failed to add to local cart:', localError);
         toast.error('Failed to add item to cart');
+        return false;
       }
-      return false;
     } finally {
       setLoading(false);
     }
@@ -243,26 +284,29 @@ export const CartProvider = ({ children }) => {
 
   const removeFromCart = async (id) => {
     try {
+      const product = cartItems.find(item => item.id === id);
+      
       if (user && token) {
-        setLoading(true);
-        const response = await axios.delete(`${CART_API_BASE}/remove/${id}`);
-        if (response.data.success) {
-          setCartItems(response.data.cartItems || []);
-          toast.success(response.data.message);
+        try {
+          setLoading(true);
+          const response = await axios.delete(`${CART_API_BASE}/remove/${id}`);
+          if (response.data.success) {
+            setCartItems(response.data.cartItems || []);
+            toast.success(response.data.message);
+            return;
+          }
+        } catch (apiError) {
+          console.warn('Cart API not available, using localStorage only');
         }
-      } else {
-        const product = cartItems.find(item => item.id === id);
-        const updatedCart = cartItems.filter(item => item.id !== id);
-        setCartItems(updatedCart);
-        toast.success(`${product?.name || 'Item'} removed from cart`);
       }
+      
+      // Fall back to localStorage removal
+      const updatedCart = cartItems.filter(item => item.id !== id);
+      setCartItems(updatedCart);
+      toast.success(`${product?.name || 'Item'} removed from cart`);
     } catch (error) {
       console.error('Remove from cart error:', error);
-      if (error.response?.data?.message) {
-        toast.error(error.response.data.message);
-      } else {
-        toast.error('Failed to remove item from cart');
-      }
+      toast.error('Failed to remove item from cart');
     } finally {
       setLoading(false);
     }
@@ -271,23 +315,25 @@ export const CartProvider = ({ children }) => {
   const clearCart = async () => {
     try {
       if (user && token) {
-        setLoading(true);
-        const response = await axios.delete(`${CART_API_BASE}/clear`);
-        if (response.data.success) {
-          setCartItems([]);
-          toast.success(response.data.message);
+        try {
+          setLoading(true);
+          const response = await axios.delete(`${CART_API_BASE}/clear`);
+          if (response.data.success) {
+            setCartItems([]);
+            toast.success(response.data.message);
+            return;
+          }
+        } catch (apiError) {
+          console.warn('Cart API not available, using localStorage only');
         }
-      } else {
-        setCartItems([]);
-        toast.success('Cart cleared');
       }
+      
+      // Fall back to localStorage clear
+      setCartItems([]);
+      toast.success('Cart cleared');
     } catch (error) {
       console.error('Clear cart error:', error);
-      if (error.response?.data?.message) {
-        toast.error(error.response.data.message);
-      } else {
-        toast.error('Failed to clear cart');
-      }
+      toast.error('Failed to clear cart');
     } finally {
       setLoading(false);
     }
@@ -298,58 +344,44 @@ export const CartProvider = ({ children }) => {
     
     try {
       if (user && token) {
-        // For authenticated users, make API call and update state immediately
-        setLoading(true);
-        const response = await axios.put(`${CART_API_BASE}/update/${id}`, { quantity });
-        if (response.data.success) {
-          // Update the cart items with the response from the server
-          setCartItems(response.data.cartItems || []);
-          toast.success('Quantity updated successfully');
-        } else {
-          throw new Error(response.data.message || 'Failed to update quantity');
-        }
-      } else {
-        // For local storage, check stock limits
-        const itemIndex = cartItems.findIndex(item => item.id === id);
-        if (itemIndex !== -1) {
-          const item = cartItems[itemIndex];
-          const maxStock = item.availableStock || 10; // Use availableStock or default
-          
-          if (quantity > maxStock) {
-            toast.error(`Only ${maxStock} items available in stock`);
+        // For authenticated users, try API call first
+        try {
+          setLoading(true);
+          const response = await axios.put(`${CART_API_BASE}/update/${id}`, { quantity });
+          if (response.data.success) {
+            setCartItems(response.data.cartItems || []);
+            toast.success('Quantity updated successfully');
             return;
           }
-          
-          const updatedCart = cartItems.map(cartItem => 
-            cartItem.id === id ? { 
-              ...cartItem, 
-              quantity,
-              exceedsStock: quantity > maxStock
-            } : cartItem
-          );
-          setCartItems(updatedCart);
-          toast.success('Quantity updated successfully');
+        } catch (apiError) {
+          console.warn('Cart update API not available, using localStorage only');
         }
+      }
+      
+      // For local storage or API fallback, check stock limits
+      const itemIndex = cartItems.findIndex(item => item.id === id);
+      if (itemIndex !== -1) {
+        const item = cartItems[itemIndex];
+        const maxStock = item.availableStock || 10; // Use availableStock or default
+        
+        if (quantity > maxStock) {
+          toast.error(`Only ${maxStock} items available in stock`);
+          return;
+        }
+        
+        const updatedCart = cartItems.map(cartItem => 
+          cartItem.id === id ? { 
+            ...cartItem, 
+            quantity,
+            exceedsStock: quantity > maxStock
+          } : cartItem
+        );
+        setCartItems(updatedCart);
+        toast.success('Quantity updated successfully');
       }
     } catch (error) {
       console.error('Update quantity error:', error);
-      if (error.response?.data?.message) {
-        toast.error(error.response.data.message);
-        
-        // Handle out of stock scenario - refresh cart to get updated stock info
-        if (error.response.data.outOfStock && user && token) {
-          try {
-            const response = await axios.get(CART_API_BASE);
-            if (response.data.success) {
-              setCartItems(response.data.cartItems || []);
-            }
-          } catch (refreshError) {
-            console.error('Error refreshing cart:', refreshError);
-          }
-        }
-      } else {
-        toast.error('Failed to update quantity');
-      }
+      toast.error('Failed to update quantity');
     } finally {
       setLoading(false);
     }
@@ -374,6 +406,7 @@ export const CartProvider = ({ children }) => {
         }
       } catch (error) {
         console.error('Error refreshing cart:', error);
+        // Keep current localStorage items if API fails
       } finally {
         setLoading(false);
       }

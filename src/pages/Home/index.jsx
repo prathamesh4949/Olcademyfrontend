@@ -14,6 +14,7 @@ import { ChevronLeft, ChevronRight, Star, RefreshCw, ShoppingBag, Eye, CheckCirc
 import { FiHeart } from 'react-icons/fi';
 import { useWishlist } from '@/WishlistContext';
 import ProductService from '../../services/productService';
+import ScentService from '../../services/scentService'; // Import ScentService
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -22,10 +23,10 @@ const HomePage = () => {
   const [darkMode, setDarkMode] = useState(false);
   const scrollRef = useRef(null);
   const summerScrollRef = useRef(null);
-  const signatureScrollRef = useRef(null); // Added for Signature Collection
+  const signatureScrollRef = useRef(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [summerCurrentIndex, setSummerCurrentIndex] = useState(0);
-  const [signatureCurrentIndex, setSignatureCurrentIndex] = useState(0); // Added for Signature Collection
+  const [signatureCurrentIndex, setSignatureCurrentIndex] = useState(0);
   const { addToCart, cartItems, isInCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
 
@@ -69,7 +70,33 @@ const HomePage = () => {
     document.documentElement.classList.toggle("dark", darkMode);
   }, [darkMode]);
 
-  // Fetch home page data from backend
+  // Enhanced Banner Click Handler
+  const handleBannerClick = async (banner) => {
+    if (banner && banner._id) {
+      try {
+        await ProductService.trackBannerClick(banner._id);
+      } catch (error) {
+        console.error('Error tracking banner click:', error);
+      }
+    }
+
+    // Navigate based on banner type or specific properties
+    if (banner.buttonLink) {
+      // If banner has specific link, use it
+      navigate(banner.buttonLink);
+    } else if (banner.type === 'trending_collection' || banner.title?.toLowerCase().includes('trending')) {
+      // Navigate to trending collection
+      navigate('/trending-collection');
+    } else if (banner.type === 'best_seller_collection' || banner.title?.toLowerCase().includes('best seller')) {
+      // Navigate to best sellers collection
+      navigate('/best-sellers-collection');
+    } else {
+      // Default fallback
+      console.log('Banner clicked but no specific navigation defined:', banner);
+    }
+  };
+
+  // Updated fetchHomeData with scent integration
   useEffect(() => {
     const fetchHomeData = async () => {
       try {
@@ -78,8 +105,8 @@ const HomePage = () => {
         
         console.log('🔍 Fetching home page data...');
         
-        // Fetch both products and banners
-        const [productsResponse, bannersResponse] = await Promise.all([
+        // Fetch products, banners, and featured scents
+        const [productsResponse, bannersResponse, scentsResponse] = await Promise.all([
           ProductService.getHomeCollections().catch(err => {
             console.error('Products fetch error:', err);
             return { success: false, error: err.message };
@@ -87,13 +114,19 @@ const HomePage = () => {
           ProductService.getHomeBanners().catch(err => {
             console.error('Banners fetch error:', err);
             return { success: false, error: err.message };
+          }),
+          // NEW: Fetch featured scents
+          ScentService.getFeaturedScents().catch(err => {
+            console.error('Scents fetch error:', err);
+            return { success: false, error: err.message };
           })
         ]);
         
         console.log('Home Products Response:', productsResponse);
         console.log('Home Banners Response:', bannersResponse);
+        console.log('Scents Response:', scentsResponse);
         
-        // Handle products
+        // Handle existing products
         if (productsResponse.success && productsResponse.data) {
           const safeCollections = {
             fragrant_favourites: productsResponse.data.fragrant_favourites || [],
@@ -119,7 +152,6 @@ const HomePage = () => {
 
         // Handle banners
         if (bannersResponse.success && bannersResponse.data) {
-          // Organize banners by type
           const bannersByType = {
             hero: null,
             product_highlight: [],
@@ -146,6 +178,30 @@ const HomePage = () => {
             collection_highlight: []
           });
         }
+
+        // NEW: Handle scents data
+        if (scentsResponse.success && scentsResponse.data) {
+          const scentsData = scentsResponse.data;
+          console.log('✅ Featured scents loaded:', {
+            trending: scentsData.trending?.length || 0,
+            bestSellers: scentsData.bestSellers?.length || 0,
+            signature: scentsData.signature?.length || 0
+          });
+          
+          // Option 1: Replace existing collections with scent data
+          // setCollections({
+          //   fragrant_favourites: scentsData.trending || [],
+          //   summer_scents: scentsData.bestSellers || [],
+          //   signature_collection: scentsData.signature || []
+          // });
+          
+          // Option 2: Add scents as additional collections
+          setCollections(prev => ({
+            ...prev,
+            trending_scents: scentsData.trending || [],
+            best_seller_scents: scentsData.bestSellers || []
+          }));
+        }
         
       } catch (err) {
         console.error('❌ Error fetching home data:', err);
@@ -170,17 +226,6 @@ const HomePage = () => {
     fetchHomeData();
   }, []);
 
-  // Handle banner click tracking
-  const handleBannerClick = async (banner) => {
-    if (banner && banner._id) {
-      try {
-        await ProductService.trackBannerClick(banner._id);
-      } catch (error) {
-        console.error('Error tracking banner click:', error);
-      }
-    }
-  };
-
   // Navigation functions with safety checks
   const createNavFunction = (products = [], setIndex) => ({
     next: () => {
@@ -195,7 +240,7 @@ const HomePage = () => {
 
   const fragrantFavouritesNav = createNavFunction(collections.fragrant_favourites, setCurrentIndex);
   const summerScentsNav = createNavFunction(collections.summer_scents, setSummerCurrentIndex);
-  const signatureCollectionNav = createNavFunction(collections.signature_collection, setSignatureCurrentIndex); // Added for Signature Collection
+  const signatureCollectionNav = createNavFunction(collections.signature_collection, setSignatureCurrentIndex);
 
   const handleSubscribe = () => {
     if (email && acceptTerms) {
@@ -621,16 +666,29 @@ const HomePage = () => {
     );
   };
 
-  // Dynamic Banner Component - Updated for full-frame image
+  // Enhanced Dynamic Banner Component with click handling
   const DynamicBanner = ({ banner, type = 'hero' }) => {
     if (!banner) return null;
 
     const handleClick = () => {
       handleBannerClick(banner);
-      // Navigate to banner link if needed
-      if (banner.buttonLink) {
-        window.location.href = banner.buttonLink;
+    };
+
+    // Determine navigation based on banner content
+    const getButtonAction = () => {
+      if (banner.buttonLink) return banner.buttonLink;
+      
+      const title = banner.title?.toLowerCase() || '';
+      const description = banner.description?.toLowerCase() || '';
+      
+      if (title.includes('trending') || description.includes('trending')) {
+        return '/trending-collection';
       }
+      if (title.includes('best seller') || description.includes('best seller') || title.includes('bestseller')) {
+        return '/best-sellers-collection';
+      }
+      
+      return '#'; // Default fallback
     };
 
     if (type === 'product_highlight') {
@@ -640,7 +698,7 @@ const HomePage = () => {
           initial="hidden"
           whileInView="show"
           className="py-16 px-6"
-          style={{ backgroundColor: banner.backgroundColor }}
+          style={{ backgroundColor: banner.backgroundColor || '#F8F5F0' }}
         >
           <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-8 items-center">
             <div className="text-left">
@@ -651,26 +709,31 @@ const HomePage = () => {
               )}
               <h2 className="text-[42px] font-dm-serif mb-6 text-[#79300f] dark:text-[#f6d110]">
                 {banner.title} <br />
-                <span className="text-[#79300f] dark:text-[#f6d110]">
-                  {banner.titleHighlight}
-                </span>
+                {banner.titleHighlight && (
+                  <span className="text-[#79300f] dark:text-[#f6d110]">
+                    {banner.titleHighlight}
+                  </span>
+                )}
               </h2>
               <p className="text-[18px] mb-6 text-[#5a2408] dark:text-gray-300 leading-relaxed">
                 {banner.description}
               </p>
-              <Button 
+              <button
                 onClick={handleClick}
-                className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white px-8 py-4 text-lg font-semibold rounded-xl"
+                className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white px-8 py-4 text-lg font-semibold rounded-xl transition-all duration-300 hover:shadow-lg transform hover:scale-105"
               >
-                {banner.buttonText}
-              </Button>
+                {banner.buttonText || 'Explore Collection'}
+              </button>
             </div>
             <div className="relative h-[400px]">
               <img
                 src={banner.image || '/images/newimg1.PNG'}
                 alt={banner.altText || banner.title}
-                className="w-full h-full object-cover rounded-xl"
-                onError={(e) => { e.target.src = '/images/newimg1.PNG'; }}
+                className="w-full h-full object-cover rounded-xl shadow-lg"
+                onError={(e) => { 
+                  console.warn('Banner image failed to load:', e.target.src);
+                  e.target.src = '/images/newimg1.PNG'; 
+                }}
               />
             </div>
           </div>
@@ -685,7 +748,7 @@ const HomePage = () => {
           initial="hidden"
           whileInView="show"
           className="py-16 px-6"
-          style={{ backgroundColor: banner.backgroundColor }}
+          style={{ backgroundColor: banner.backgroundColor || '#F2F2F2' }}
         >
           <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
             <div className="text-left">
@@ -696,26 +759,31 @@ const HomePage = () => {
               )}
               <h2 className="text-[42px] font-dm-serif mb-6 text-[#79300f] dark:text-[#f6d110]">
                 {banner.title} <br />
-                <span className="text-[#79300f] dark:text-[#f6d110]">
-                  {banner.titleHighlight}
-                </span>
+                {banner.titleHighlight && (
+                  <span className="text-[#79300f] dark:text-[#f6d110]">
+                    {banner.titleHighlight}
+                  </span>
+                )}
               </h2>
               <p className="text-[18px] mb-6 text-[#5a2408] dark:text-gray-300 leading-relaxed">
                 {banner.description}
               </p>
-              <Button 
+              <button
                 onClick={handleClick}
-                className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white px-8 py-4 text-lg font-semibold rounded-xl"
+                className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white px-8 py-4 text-lg font-semibold rounded-xl transition-all duration-300 hover:shadow-lg transform hover:scale-105"
               >
-                {banner.buttonText}
-              </Button>
+                {banner.buttonText || 'View Collection'}
+              </button>
             </div>
             <div className="relative h-[400px]">
               <img
                 src={banner.image || '/images/newimg1.PNG'}
                 alt={banner.altText || banner.title}
-                className="w-full h-full object-cover rounded-xl"
-                onError={(e) => { e.target.src = '/images/newimg1.PNG'; }}
+                className="w-full h-full object-cover rounded-xl shadow-lg"
+                onError={(e) => { 
+                  console.warn('Banner image failed to load:', e.target.src);
+                  e.target.src = '/images/newimg1.PNG'; 
+                }}
               />
             </div>
           </div>

@@ -12,6 +12,21 @@ import GiftCollection from './pages/GiftCollection';
 import Wishlist from './components/common/Wishlist';
 import ProductPage from './pages/ProductPage';
 import ProductDetailPage from './pages/ProductDetailPage';
+import TrendingCollection from './pages/TrendingCollection';
+import BestSellersCollection from './pages/BestSellersCollection';
+import WomensSignatureCollection from './pages/WomensSignatureCollection';
+import RoseGardenEssenceCollection from './pages/RoseGardenEssenceCollection';
+import MensSignatureCollection from './pages/MensSignatureCollection';
+import OrangeMarmaladeCollection from './pages/OrangeMarmaladeCollection';
+// Unisex collection pages
+import GenderFreeFragranceCollection from './pages/GenderFreeFragranceCollection';
+import ScentsWithoutLimitsCollection from './pages/ScentsWithoutLimitsCollection';
+// NEW: Import the new gift collection pages
+import PerfectDiscoverGiftsCollection from './pages/PerfectDiscoverGiftsCollection';
+import PerfectGiftsPremiumCollection from './pages/PerfectGiftsPremiumCollection';
+import PerfectGiftsLuxuryCollection from './pages/PerfectGiftsLuxuryCollection';
+import HomeDecorGiftsCollection from './pages/HomeDecorGiftsCollection';
+
 import { CartProvider } from './CartContext';
 import { Toaster } from 'react-hot-toast';
 import { WishlistProvider } from './WishlistContext';
@@ -44,11 +59,35 @@ const AppRoutes = ({ darkMode, setDarkMode }) => {
               <Route path="/gift-collection" element={<GiftCollection />} />
               <Route path="/search" element={<SearchResults />} />
               
+              {/* Collection Routes */}
+              <Route path="/trending-collection" element={<TrendingCollection />} />
+              <Route path="/best-sellers-collection" element={<BestSellersCollection />} />
+              
+              {/* Women's Collection Routes */}
+              <Route path="/womens-signature-collection" element={<WomensSignatureCollection />} />
+              <Route path="/rose-garden-essence-collection" element={<RoseGardenEssenceCollection />} />
+              
+              {/* Men's Collection Routes */}
+              <Route path="/mens-signature-collection" element={<MensSignatureCollection />} />
+              <Route path="/orange-marmalade-collection" element={<OrangeMarmaladeCollection />} />
+              
+              {/* Unisex Collection Routes */}
+              <Route path="/gender-free-fragrance-collection" element={<GenderFreeFragranceCollection />} />
+              <Route path="/scents-without-limits-collection" element={<ScentsWithoutLimitsCollection />} />
+              
+              {/* NEW: Gift Collection Routes */}
+              <Route path="/perfect-discover-gifts-collection" element={<PerfectDiscoverGiftsCollection />} />
+              <Route path="/perfect-gifts-premium-collection" element={<PerfectGiftsPremiumCollection />} />
+              <Route path="/perfect-gifts-luxury-collection" element={<PerfectGiftsLuxuryCollection />} />
+              <Route path="/home-decor-gifts-collection" element={<HomeDecorGiftsCollection />} />
+              
               {/* IMPORTANT: Static routes BEFORE dynamic routes */}
               <Route path="/product-perfume" element={<ProductPage />} />
               
               {/* Dynamic product route - MUST come after static routes */}
               <Route path="/product/:id" element={<ProductDetailPage />} />
+              {/* Dynamic scent route for new collection items */}
+              <Route path="/scent/:id" element={<ProductDetailPage />} />
               
               {/* Authentication Routes */}
               <Route 
