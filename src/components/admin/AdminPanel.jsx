@@ -39,11 +39,14 @@ import {
   CreditCard,
   X,
   Package2,
-  Palette
+  Palette,
+  Monitor // Added Monitor icon
 } from 'lucide-react';
 
-// Import the Products Section Component
-import AdminProductsSection from './AdminProductsSection'; // This would be the component we just created
+// Import Section Components
+import AdminProductsSection from './AdminProductsSection';
+import AdminScentsSection from './AdminScentsSection';
+import AdminBannersSection from './AdminBannersSection'; // Added AdminBannersSection import
 
 const ModernAdminPanel = () => {
   const { 
@@ -350,7 +353,9 @@ const ModernAdminPanel = () => {
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home, isActive: true },
-    { id: 'products', label: 'Products', icon: Package2, isActive: true }, // Now active
+    { id: 'products', label: 'Products', icon: Package2, isActive: true },
+    { id: 'banners', label: 'Banners', icon: Monitor, isActive: true }, // Added Banners menu item
+    { id: 'scents', label: 'Scents', icon: Star, isActive: true },
     { id: 'orders', label: 'Orders', icon: ShoppingBag, isActive: true },
     { id: 'users', label: 'Users', icon: Users, isActive: true },
     { id: 'analytics', label: 'Analytics', icon: BarChart3, isActive: false },
@@ -637,8 +642,14 @@ const ModernAdminPanel = () => {
             </div>
           )}
 
-          {/* Products Tab - NEW SECTION */}
+          {/* Products Tab */}
           {activeTab === 'products' && <AdminProductsSection />}
+
+          {/* Banners Tab */}
+          {activeTab === 'banners' && <AdminBannersSection />}
+
+          {/* Scents Tab */}
+          {activeTab === 'scents' && <AdminScentsSection />}
 
           {/* Orders Tab */}
           {activeTab === 'orders' && (
