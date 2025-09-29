@@ -296,12 +296,12 @@ const HomePage = () => {
     if (!product) {
       console.warn('ProductCard: No product data provided');
       return (
-        <div className={`${isCompact ? 'w-[300px]' : 'w-full'} bg-gray-200 dark:bg-gray-700 animate-pulse rounded-2xl p-6`}>
-          <div className="h-[200px] bg-gray-300 dark:bg-gray-600 rounded-xl mb-4"></div>
+        <div className={`${isCompact ? 'w-[300px]' : 'w-full'} bg-gray-200 animate-pulse rounded-2xl p-6`}>
+          <div className="h-[200px] bg-gray-300 rounded-xl mb-4"></div>
           <div className="space-y-3">
-            <div className="h-6 bg-gray-300 dark:bg-gray-600 rounded"></div>
-            <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-3/4"></div>
-            <div className="h-8 bg-gray-300 dark:bg-gray-600 rounded"></div>
+            <div className="h-6 bg-gray-300 rounded"></div>
+            <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+            <div className="h-8 bg-gray-300 rounded"></div>
           </div>
         </div>
       );
@@ -439,7 +439,7 @@ const HomePage = () => {
         layout
         whileHover={{ scale: 1.02, y: -5 }}
         transition={{ duration: 0.3, type: "spring", stiffness: 300 }}
-        className={`bg-gradient-to-br from-[#F5E9DC] to-[#E7DDC6] dark:from-gray-800 dark:to-gray-700 p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 text-left relative flex-shrink-0 border border-[#D4C5A9] dark:border-gray-600 group cursor-pointer ${isCompact ? 'w-[300px]' : 'w-full'} backdrop-blur-sm flex flex-col`}
+        className={`bg-white p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 text-left relative flex-shrink-0 border border-gray-200 group cursor-pointer ${isCompact ? 'w-[300px]' : 'w-full'} backdrop-blur-sm flex flex-col`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         onClick={handleCardClick}
@@ -449,7 +449,7 @@ const HomePage = () => {
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           onClick={handleWishlistToggle}
-          className="absolute top-4 right-4 text-[#79300f] hover:text-red-600 dark:text-[#f6d110] dark:hover:text-red-400 z-10 bg-white/90 dark:bg-black/90 backdrop-blur-sm rounded-full p-2 shadow-md transition-all duration-200"
+          className="absolute top-4 right-4 text-[#79300f] hover:text-red-600 z-10 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-md transition-all duration-200"
           aria-label={isInWishlist(product._id) ? 'Remove from wishlist' : 'Add to wishlist'}
         >
           <FiHeart size={18} className={isInWishlist(product._id) ? 'fill-red-600 text-red-600' : ''} />
@@ -465,10 +465,10 @@ const HomePage = () => {
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={handleQuickView}
-              className="absolute top-4 right-16 bg-white/90 dark:bg-black/90 backdrop-blur-sm rounded-full p-2 shadow-md transition-all duration-200 z-10"
+              className="absolute top-4 right-16 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-md transition-all duration-200 z-10"
               aria-label="Quick view"
             >
-              <Eye size={18} className="text-[#79300f] dark:text-[#f6d110]" />
+              <Eye size={18} className="text-[#79300f]" />
             </motion.button>
           )}
         </AnimatePresence>
@@ -488,7 +488,7 @@ const HomePage = () => {
         )}
 
         {/* Image Container */}
-        <div className="bg-white/50 dark:bg-black/20 backdrop-blur-sm rounded-xl p-4 mb-4 shadow-inner relative overflow-hidden">
+        <div className="bg-gray-50 rounded-xl p-4 mb-4 shadow-inner relative overflow-hidden">
           {imageLoading && (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#79300f]"></div>
@@ -523,13 +523,13 @@ const HomePage = () => {
         {/* Product Info */}
         <div className="space-y-3 flex-1">
           <div className="flex items-start justify-between">
-            <h3 className={`${isCompact ? 'text-lg' : 'text-xl'} font-alata text-[#5a2408] dark:text-gray-200 font-bold leading-tight`}>
+            <h3 className={`${isCompact ? 'text-lg' : 'text-xl'} font-alata text-[#5a2408] font-bold leading-tight`}>
               {product.name || 'Unnamed Product'}
             </h3>
             {product.rating && (
               <div className="flex items-center space-x-1">
                 <Star size={14} className="text-yellow-500 fill-current" />
-                <span className="text-sm text-gray-600 dark:text-gray-400">
+                <span className="text-sm text-gray-600">
                   {product.rating.toFixed(1)}
                 </span>
               </div>
@@ -537,24 +537,24 @@ const HomePage = () => {
           </div>
           
           {product.description && (
-            <p className={`${isCompact ? 'text-xs' : 'text-sm'} text-[#8b4513] dark:text-gray-400 leading-relaxed line-clamp-2`}>
+            <p className={`${isCompact ? 'text-xs' : 'text-sm'} text-[#8b4513] leading-relaxed line-clamp-2`}>
               {product.description}
             </p>
           )}
           
           <div className="flex items-center justify-between pt-2">
             <div className="flex flex-col">
-              <p className={`${isCompact ? 'text-lg' : 'text-xl'} font-bold text-[#79300f] dark:text-[#f6d110]`}>
+              <p className={`${isCompact ? 'text-lg' : 'text-xl'} font-bold text-[#79300f]`}>
                 ${typeof product.price === 'number' ? product.price.toFixed(2) : '0.00'}
               </p>
               {product.originalPrice && product.originalPrice > product.price && (
-                <p className="text-sm text-gray-500 dark:text-gray-400 line-through">
+                <p className="text-sm text-gray-500 line-through">
                   ${product.originalPrice.toFixed(2)}
                 </p>
               )}
             </div>
-            <div className="bg-[#79300f]/10 dark:bg-[#f6d110]/10 px-2 py-1 rounded-full">
-              <span className="text-xs text-[#79300f] dark:text-[#f6d110] font-medium">PREMIUM</span>
+            <div className="bg-[#79300f]/10 px-2 py-1 rounded-full">
+              <span className="text-xs text-[#79300f] font-medium">PREMIUM</span>
             </div>
           </div>
         </div>
@@ -593,24 +593,24 @@ const HomePage = () => {
     console.log(`Rendering ${title} with ${products?.length || 0} products`);
     
     return (
-      <section className="py-16 px-6 bg-[#F2F2F2] dark:bg-[#0d0603]">
+      <section className="py-16 px-6" style={{ backgroundColor: '#F9F7F6' }}>
         <div className="max-w-7xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <h2 className="text-[50px] font-dm-serif mb-12 text-[#79300f] dark:text-[#f6d110]">
+            <h2 className="text-[50px] font-dm-serif mb-12 text-[#79300f]">
               {title}
             </h2>
           </motion.div>
 
           {products.length === 0 && !loading ? (
             <div className="text-center py-16">
-              <p className="text-lg text-gray-500 dark:text-gray-400">
+              <p className="text-lg text-gray-500">
                 No products available in this collection.
               </p>
-              <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">
+              <p className="text-sm text-gray-400 mt-2">
                 Please check back later or try refreshing the page.
               </p>
             </div>
@@ -698,24 +698,24 @@ const HomePage = () => {
           initial="hidden"
           whileInView="show"
           className="py-16 px-6"
-          style={{ backgroundColor: banner.backgroundColor || '#F8F5F0' }}
+          style={{ backgroundColor: '#F9F7F6' }}
         >
           <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-8 items-center">
             <div className="text-left">
               {banner.subtitle && (
-                <h3 className="text-lg text-[#79300f] dark:text-[#f6d110] font-semibold uppercase mb-3">
+                <h3 className="text-lg text-[#79300f] font-semibold uppercase mb-3">
                   {banner.subtitle}
                 </h3>
               )}
-              <h2 className="text-[42px] font-dm-serif mb-6 text-[#79300f] dark:text-[#f6d110]">
+              <h2 className="text-[42px] font-dm-serif mb-6 text-[#79300f]">
                 {banner.title} <br />
                 {banner.titleHighlight && (
-                  <span className="text-[#79300f] dark:text-[#f6d110]">
+                  <span className="text-[#79300f]">
                     {banner.titleHighlight}
                   </span>
                 )}
               </h2>
-              <p className="text-[18px] mb-6 text-[#5a2408] dark:text-gray-300 leading-relaxed">
+              <p className="text-[18px] mb-6 text-[#5a2408] leading-relaxed">
                 {banner.description}
               </p>
               <button
@@ -748,24 +748,24 @@ const HomePage = () => {
           initial="hidden"
           whileInView="show"
           className="py-16 px-6"
-          style={{ backgroundColor: banner.backgroundColor || '#F2F2F2' }}
+          style={{ backgroundColor: '#F9F7F6' }}
         >
           <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
             <div className="text-left">
               {banner.subtitle && (
-                <h3 className="text-lg text-[#79300f] dark:text-[#f6d110] font-semibold uppercase mb-3">
+                <h3 className="text-lg text-[#79300f] font-semibold uppercase mb-3">
                   {banner.subtitle}
                 </h3>
               )}
-              <h2 className="text-[42px] font-dm-serif mb-6 text-[#79300f] dark:text-[#f6d110]">
+              <h2 className="text-[42px] font-dm-serif mb-6 text-[#79300f]">
                 {banner.title} <br />
                 {banner.titleHighlight && (
-                  <span className="text-[#79300f] dark:text-[#f6d110]">
+                  <span className="text-[#79300f]">
                     {banner.titleHighlight}
                   </span>
                 )}
               </h2>
-              <p className="text-[18px] mb-6 text-[#5a2408] dark:text-gray-300 leading-relaxed">
+              <p className="text-[18px] mb-6 text-[#5a2408] leading-relaxed">
                 {banner.description}
               </p>
               <button
@@ -876,16 +876,16 @@ const HomePage = () => {
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.8, opacity: 0 }}
-            className="bg-white dark:bg-gray-800 rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+            className="bg-white rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold text-[#79300f] dark:text-[#f6d110]">
+              <h3 className="text-2xl font-bold text-[#79300f]">
                 Quick View
               </h3>
               <button
                 onClick={handleClose}
-                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-2xl"
+                className="text-gray-500 hover:text-gray-700 text-2xl"
                 aria-label="Close quick view"
               >
                 ×
@@ -897,7 +897,7 @@ const HomePage = () => {
                 <img
                   src={quickViewProduct.images?.[0] || '/images/default-gift.png'}
                   alt={quickViewProduct.name || 'Product'}
-                  className="w-full h-64 object-contain rounded-2xl bg-gray-100 dark:bg-gray-700"
+                  className="w-full h-64 object-contain rounded-2xl bg-gray-100"
                   onError={(e) => {
                     e.target.src = '/images/default-gift.png';
                   }}
@@ -905,13 +905,13 @@ const HomePage = () => {
               </div>
               
               <div className="space-y-4">
-                <h4 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                <h4 className="text-xl font-bold text-gray-900">
                   {quickViewProduct.name || 'Unnamed Product'}
                 </h4>
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-gray-600">
                   {quickViewProduct.description || 'No description available'}
                 </p>
-                <p className="text-2xl font-bold text-[#79300f] dark:text-[#f6d110]">
+                <p className="text-2xl font-bold text-[#79300f]">
                   ${quickViewProduct.price ? quickViewProduct.price.toFixed(2) : '0.00'}
                 </p>
                 
@@ -997,12 +997,12 @@ const HomePage = () => {
   );
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#F9F7F6' }}>
       <Header />
       <NotificationSystem />
       <QuickViewModal />
       
-      <main className="flex-1">
+      <main className="flex-1" style={{ backgroundColor: '#F9F7F6' }}>
         {/* HeroSection */}
         {banners.hero && (
           <HeroSection
@@ -1018,7 +1018,7 @@ const HomePage = () => {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="max-w-7xl mx-auto px-6 py-4 text-red-600 dark:text-red-400"
+            className="max-w-7xl mx-auto px-6 py-4 text-red-600"
           >
             <AlertCircle size={20} className="inline mr-2" />
             {error}
@@ -1059,18 +1059,18 @@ const HomePage = () => {
           scrollRef={signatureScrollRef}
         />
 
-        <section className="py-20 px-6 bg-gradient-to-br from-[#0d0603] to-[#1a1410] dark:from-[#F8F5F0] dark:to-[#F2F2F2]">
+        <section className="py-20 px-6" style={{ backgroundColor: '#F9F7F6' }}>
           <div className="max-w-7xl mx-auto text-center">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <span className="text-lg text-[#f6d110] font-medium uppercase tracking-wider mb-4 block">Exclusive Access</span>
-              <h2 className="text-[50px] md:text-[60px] font-dm-serif mb-6 text-white leading-tight">
+              <span className="text-lg text-[#79300f] font-medium uppercase tracking-wider mb-4 block">Exclusive Access</span>
+              <h2 className="text-[50px] md:text-[60px] font-dm-serif mb-6 text-[#79300f] leading-tight">
                 Join Our Exclusive Circle
               </h2>
-              <p className="text-[20px] mb-12 text-gray-200 leading-relaxed max-w-3xl mx-auto">
+              <p className="text-[20px] mb-12 text-[#5a2408] leading-relaxed max-w-3xl mx-auto">
                 Subscribe to our newsletter for early access to limited edition releases, private events,
                 and the secrets behind our scent creations. Be the first to discover luxury.
               </p>
@@ -1080,7 +1080,7 @@ const HomePage = () => {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 max-w-2xl mx-auto border border-white/20 shadow-2xl"
+              className="bg-white/90 backdrop-blur-lg rounded-2xl p-8 max-w-2xl mx-auto border border-gray-200 shadow-2xl"
             >
               <div className="flex flex-col md:flex-row items-center gap-4 justify-center mb-6">
                 <input 
@@ -1088,10 +1088,10 @@ const HomePage = () => {
                   placeholder='Enter your email address'
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className='bg-white/90 text-[#79300f] placeholder-gray-500 px-6 py-4 flex-1 outline-none rounded-xl border border-white/30 backdrop-blur-sm shadow-lg focus:bg-white focus:shadow-xl transition-all duration-300' 
+                  className='bg-white text-[#79300f] placeholder-gray-500 px-6 py-4 flex-1 outline-none rounded-xl border border-gray-300 shadow-lg focus:border-[#79300f] focus:shadow-xl transition-all duration-300' 
                 />
                 <Button
-                  className='bg-gradient-to-r from-[#f6d110] to-[#e6c200] hover:from-[#e6c200] hover:to-[#f6d110] text-[#79300f] px-8 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 whitespace-nowrap'
+                  className='bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white px-8 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 whitespace-nowrap'
                   onClick={handleSubscribe}
                 >
                   Subscribe Now
@@ -1102,11 +1102,11 @@ const HomePage = () => {
                 <Checkbox
                   checked={acceptTerms}
                   onChange={(e) => setAcceptTerms(e.target.checked)}
-                  className='h-5 w-5 accent-[#f6d110]'
+                  className='h-5 w-5 accent-[#79300f]'
                 />
-                <span className="text-sm text-gray-200">
+                <span className="text-sm text-[#5a2408]">
                   By checking this box, I accept the{' '}
-                  <a href="#" className="text-[#f6d110] hover:text-white underline transition-colors">
+                  <a href="#" className="text-[#79300f] hover:text-[#5a2408] underline transition-colors">
                     terms and conditions
                   </a>
                   .
