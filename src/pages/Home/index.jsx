@@ -10,7 +10,18 @@ import { useCart } from '@/CartContext';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fadeIn } from '../../variants';
-import { ChevronLeft, ChevronRight, Star, RefreshCw, ShoppingBag, Eye, CheckCircle, AlertCircle, Heart, ShoppingCart } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Star,
+  RefreshCw,
+  ShoppingBag,
+  Eye,
+  CheckCircle,
+  AlertCircle,
+  Heart,
+  ShoppingCart,
+} from 'lucide-react';
 import { FiHeart } from 'react-icons/fi';
 import { useWishlist } from '@/WishlistContext';
 import ProductService from '../../services/productService';
@@ -34,15 +45,15 @@ const HomePage = () => {
   const [collections, setCollections] = useState({
     fragrant_favourites: [],
     summer_scents: [],
-    signature_collection: []
+    signature_collection: [],
   });
-  
+
   const [banners, setBanners] = useState({
     hero: null,
     product_highlight: [],
-    collection_highlight: []
+    collection_highlight: [],
   });
-  
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -53,21 +64,21 @@ const HomePage = () => {
   // Add notification helper
   const addNotification = useCallback((message, type = 'success') => {
     const id = Date.now();
-    setNotifications(prev => [...prev, { id, message, type }]);
+    setNotifications((prev) => [...prev, { id, message, type }]);
     setTimeout(() => {
-      setNotifications(prev => prev.filter(n => n.id !== id));
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
     }, 3000);
   }, []);
 
   // Load theme preference
   useEffect(() => {
-    const stored = localStorage.getItem("darkMode");
+    const stored = localStorage.getItem('darkMode');
     if (stored !== null) setDarkMode(JSON.parse(stored));
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("darkMode", JSON.stringify(darkMode));
-    document.documentElement.classList.toggle("dark", darkMode);
+    localStorage.setItem('darkMode', JSON.stringify(darkMode));
+    document.documentElement.classList.toggle('dark', darkMode);
   }, [darkMode]);
 
   // Enhanced Banner Click Handler
@@ -84,10 +95,16 @@ const HomePage = () => {
     if (banner.buttonLink) {
       // If banner has specific link, use it
       navigate(banner.buttonLink);
-    } else if (banner.type === 'trending_collection' || banner.title?.toLowerCase().includes('trending')) {
+    } else if (
+      banner.type === 'trending_collection' ||
+      banner.title?.toLowerCase().includes('trending')
+    ) {
       // Navigate to trending collection
       navigate('/trending-collection');
-    } else if (banner.type === 'best_seller_collection' || banner.title?.toLowerCase().includes('best seller')) {
+    } else if (
+      banner.type === 'best_seller_collection' ||
+      banner.title?.toLowerCase().includes('best seller')
+    ) {
       // Navigate to best sellers collection
       navigate('/best-sellers-collection');
     } else {
@@ -102,51 +119,51 @@ const HomePage = () => {
       try {
         setLoading(true);
         setError(null);
-        
+
         console.log('🔍 Fetching home page data...');
-        
+
         // Fetch products, banners, and featured scents
         const [productsResponse, bannersResponse, scentsResponse] = await Promise.all([
-          ProductService.getHomeCollections().catch(err => {
+          ProductService.getHomeCollections().catch((err) => {
             console.error('Products fetch error:', err);
             return { success: false, error: err.message };
           }),
-          ProductService.getHomeBanners().catch(err => {
+          ProductService.getHomeBanners().catch((err) => {
             console.error('Banners fetch error:', err);
             return { success: false, error: err.message };
           }),
           // NEW: Fetch featured scents
-          ScentService.getFeaturedScents().catch(err => {
+          ScentService.getFeaturedScents().catch((err) => {
             console.error('Scents fetch error:', err);
             return { success: false, error: err.message };
-          })
+          }),
         ]);
-        
+
         console.log('Home Products Response:', productsResponse);
         console.log('Home Banners Response:', bannersResponse);
         console.log('Scents Response:', scentsResponse);
-        
+
         // Handle existing products
         if (productsResponse.success && productsResponse.data) {
           const safeCollections = {
             fragrant_favourites: productsResponse.data.fragrant_favourites || [],
             summer_scents: productsResponse.data.summer_scents || [],
-            signature_collection: productsResponse.data.signature_collection || []
+            signature_collection: productsResponse.data.signature_collection || [],
           };
-          
+
           console.log('✅ Collections processed:', {
             fragrant_favourites: safeCollections.fragrant_favourites.length,
             summer_scents: safeCollections.summer_scents.length,
-            signature_collection: safeCollections.signature_collection.length
+            signature_collection: safeCollections.signature_collection.length,
           });
-          
+
           setCollections(safeCollections);
         } else {
           console.warn('⚠️ Products fetch failed or empty:', productsResponse);
           setCollections({
             fragrant_favourites: [],
             summer_scents: [],
-            signature_collection: []
+            signature_collection: [],
           });
         }
 
@@ -155,10 +172,10 @@ const HomePage = () => {
           const bannersByType = {
             hero: null,
             product_highlight: [],
-            collection_highlight: []
+            collection_highlight: [],
           };
 
-          (bannersResponse.data || []).forEach(banner => {
+          (bannersResponse.data || []).forEach((banner) => {
             if (banner.type === 'hero') {
               bannersByType.hero = banner;
             } else if (banner.type === 'product_highlight') {
@@ -175,7 +192,7 @@ const HomePage = () => {
           setBanners({
             hero: null,
             product_highlight: [],
-            collection_highlight: []
+            collection_highlight: [],
           });
         }
 
@@ -185,38 +202,37 @@ const HomePage = () => {
           console.log('✅ Featured scents loaded:', {
             trending: scentsData.trending?.length || 0,
             bestSellers: scentsData.bestSellers?.length || 0,
-            signature: scentsData.signature?.length || 0
+            signature: scentsData.signature?.length || 0,
           });
-          
+
           // Option 1: Replace existing collections with scent data
           // setCollections({
           //   fragrant_favourites: scentsData.trending || [],
           //   summer_scents: scentsData.bestSellers || [],
           //   signature_collection: scentsData.signature || []
           // });
-          
+
           // Option 2: Add scents as additional collections
-          setCollections(prev => ({
+          setCollections((prev) => ({
             ...prev,
             trending_scents: scentsData.trending || [],
-            best_seller_scents: scentsData.bestSellers || []
+            best_seller_scents: scentsData.bestSellers || [],
           }));
         }
-        
       } catch (err) {
         console.error('❌ Error fetching home data:', err);
         setError(err.message);
-        
+
         // Fallback to empty arrays to prevent crashes
         setCollections({
           fragrant_favourites: [],
           summer_scents: [],
-          signature_collection: []
+          signature_collection: [],
         });
         setBanners({
           hero: null,
           product_highlight: [],
-          collection_highlight: []
+          collection_highlight: [],
         });
       } finally {
         setLoading(false);
@@ -230,17 +246,20 @@ const HomePage = () => {
   const createNavFunction = (products = [], setIndex) => ({
     next: () => {
       if (!products || products.length <= 4) return;
-      setIndex(prev => Math.min(prev + 1, products.length - 4));
+      setIndex((prev) => Math.min(prev + 1, products.length - 4));
     },
     prev: () => {
       if (!products || products.length <= 4) return;
-      setIndex(prev => Math.max(prev - 1, 0));
-    }
+      setIndex((prev) => Math.max(prev - 1, 0));
+    },
   });
 
   const fragrantFavouritesNav = createNavFunction(collections.fragrant_favourites, setCurrentIndex);
   const summerScentsNav = createNavFunction(collections.summer_scents, setSummerCurrentIndex);
-  const signatureCollectionNav = createNavFunction(collections.signature_collection, setSignatureCurrentIndex);
+  const signatureCollectionNav = createNavFunction(
+    collections.signature_collection,
+    setSignatureCurrentIndex
+  );
 
   const handleSubscribe = () => {
     if (email && acceptTerms) {
@@ -258,25 +277,25 @@ const HomePage = () => {
       console.error('❌ No product data provided for navigation');
       return;
     }
-    
+
     if (!product._id) {
       console.error('❌ Product missing _id:', product);
       return;
     }
-    
+
     // Validate the product ID format
     const productId = product._id.toString();
     if (productId.length !== 24) {
       console.error('❌ Invalid product ID format:', productId);
       return;
     }
-    
+
     console.log('🔗 Navigating to product:', {
       id: productId,
       name: product.name,
-      category: product.category
+      category: product.category,
     });
-    
+
     try {
       navigate(`/product/${productId}`);
     } catch (error) {
@@ -296,8 +315,12 @@ const HomePage = () => {
     if (!product) {
       console.warn('ProductCard: No product data provided');
       return (
-        <div className={`${isCompact ? 'w-[300px]' : 'w-full'} bg-gray-200 animate-pulse rounded-2xl p-6`}>
+        // HEAD
+        <div
+          className={`${isCompact ? 'w-[300px]' : 'w-full'} bg-gray-200 animate-pulse rounded-2xl p-6`}
+        >
           <div className="h-[200px] bg-gray-300 rounded-xl mb-4"></div>
+
           <div className="space-y-3">
             <div className="h-6 bg-gray-300 rounded"></div>
             <div className="h-4 bg-gray-300 rounded w-3/4"></div>
@@ -309,10 +332,13 @@ const HomePage = () => {
 
     const validateProduct = (product) => {
       const requiredFields = ['_id', 'name', 'price'];
-      return requiredFields.every(field => product[field]);
+      return requiredFields.every((field) => product[field]);
     };
-    
-    const productInCart = isInCart(product._id?.toString(), product.sizes && product.sizes.length > 0 ? product.sizes[0].size : null);
+
+    const productInCart = isInCart(
+      product._id?.toString(),
+      product.sizes && product.sizes.length > 0 ? product.sizes[0].size : null
+    );
 
     const handleAddToCart = async (e) => {
       e.stopPropagation();
@@ -328,10 +354,13 @@ const HomePage = () => {
         id: product._id.toString(),
         name: product.name,
         price: Number(product.price),
-        image: product.images && product.images.length > 0 ? product.images[0] : '/images/default-gift.png',
+        image:
+          product.images && product.images.length > 0
+            ? product.images[0]
+            : '/images/default-gift.png',
         quantity: 1,
         selectedSize: product.sizes && product.sizes.length > 0 ? product.sizes[0].size : null,
-        personalization: null
+        personalization: null,
       };
 
       try {
@@ -356,7 +385,7 @@ const HomePage = () => {
 
     const handleWishlistToggle = (e) => {
       e.stopPropagation();
-      
+
       if (!product._id) {
         addNotification('Unable to add to wishlist', 'error');
         return;
@@ -364,22 +393,22 @@ const HomePage = () => {
 
       try {
         const wasInWishlist = isInWishlist(product._id);
-        
+
         const wishlistProduct = {
           id: product._id.toString(),
           name: product.name,
           price: product.price,
-          image: product.images && product.images.length > 0 ? product.images[0] : '/images/default-gift.png',
+          image:
+            product.images && product.images.length > 0
+              ? product.images[0]
+              : '/images/default-gift.png',
           description: product.description || '',
           category: product.category || '',
-          selectedSize: null
+          selectedSize: null,
         };
-        
+
         toggleWishlist(wishlistProduct);
-        addNotification(
-          wasInWishlist ? 'Removed from wishlist' : 'Added to wishlist!',
-          'success'
-        );
+        addNotification(wasInWishlist ? 'Removed from wishlist' : 'Added to wishlist!', 'success');
       } catch (error) {
         console.error('Wishlist toggle error:', error);
         addNotification('Failed to update wishlist', 'error');
@@ -417,7 +446,12 @@ const HomePage = () => {
       if (isHovered && product.hoverImage && !imageError.hover) {
         return product.hoverImage;
       }
-      if (product.images && Array.isArray(product.images) && product.images.length > 0 && !imageError.primary) {
+      if (
+        product.images &&
+        Array.isArray(product.images) &&
+        product.images.length > 0 &&
+        !imageError.primary
+      ) {
         return product.images[0];
       }
       return '/images/default-gift.png';
@@ -425,7 +459,7 @@ const HomePage = () => {
 
     const handleImageError = (e, type = 'primary') => {
       console.warn(`ProductCard (${product._id}): Image error for ${type} image`, e.target.src);
-      setImageError(prev => ({ ...prev, [type]: true }));
+      setImageError((prev) => ({ ...prev, [type]: true }));
       setImageLoading(false);
       e.target.src = '/images/default-gift.png';
     };
@@ -433,12 +467,12 @@ const HomePage = () => {
     const handleImageLoad = () => {
       setImageLoading(false);
     };
-    
+
     return (
       <motion.div
         layout
         whileHover={{ scale: 1.02, y: -5 }}
-        transition={{ duration: 0.3, type: "spring", stiffness: 300 }}
+        transition={{ duration: 0.3, type: 'spring', stiffness: 300 }}
         className={`bg-white p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 text-left relative flex-shrink-0 border border-gray-200 group cursor-pointer ${isCompact ? 'w-[300px]' : 'w-full'} backdrop-blur-sm flex flex-col`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -452,7 +486,10 @@ const HomePage = () => {
           className="absolute top-4 right-4 text-[#79300f] hover:text-red-600 z-10 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-md transition-all duration-200"
           aria-label={isInWishlist(product._id) ? 'Remove from wishlist' : 'Add to wishlist'}
         >
-          <FiHeart size={18} className={isInWishlist(product._id) ? 'fill-red-600 text-red-600' : ''} />
+          <FiHeart
+            size={18}
+            className={isInWishlist(product._id) ? 'fill-red-600 text-red-600' : ''}
+          />
         </motion.button>
 
         {/* Quick View Button */}
@@ -494,10 +531,10 @@ const HomePage = () => {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#79300f]"></div>
             </div>
           )}
-          <img 
+          <img
             src={getProductImage()}
-            alt={product.name || 'Gift'} 
-            className={`${isCompact ? 'h-[200px]' : 'h-[300px]'} w-full object-contain transition-all duration-500 group-hover:scale-105 ${imageLoading ? 'opacity-0' : 'opacity-100'}`} 
+            alt={product.name || 'Gift'}
+            className={`${isCompact ? 'h-[200px]' : 'h-[300px]'} w-full object-contain transition-all duration-500 group-hover:scale-105 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
             onError={(e) => handleImageError(e, isHovered ? 'hover' : 'primary')}
             onLoad={handleImageLoad}
             loading="lazy"
@@ -523,25 +560,28 @@ const HomePage = () => {
         {/* Product Info */}
         <div className="space-y-3 flex-1">
           <div className="flex items-start justify-between">
-            <h3 className={`${isCompact ? 'text-lg' : 'text-xl'} font-alata text-[#5a2408] font-bold leading-tight`}>
+            <h3
+              className={`${isCompact ? 'text-lg' : 'text-xl'} font-alata text-[#5a2408] font-bold leading-tight`}
+            >
+              =======
               {product.name || 'Unnamed Product'}
             </h3>
             {product.rating && (
               <div className="flex items-center space-x-1">
                 <Star size={14} className="text-yellow-500 fill-current" />
-                <span className="text-sm text-gray-600">
-                  {product.rating.toFixed(1)}
-                </span>
+                <span className="text-sm text-gray-600">{product.rating.toFixed(1)}</span>
               </div>
             )}
           </div>
-          
+
           {product.description && (
-            <p className={`${isCompact ? 'text-xs' : 'text-sm'} text-[#8b4513] leading-relaxed line-clamp-2`}>
+            <p
+              className={`${isCompact ? 'text-xs' : 'text-sm'} text-[#8b4513] leading-relaxed line-clamp-2`}
+            >
               {product.description}
             </p>
           )}
-          
+
           <div className="flex items-center justify-between pt-2">
             <div className="flex flex-col">
               <p className={`${isCompact ? 'text-lg' : 'text-xl'} font-bold text-[#79300f]`}>
@@ -553,6 +593,7 @@ const HomePage = () => {
                 </p>
               )}
             </div>
+
             <div className="bg-[#79300f]/10 px-2 py-1 rounded-full">
               <span className="text-xs text-[#79300f] font-medium">PREMIUM</span>
             </div>
@@ -566,7 +607,7 @@ const HomePage = () => {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           className={`w-full font-semibold py-3 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 mt-auto ${
-            productInCart 
+            productInCart
               ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-700 hover:via-teal-700 hover:to-cyan-700 text-white border border-emerald-400/30 shadow-emerald-500/20'
               : 'bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white'
           }`}
@@ -591,7 +632,7 @@ const HomePage = () => {
   // Collection Section Component with smooth transitions
   const CollectionSection = ({ title, products = [], index = 0, navigation, scrollRef }) => {
     console.log(`Rendering ${title} with ${products?.length || 0} products`);
-    
+
     return (
       <section className="py-16 px-6" style={{ backgroundColor: '#F9F7F6' }}>
         <div className="max-w-7xl mx-auto text-center">
@@ -600,16 +641,12 @@ const HomePage = () => {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <h2 className="text-[50px] font-dm-serif mb-12 text-[#79300f]">
-              {title}
-            </h2>
+            <h2 className="text-[50px] font-dm-serif mb-12 text-[#79300f]">{title}</h2>
           </motion.div>
 
           {products.length === 0 && !loading ? (
             <div className="text-center py-16">
-              <p className="text-lg text-gray-500">
-                No products available in this collection.
-              </p>
+              <p className="text-lg text-gray-500">No products available in this collection.</p>
               <p className="text-sm text-gray-400 mt-2">
                 Please check back later or try refreshing the page.
               </p>
@@ -622,11 +659,11 @@ const HomePage = () => {
                 </div>
               ) : (
                 <div className="overflow-hidden">
-                  <div 
+                  <div
                     className="flex gap-6 transition-transform duration-500 ease-in-out will-change-transform"
-                    style={{ 
+                    style={{
                       transform: `translateX(-${index * 312}px)`,
-                      width: `${products.length * 312}px`
+                      width: `${products.length * 312}px`,
                     }}
                     ref={scrollRef}
                   >
@@ -677,24 +714,28 @@ const HomePage = () => {
     // Determine navigation based on banner content
     const getButtonAction = () => {
       if (banner.buttonLink) return banner.buttonLink;
-      
+
       const title = banner.title?.toLowerCase() || '';
       const description = banner.description?.toLowerCase() || '';
-      
+
       if (title.includes('trending') || description.includes('trending')) {
         return '/trending-collection';
       }
-      if (title.includes('best seller') || description.includes('best seller') || title.includes('bestseller')) {
+      if (
+        title.includes('best seller') ||
+        description.includes('best seller') ||
+        title.includes('bestseller')
+      ) {
         return '/best-sellers-collection';
       }
-      
+
       return '#'; // Default fallback
     };
 
     if (type === 'product_highlight') {
       return (
         <motion.section
-          variants={fadeIn("up", 0.2)}
+          variants={fadeIn('up', 0.2)}
           initial="hidden"
           whileInView="show"
           className="py-16 px-6"
@@ -707,22 +748,35 @@ const HomePage = () => {
                   {banner.subtitle}
                 </h3>
               )}
+
               <h2 className="text-[42px] font-dm-serif mb-6 text-[#79300f]">
                 {banner.title} <br />
                 {banner.titleHighlight && (
-                  <span className="text-[#79300f]">
-                    {banner.titleHighlight}
-                  </span>
+                  <span className="text-[#79300f]">{banner.titleHighlight}</span>
                 )}
               </h2>
               <p className="text-[18px] mb-6 text-[#5a2408] leading-relaxed">
                 {banner.description}
               </p>
-              <button
+              {/* <button
                 onClick={handleClick}
-                className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white px-8 py-4 text-lg font-semibold rounded-xl transition-all duration-300 hover:shadow-lg transform hover:scale-105"
+                className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white px-8 py-4 text-lg font-semibold rounded-md transition-all duration-300 hover:shadow-lg transform hover:scale-105"
               >
                 {banner.buttonText || 'Explore Collection'}
+              </button> */}
+              <button
+                onClick={handleClick}
+                className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white px-8 py-3 text-lg font-semibold rounded-lg transition-all duration-300 hover:shadow-lg transform hover:scale-105 flex items-center gap-3 w-fit"
+              >
+                <span>{banner.buttonText || 'Explore Collection'}</span>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 8l4 4m0 0l-4 4m4-4H3"
+                  />
+                </svg>
               </button>
             </div>
             <div className="relative h-[400px]">
@@ -730,9 +784,9 @@ const HomePage = () => {
                 src={banner.image || '/images/newimg1.PNG'}
                 alt={banner.altText || banner.title}
                 className="w-full h-full object-cover rounded-xl shadow-lg"
-                onError={(e) => { 
+                onError={(e) => {
                   console.warn('Banner image failed to load:', e.target.src);
-                  e.target.src = '/images/newimg1.PNG'; 
+                  e.target.src = '/images/newimg1.PNG';
                 }}
               />
             </div>
@@ -744,7 +798,7 @@ const HomePage = () => {
     if (type === 'collection_highlight') {
       return (
         <motion.section
-          variants={fadeIn("up", 0.2)}
+          variants={fadeIn('up', 0.2)}
           initial="hidden"
           whileInView="show"
           className="py-16 px-6"
@@ -757,22 +811,30 @@ const HomePage = () => {
                   {banner.subtitle}
                 </h3>
               )}
+
               <h2 className="text-[42px] font-dm-serif mb-6 text-[#79300f]">
                 {banner.title} <br />
                 {banner.titleHighlight && (
-                  <span className="text-[#79300f]">
-                    {banner.titleHighlight}
-                  </span>
+                  <span className="text-[#79300f]">{banner.titleHighlight}</span>
                 )}
               </h2>
               <p className="text-[18px] mb-6 text-[#5a2408] leading-relaxed">
                 {banner.description}
               </p>
+
               <button
                 onClick={handleClick}
-                className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white px-8 py-4 text-lg font-semibold rounded-xl transition-all duration-300 hover:shadow-lg transform hover:scale-105"
+                className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white px-8 py-3 text-lg font-semibold rounded-lg transition-all duration-300 hover:shadow-lg transform hover:scale-105 flex items-center gap-3 w-fit"
               >
-                {banner.buttonText || 'View Collection'}
+                <span>{banner.buttonText || 'View Collection'}</span>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 8l4 4m0 0l-4 4m4-4H3"
+                  />
+                </svg>
               </button>
             </div>
             <div className="relative h-[400px]">
@@ -780,9 +842,9 @@ const HomePage = () => {
                 src={banner.image || '/images/newimg1.PNG'}
                 alt={banner.altText || banner.title}
                 className="w-full h-full object-cover rounded-xl shadow-lg"
-                onError={(e) => { 
+                onError={(e) => {
                   console.warn('Banner image failed to load:', e.target.src);
-                  e.target.src = '/images/newimg1.PNG'; 
+                  e.target.src = '/images/newimg1.PNG';
                 }}
               />
             </div>
@@ -811,12 +873,15 @@ const HomePage = () => {
             id: quickViewProduct._id.toString(),
             name: quickViewProduct.name,
             price: quickViewProduct.price,
-            image: quickViewProduct.images && quickViewProduct.images.length > 0 ? quickViewProduct.images[0] : '/images/default-gift.png',
+            image:
+              quickViewProduct.images && quickViewProduct.images.length > 0
+                ? quickViewProduct.images[0]
+                : '/images/default-gift.png',
             description: quickViewProduct.description || '',
             category: quickViewProduct.category || '',
-            selectedSize: null
+            selectedSize: null,
           };
-          
+
           toggleWishlist(wishlistProduct);
           addNotification(
             isInWishlist(quickViewProduct._id) ? 'Removed from wishlist' : 'Added to wishlist!',
@@ -841,10 +906,16 @@ const HomePage = () => {
         id: quickViewProduct._id.toString(),
         name: quickViewProduct.name,
         price: Number(quickViewProduct.price),
-        image: quickViewProduct.images && quickViewProduct.images.length > 0 ? quickViewProduct.images[0] : '/images/default-gift.png',
+        image:
+          quickViewProduct.images && quickViewProduct.images.length > 0
+            ? quickViewProduct.images[0]
+            : '/images/default-gift.png',
         quantity: 1,
-        selectedSize: quickViewProduct.sizes && quickViewProduct.sizes.length > 0 ? quickViewProduct.sizes[0].size : null,
-        personalization: null
+        selectedSize:
+          quickViewProduct.sizes && quickViewProduct.sizes.length > 0
+            ? quickViewProduct.sizes[0].size
+            : null,
+        personalization: null,
       };
 
       try {
@@ -861,7 +932,12 @@ const HomePage = () => {
       }
     };
 
-    const productInQuickViewCart = isInCart(quickViewProduct._id?.toString(), quickViewProduct.sizes && quickViewProduct.sizes.length > 0 ? quickViewProduct.sizes[0].size : null);
+    const productInQuickViewCart = isInCart(
+      quickViewProduct._id?.toString(),
+      quickViewProduct.sizes && quickViewProduct.sizes.length > 0
+        ? quickViewProduct.sizes[0].size
+        : null
+    );
 
     return (
       <AnimatePresence>
@@ -880,9 +956,8 @@ const HomePage = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold text-[#79300f]">
-                Quick View
-              </h3>
+              <h3 className="text-2xl font-bold text-[#79300f]">Quick View</h3>
+
               <button
                 onClick={handleClose}
                 className="text-gray-500 hover:text-gray-700 text-2xl"
@@ -891,7 +966,7 @@ const HomePage = () => {
                 ×
               </button>
             </div>
-            
+
             <div className="grid md:grid-cols-2 gap-8">
               <div>
                 <img
@@ -903,7 +978,7 @@ const HomePage = () => {
                   }}
                 />
               </div>
-              
+
               <div className="space-y-4">
                 <h4 className="text-xl font-bold text-gray-900">
                   {quickViewProduct.name || 'Unnamed Product'}
@@ -914,7 +989,7 @@ const HomePage = () => {
                 <p className="text-2xl font-bold text-[#79300f]">
                   ${quickViewProduct.price ? quickViewProduct.price.toFixed(2) : '0.00'}
                 </p>
-                
+
                 <div className="flex gap-4">
                   {productInQuickViewCart ? (
                     <button
@@ -941,7 +1016,12 @@ const HomePage = () => {
                     className="px-4 py-3 border-2 border-[#79300f] text-[#79300f] rounded-xl hover:bg-[#79300f] hover:text-white transition-all duration-300"
                     aria-label="Add to wishlist"
                   >
-                    <Heart size={20} className={isInWishlist(quickViewProduct._id) ? 'fill-red-600 text-red-600' : ''} />
+                    <Heart
+                      size={20}
+                      className={
+                        isInWishlist(quickViewProduct._id) ? 'fill-red-600 text-red-600' : ''
+                      }
+                    />
                   </button>
                   <button
                     onClick={() => {
@@ -977,8 +1057,8 @@ const HomePage = () => {
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: 100, scale: 0.8 }}
             className={`p-4 rounded-2xl shadow-lg backdrop-blur-sm border max-w-sm ${
-              notification.type === 'success' 
-                ? 'bg-green-500/90 text-white border-green-400' 
+              notification.type === 'success'
+                ? 'bg-green-500/90 text-white border-green-400'
                 : 'bg-red-500/90 text-white border-red-400'
             }`}
           >
@@ -1001,7 +1081,7 @@ const HomePage = () => {
       <Header />
       <NotificationSystem />
       <QuickViewModal />
-      
+
       <main className="flex-1" style={{ backgroundColor: '#F9F7F6' }}>
         {/* HeroSection */}
         {banners.hero && (
@@ -1066,35 +1146,37 @@ const HomePage = () => {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <span className="text-lg text-[#79300f] font-medium uppercase tracking-wider mb-4 block">Exclusive Access</span>
+              <span className="text-lg text-[#79300f] font-medium uppercase tracking-wider mb-4 block">
+                Exclusive Access
+              </span>
               <h2 className="text-[50px] md:text-[60px] font-dm-serif mb-6 text-[#79300f] leading-tight">
                 Join Our Exclusive Circle
               </h2>
               <p className="text-[20px] mb-12 text-[#5a2408] leading-relaxed max-w-3xl mx-auto">
-                Subscribe to our newsletter for early access to limited edition releases, private events,
-                and the secrets behind our scent creations. Be the first to discover luxury.
+                Subscribe to our newsletter for early access to limited edition releases, private
+                events, and the secrets behind our scent creations. Be the first to discover luxury.
               </p>
             </motion.div>
 
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
               className="bg-white/90 backdrop-blur-lg rounded-2xl p-8 max-w-2xl mx-auto border border-gray-200 shadow-2xl"
             >
-              <div className="flex flex-col md:flex-row items-center gap-4 justify-center mb-6">
-                <input 
+              <div className="flex flex-col sm:flex-row gap-4 mb-6 ">
+                <input
                   type="email"
-                  placeholder='Enter your email address'
+                  placeholder="EMAIL"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className='bg-white text-[#79300f] placeholder-gray-500 px-6 py-4 flex-1 outline-none rounded-xl border border-gray-300 shadow-lg focus:border-[#79300f] focus:shadow-xl transition-all duration-300' 
+                  className="bg-white text-[#79300f] placeholder-gray-500 px-6 py-4 flex-1 outline-none rounded-xl border border-gray-300 shadow-lg focus:border-[#79300f] focus:shadow-xl transition-all duration-300"
                 />
                 <Button
-                  className='bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white px-8 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 whitespace-nowrap'
                   onClick={handleSubscribe}
+                  className="bg-gradient-to-r from-[#cdaf6e] via-[#e4c77f] to-[#f5e6a1] text-black px-6 py-4 md:px-8 md:py-5 lg:px-10 lg:py-6 font-medium text-sm md:text-base lg:text-lg tracking-widest hover:opacity-90 transition-colors sm:rounded-r sm:rounded-l-none rounded whitespace-nowrap"
                 >
-                  Subscribe Now
+                  JOIN THE CIRCLE
                 </Button>
               </div>
 
@@ -1102,11 +1184,14 @@ const HomePage = () => {
                 <Checkbox
                   checked={acceptTerms}
                   onChange={(e) => setAcceptTerms(e.target.checked)}
-                  className='h-5 w-5 accent-[#79300f]'
+                  className="h-5 w-5 accent-[#79300f]"
                 />
                 <span className="text-sm text-[#5a2408]">
                   By checking this box, I accept the{' '}
-                  <a href="#" className="text-[#79300f] hover:text-[#5a2408] underline transition-colors">
+                  <a
+                    href="#"
+                    className="text-[#79300f] hover:text-[#5a2408] underline transition-colors"
+                  >
                     terms and conditions
                   </a>
                   .
