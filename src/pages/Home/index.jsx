@@ -749,7 +749,7 @@ const HomePage = () => {
                 </h3>
               )}
 
-              <h2 className="text-[42px] font-dm-serif mb-6 text-[#79300f]">
+              <h2 className="text-[42px] font-dm-serif mb-6 text-black">
                 {banner.title} <br />
                 {banner.titleHighlight && (
                   <span className="text-[#79300f]">{banner.titleHighlight}</span>
@@ -812,7 +812,7 @@ const HomePage = () => {
                 </h3>
               )}
 
-              <h2 className="text-[42px] font-dm-serif mb-6 text-[#79300f]">
+              <h2 className="text-[42px] font-dm-serif mb-6 text-black">
                 {banner.title} <br />
                 {banner.titleHighlight && (
                   <span className="text-[#79300f]">{banner.titleHighlight}</span>
@@ -1139,22 +1139,18 @@ const HomePage = () => {
           scrollRef={signatureScrollRef}
         />
 
-        <section className="py-20 px-6" style={{ backgroundColor: '#F9F7F6' }}>
-          <div className="max-w-7xl mx-auto text-center">
+        <section className="bg-gradient-to-br from-[#1C160C] via-[#1C160C] to-[#292218] py-20 px-6 ">
+          <div className="max-w-3xl mx-auto text-center">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <span className="text-lg text-[#79300f] font-medium uppercase tracking-wider mb-4 block">
-                Exclusive Access
-              </span>
-              <h2 className="text-[50px] md:text-[60px] font-dm-serif mb-6 text-[#79300f] leading-tight">
-                Join Our Exclusive Circle
+              <h2 className="text-[42px] md:text-[48px] font-dm-serif mb-4 bg-gradient-to-r from-[#CDAF6E] via-[#E4C77F] to-[#F5E6A1] bg-clip-text text-transparent leading-tight">
+                The Vesarii Inner Circle
               </h2>
-              <p className="text-[20px] mb-12 text-[#5a2408] leading-relaxed max-w-3xl mx-auto">
-                Subscribe to our newsletter for early access to limited edition releases, private
-                events, and the secrets behind our scent creations. Be the first to discover luxury.
+              <p className="text-[16px] mb-10 text-[#EFE9E6] leading-relaxed max-w-xl mx-auto">
+                Private access to rare editions, secret previews, and Parisian inspirations.
               </p>
             </motion.div>
 
@@ -1162,41 +1158,29 @@ const HomePage = () => {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="bg-white/90 backdrop-blur-lg rounded-2xl p-8 max-w-2xl mx-auto border border-gray-200 shadow-2xl"
+              className="max-w-2xl mx-auto"
             >
-              <div className="flex flex-col sm:flex-row gap-4 mb-6 ">
+              <div className="flex flex-col sm:flex-row gap-4 mb-6">
                 <input
                   type="email"
                   placeholder="EMAIL"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="bg-white text-[#79300f] placeholder-gray-500 px-6 py-4 flex-1 outline-none rounded-xl border border-gray-300 shadow-lg focus:border-[#79300f] focus:shadow-xl transition-all duration-300"
+                  className="px-6 py-4 flex-1 outline-none border border-[#D4AF7A]/40 focus:border-[#D4AF7A] transition-all duration-300 bg-transparent
+    bg-gradient-to-br from-[#CDAF6E] via-[#E4C77F] to-[#F5E6A1] bg-clip-text text-transparent
+    placeholder:text-transparent placeholder:bg-gradient-to-br placeholder:from-[#CDAF6E] placeholder:via-[#E4C77F] placeholder:to-[#E4C77F] placeholder:bg-clip-text"
                 />
                 <Button
                   onClick={handleSubscribe}
-                  className="bg-gradient-to-r from-[#cdaf6e] via-[#e4c77f] to-[#f5e6a1] text-black px-6 py-4 md:px-8 md:py-5 lg:px-10 lg:py-6 font-medium text-sm md:text-base lg:text-lg tracking-widest hover:opacity-90 transition-colors sm:rounded-r sm:rounded-l-none rounded whitespace-nowrap"
+                  className="bg-gradient-to-br from-[#CDAF6E] via-[#E4C77F] to-[#F5E6A1] text-[#341405] px-6 py-2 rounded-sm font-bold text-sm  hover:bg-[#E4BF8A] transition-colors tracking-wider whitespace-nowrap font-[Manrope]"
                 >
                   JOIN THE CIRCLE
                 </Button>
               </div>
 
-              <div className="flex items-center justify-center gap-3">
-                <Checkbox
-                  checked={acceptTerms}
-                  onChange={(e) => setAcceptTerms(e.target.checked)}
-                  className="h-5 w-5 accent-[#79300f]"
-                />
-                <span className="text-sm text-[#5a2408]">
-                  By checking this box, I accept the{' '}
-                  <a
-                    href="#"
-                    className="text-[#79300f] hover:text-[#5a2408] underline transition-colors"
-                  >
-                    terms and conditions
-                  </a>
-                  .
-                </span>
-              </div>
+              <p className="text-[14px] text-[#EFE9E6]">
+                By joining, you'll receive updates on limited editions and private events.
+              </p>
             </motion.div>
           </div>
         </section>

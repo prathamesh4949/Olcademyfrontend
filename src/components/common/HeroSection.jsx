@@ -14,18 +14,29 @@ const HeroSection = () => {
           playsInline
           preload="auto"
         >
-          <source src="https://ombrelamar.com/wp-content/uploads/2024/12/Lamis-3840x2160-1.mp4" type="video/mp4" />
+          <source
+            src="https://ombrelamar.com/wp-content/uploads/2024/12/Lamis-3840x2160-1.mp4"
+            type="video/mp4"
+          />
           Your browser does not support the video tag.
         </video>
-        
-        {/* Dark overlay for better text readability */}
+
+        {/* Dark overlay */}
         <div className="absolute inset-0 bg-black bg-opacity-40"></div>
       </div>
 
-      {/* Content overlay (now empty) */}
-      <div className="relative z-10 py-16 px-6 min-h-screen flex items-center">
-        <div className="max-w-7xl mx-auto w-full">
-          {/* No text content */}
+      {/* Content Overlay */}
+      <div className="relative z-10 flex items-center justify-center min-h-screen px-6 text-center">
+        <div className="max-w-4xl mx-auto">
+          {/* Heading */}
+          <h1 className="font-[Playfair] font-bold text-[62px] leading-[120%] text-center text-white">
+            Crafted in Paris. Defined by You
+          </h1>
+
+          {/* Subheading */}
+          <p className="mt-6 font-[Manrope] font-normal text-[18px] leading-[150%] text-center text-white/90">
+            A fragrance that transcends time, inspired by rare woods and eternal elegance.
+          </p>
         </div>
       </div>
     </section>
