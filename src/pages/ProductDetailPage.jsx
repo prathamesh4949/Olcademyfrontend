@@ -7,12 +7,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { fadeIn } from '../variants';
 import { useCart } from '../CartContext';
 import { useWishlist } from '../WishlistContext';
-import { 
-  Heart, 
-  Star, 
-  ArrowLeft, 
-  Plus, 
-  Minus, 
+import {
+  Heart,
+  Star,
+  ArrowLeft,
+  Plus,
+  Minus,
   Droplets,
   ShoppingCart,
   Check,
@@ -35,7 +35,7 @@ const ProductDetailPage = () => {
   const location = useLocation();
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
-  
+
   const [product, setProduct] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -54,10 +54,10 @@ const ProductDetailPage = () => {
 
   // Scroll to top when component mounts or product ID changes
   useEffect(() => {
-    window.scrollTo({ 
-      top: 0, 
-      left: 0, 
-      behavior: 'smooth' 
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'smooth'
     });
   }, [id]);
 
@@ -191,7 +191,7 @@ const ProductDetailPage = () => {
       addNotification('Item information is incomplete', 'error');
       return;
     }
-    
+
     if (product.sizes?.length > 0 && !selectedSize) {
       addNotification('Please select a size first', 'error');
       return;
@@ -273,7 +273,7 @@ const ProductDetailPage = () => {
     }
 
     const wasInWishlist = isInWishlist(product._id);
-    
+
     if (wasInWishlist) {
       const wishlistItem = {
         id: product._id.toString(),
@@ -292,7 +292,7 @@ const ProductDetailPage = () => {
         addNotification('Item already in wishlist', 'error');
         return;
       }
-      
+
       const wishlistItem = {
         id: product._id.toString(),
         name: product.name,
@@ -302,7 +302,7 @@ const ProductDetailPage = () => {
         category: product.category || '',
         selectedSize: null
       };
-      
+
       toggleWishlist(wishlistItem);
       setIsWishlisted(true);
       addNotification('Added to wishlist!', 'success');
@@ -332,8 +332,8 @@ const ProductDetailPage = () => {
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: 100, scale: 0.8 }}
             className={`p-4 rounded-2xl shadow-lg backdrop-blur-sm border max-w-sm ${
-              notification.type === 'success' 
-                ? 'bg-green-500/90 text-white border-green-400' 
+              notification.type === 'success'
+                ? 'bg-green-500/90 text-white border-green-400'
                 : 'bg-red-500/90 text-white border-red-400'
             }`}
           >
@@ -356,7 +356,7 @@ const ProductDetailPage = () => {
       <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <Header darkMode={darkMode} setDarkMode={setDarkMode} />
         <div className="flex justify-center items-center h-96">
-          <motion.div 
+          <motion.div
             className="text-center"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -370,7 +370,7 @@ const ProductDetailPage = () => {
               <div className="w-16 h-16 bg-gradient-to-r from-amber-600 to-orange-600 rounded-full opacity-75 mx-auto mb-6"></div>
               <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-gradient-to-r from-orange-400 to-amber-400 rounded-full"></div>
             </motion.div>
-            <motion.p 
+            <motion.p
               className="text-xl font-semibold text-amber-800 dark:text-amber-200 mb-2"
               animate={{ opacity: [1, 0.7, 1] }}
               transition={{ duration: 1.5, repeat: Infinity }}
@@ -390,7 +390,7 @@ const ProductDetailPage = () => {
       <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-amber-50 dark:from-gray-900 dark:via-red-900/20 dark:to-gray-900">
         <Header darkMode={darkMode} setDarkMode={setDarkMode} />
         <div className="flex justify-center items-center min-h-[500px]">
-          <motion.div 
+          <motion.div
             className="text-center max-w-2xl mx-auto p-8"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -410,7 +410,7 @@ const ProductDetailPage = () => {
             <p className="text-lg text-gray-600 dark:text-gray-300 mb-8">{error}</p>
             <div className="flex gap-4 justify-center flex-wrap">
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button 
+                <Button
                   onClick={() => navigate(-1)}
                   className="bg-gradient-to-r from-amber-600 to-orange-600 text-white px-8 py-3 rounded-full hover:from-amber-700 hover:to-orange-700 transition-all shadow-lg"
                   aria-label="Go back to previous page"
@@ -419,7 +419,7 @@ const ProductDetailPage = () => {
                 </Button>
               </motion.div>
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button 
+                <Button
                   onClick={() => navigate('/shop')}
                   className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-full hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg"
                   aria-label="Browse all collections"
@@ -444,11 +444,11 @@ const ProductDetailPage = () => {
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
           className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-r from-amber-200 to-orange-200 rounded-full opacity-20 dark:opacity-10"
-          animate={{ 
+          animate={{
             scale: [1, 1.2, 1],
             rotate: [0, 180, 360],
           }}
-          transition={{ 
+          transition={{
             duration: 20,
             repeat: Infinity,
             ease: "linear"
@@ -456,11 +456,11 @@ const ProductDetailPage = () => {
         />
         <motion.div
           className="absolute -bottom-32 -left-32 w-64 h-64 bg-gradient-to-r from-rose-200 to-pink-200 rounded-full opacity-20 dark:opacity-10"
-          animate={{ 
+          animate={{
             scale: [1, 1.1, 1],
             rotate: [360, 180, 0],
           }}
-          transition={{ 
+          transition={{
             duration: 25,
             repeat: Infinity,
             ease: "linear"
@@ -469,10 +469,10 @@ const ProductDetailPage = () => {
       </div>
 
       <Header darkMode={darkMode} setDarkMode={setDarkMode} />
-      
+
       {/* Notification Systems */}
       <NotificationSystem />
-      
+
       {/* Success Notification for Cart */}
       <AnimatePresence>
         {showNotification && (
@@ -537,7 +537,7 @@ const ProductDetailPage = () => {
             className="space-y-6"
           >
             <div className="relative group">
-              <motion.div 
+              <motion.div
                 className="bg-gradient-to-br from-white via-amber-50/50 to-orange-100/50 dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 rounded-3xl p-8 shadow-2xl backdrop-blur-sm border border-white/20"
                 whileHover={{ scale: 1.02 }}
                 transition={{ duration: 0.3 }}
@@ -545,8 +545,8 @@ const ProductDetailPage = () => {
                 <motion.img
                   key={selectedImage}
                   src={
-                    product.images && product.images[selectedImage] 
-                      ? product.images[selectedImage] 
+                    product.images && product.images[selectedImage]
+                      ? product.images[selectedImage]
                       : '/images/default-perfume.png'
                   }
                   alt={`${product.name} - Image ${selectedImage + 1}`}
@@ -593,8 +593,8 @@ const ProductDetailPage = () => {
                     key={index}
                     onClick={() => setSelectedImage(index)}
                     className={`relative w-20 h-20 rounded-2xl overflow-hidden transition-all duration-300 ${
-                      selectedImage === index 
-                        ? 'ring-4 ring-amber-500 shadow-lg scale-110' 
+                      selectedImage === index
+                        ? 'ring-4 ring-amber-500 shadow-lg scale-110'
                         : 'hover:ring-2 hover:ring-amber-300 hover:scale-105'
                     }`}
                     whileHover={{ y: -2 }}
@@ -633,7 +633,7 @@ const ProductDetailPage = () => {
             <div className="relative">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
-                  <motion.h1 
+                  <motion.h1
                     className="text-5xl font-bold bg-gradient-to-r from-amber-700 via-orange-600 to-amber-800 bg-clip-text text-transparent mb-2"
                     initial={{ y: 20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
@@ -642,7 +642,7 @@ const ProductDetailPage = () => {
                     {product.name}
                   </motion.h1>
                   {product.brand && (
-                    <motion.p 
+                    <motion.p
                       className="text-xl text-amber-600 dark:text-amber-400 font-medium"
                       initial={{ y: 20, opacity: 0 }}
                       animate={{ y: 0, opacity: 1 }}
@@ -662,11 +662,11 @@ const ProductDetailPage = () => {
                   transition={{ delay: 0.4, type: "spring" }}
                   aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
                 >
-                  <Heart 
-                    size={28} 
+                  <Heart
+                    size={28}
                     className={`transition-all ${
-                      isWishlisted 
-                        ? 'fill-red-500 text-red-500 scale-110' 
+                      isWishlisted
+                        ? 'fill-red-500 text-red-500 scale-110'
                         : 'text-gray-400 dark:text-gray-500 hover:text-red-400'
                     }`}
                   />
@@ -680,8 +680,8 @@ const ProductDetailPage = () => {
                   )}
                 </motion.button>
               </div>
-              
-              <motion.p 
+
+              <motion.p
                 className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed mb-6"
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
@@ -692,7 +692,7 @@ const ProductDetailPage = () => {
 
               {/* Rating */}
               {product.rating && (
-                <motion.div 
+                <motion.div
                   className="flex items-center gap-3 mb-6"
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
@@ -709,8 +709,8 @@ const ProductDetailPage = () => {
                         <Star
                           size={24}
                           className={`${
-                            i < Math.floor(product.rating) 
-                              ? 'fill-yellow-400 text-yellow-400' 
+                            i < Math.floor(product.rating)
+                              ? 'fill-yellow-400 text-yellow-400'
                               : 'text-gray-300 dark:text-gray-600'
                           }`}
                         />
@@ -728,7 +728,7 @@ const ProductDetailPage = () => {
             </div>
 
             {/* Price */}
-            <motion.div 
+            <motion.div
               className="relative"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -785,15 +785,15 @@ const ProductDetailPage = () => {
                           {size.price.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
                         </div>
                         <div className={`text-xs mt-1 ${
-                          size.available 
-                            ? size.stock <= 5 
-                              ? 'text-red-500' 
+                          size.available
+                            ? size.stock <= 5
+                              ? 'text-red-500'
                               : 'text-green-600'
                             : 'text-gray-400'
                         }`}>
-                          {size.available 
-                            ? size.stock <= 5 
-                              ? `Only ${size.stock} left!` 
+                          {size.available
+                            ? size.stock <= 5
+                              ? `Only ${size.stock} left!`
                               : `${size.stock} in stock`
                             : 'Out of stock'
                           }
@@ -830,8 +830,8 @@ const ProductDetailPage = () => {
                     onClick={() => handleQuantityChange(-1)}
                     disabled={quantity <= 1}
                     className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
-                      quantity <= 1 
-                        ? 'text-gray-400 cursor-not-allowed' 
+                      quantity <= 1
+                        ? 'text-gray-400 cursor-not-allowed'
                         : 'text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/30'
                     }`}
                     whileHover={quantity > 1 ? { scale: 1.1 } : {}}
@@ -841,7 +841,7 @@ const ProductDetailPage = () => {
                     <Minus size={20} />
                   </motion.button>
                   <div className="w-16 text-center">
-                    <motion.span 
+                    <motion.span
                       className="text-2xl font-bold text-gray-800 dark:text-white"
                       key={quantity}
                       initial={{ scale: 1.2, color: '#f59e0b' }}
@@ -855,8 +855,8 @@ const ProductDetailPage = () => {
                     onClick={() => handleQuantityChange(1)}
                     disabled={selectedSize && quantity >= selectedSize.stock}
                     className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
-                      selectedSize && quantity >= selectedSize.stock 
-                        ? 'text-gray-400 cursor-not-allowed' 
+                      selectedSize && quantity >= selectedSize.stock
+                        ? 'text-gray-400 cursor-not-allowed'
                         : 'text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/30'
                     }`}
                     whileHover={!selectedSize || quantity < selectedSize.stock ? { scale: 1.1 } : {}}
@@ -867,7 +867,7 @@ const ProductDetailPage = () => {
                   </motion.button>
                 </div>
                 {selectedSize && (
-                  <motion.p 
+                  <motion.p
                     className="text-sm text-gray-600 dark:text-gray-400"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -892,17 +892,17 @@ const ProductDetailPage = () => {
                     Personalize Your Bottle
                   </h3>
                   <span className="px-3 py-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-sm rounded-full font-medium">
-                    {product.personalization.price > 0 
+                    {product.personalization.price > 0
                       ? `+${product.personalization.price.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}`
                       : 'Free'
                     }
                   </span>
                 </div>
-                
+
                 <motion.div
                   className={`p-6 border-2 border-dashed rounded-2xl transition-all cursor-pointer backdrop-blur-sm ${
-                    showPersonalization 
-                      ? 'border-amber-400 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20' 
+                    showPersonalization
+                      ? 'border-amber-400 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20'
                       : 'border-gray-300 dark:border-gray-600 hover:border-amber-300 bg-white/50 dark:bg-gray-800/50'
                   }`}
                   onClick={handlePersonalizationToggle}
@@ -965,25 +965,25 @@ const ProductDetailPage = () => {
                 onClick={handleAddToCart}
                 disabled={product.sizes?.length > 0 && (!selectedSize || selectedSize.stock === 0)}
                 className={`w-full relative overflow-hidden font-bold py-6 rounded-2xl text-lg shadow-2xl transition-all duration-300 ${
-                  product.sizes?.length > 0 && (!selectedSize || selectedSize.stock === 0) 
-                    ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 cursor-not-allowed' 
+                  product.sizes?.length > 0 && (!selectedSize || selectedSize.stock === 0)
+                    ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 cursor-not-allowed'
                     : 'bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 hover:from-amber-700 hover:via-orange-700 hover:to-amber-800 text-white shadow-amber-500/30'
                 }`}
                 whileHover={
-                  !(product.sizes?.length > 0 && (!selectedSize || selectedSize.stock === 0))
-                    ? { scale: 1.02, y: -2 } 
+!(product.sizes?.length > 0 && (!selectedSize || selectedSize.stock === 0))
+                    ? { scale: 1.02, y: -2 }
                     : {}
                 }
                 whileTap={
                   !(product.sizes?.length > 0 && (!selectedSize || selectedSize.stock === 0))
-                    ? { scale: 0.98 } 
+                    ? { scale: 0.98 }
                     : {}
                 }
                 aria-label={
-                  product.sizes?.length > 0 && !selectedSize 
-                    ? 'Select size to add to cart' 
-                    : product.sizes?.length > 0 && selectedSize?.stock === 0 
-                    ? 'Out of stock' 
+                  product.sizes?.length > 0 && !selectedSize
+                    ? 'Select size to add to cart'
+                    : product.sizes?.length > 0 && selectedSize?.stock === 0
+                    ? 'Out of stock'
                     : 'Add to cart'
                 }
               >
@@ -996,7 +996,7 @@ const ProductDetailPage = () => {
                 <div className="relative flex items-center justify-center gap-3">
                   <ShoppingCart className="w-6 h-6" />
                   <span>
-                    {product.sizes?.length > 0 && !selectedSize 
+                    {product.sizes?.length > 0 && !selectedSize
                       ? 'Select Size First'
                       : product.sizes?.length > 0 && selectedSize?.stock === 0
                       ? 'Out of Stock'
@@ -1145,8 +1145,8 @@ const ProductDetailPage = () => {
                       <h5 className="font-semibold text-gray-800 dark:text-gray-200 mb-3">Perfect For:</h5>
                       <div className="flex flex-wrap gap-2">
                         {product.occasion.map((occ, index) => (
-                          <motion.span 
-                            key={index} 
+                          <motion.span
+                            key={index}
                             className="px-4 py-2 bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 text-purple-800 dark:text-purple-200 rounded-full text-sm font-medium"
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
@@ -1168,8 +1168,8 @@ const ProductDetailPage = () => {
                       <h5 className="font-semibold text-gray-800 dark:text-gray-200 mb-3">Best Season:</h5>
                       <div className="flex flex-wrap gap-2">
                         {product.season.map((season, index) => (
-                          <motion.span 
-                            key={index} 
+                          <motion.span
+                            key={index}
                             className="px-4 py-2 bg-gradient-to-r from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30 text-blue-800 dark:text-blue-200 rounded-full text-sm font-medium"
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
@@ -1209,7 +1209,7 @@ const ProductDetailPage = () => {
                 Discover more exquisite fragrances curated just for you
               </p>
             </motion.div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {relatedProducts.map((relatedProduct, index) => (
                 <motion.div
@@ -1219,7 +1219,7 @@ const ProductDetailPage = () => {
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.8 + index * 0.1, duration: 0.6 }}
-                  whileHover={{ 
+                  whileHover={{
                     y: -8,
                     transition: { duration: 0.3 }
                   }}
@@ -1233,9 +1233,9 @@ const ProductDetailPage = () => {
                     initial={{ opacity: 0 }}
                     whileHover={{ opacity: 1 }}
                   />
-                  
+
                   <div className="relative">
-                    <motion.div 
+                    <motion.div
                       className="bg-white/70 dark:bg-black/20 backdrop-blur-sm rounded-2xl p-4 mb-6 shadow-inner group-hover:shadow-lg transition-all duration-300"
                       whileHover={{ scale: 1.05 }}
                     >
@@ -1248,7 +1248,7 @@ const ProductDetailPage = () => {
                         }}
                       />
                     </motion.div>
-                    
+
                     <div className="space-y-3">
                       <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 group-hover:text-amber-700 dark:group-hover:text-amber-300 transition-colors duration-300">
                         {relatedProduct.name}
@@ -1270,7 +1270,7 @@ const ProductDetailPage = () => {
                         )}
                       </div>
                     </div>
-                    
+
                     <motion.div
                       className="absolute top-4 right-4 w-10 h-10 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300"
                       whileHover={{ scale: 1.1 }}
@@ -1292,3 +1292,4 @@ const ProductDetailPage = () => {
 };
 
 export default ProductDetailPage;
+

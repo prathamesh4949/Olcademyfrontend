@@ -4,26 +4,21 @@ import Header from '@/components/common/Header';
 import Footer from '@/components/common/Footer';
 import { useWishlist } from '@/WishlistContext';
 import { useCart } from '@/CartContext';
-import { FiHeart, FiShoppingCart, FiTrash2, FiX } from 'react-icons/fi';
+import { FiHeart, FiX } from 'react-icons/fi';
 import { motion } from 'framer-motion';
+import toast, { Toaster } from 'react-hot-toast';
 
 const Wishlist = () => {
   const navigate = useNavigate();
   const [darkMode, setDarkMode] = useState(false);
-  const { 
-    wishlistItems, 
-    removeFromWishlist, 
-    clearWishlist, 
-    moveToCart, 
-    loading, 
-    isInitialized, 
-    refreshWishlist 
-  } = useWishlist();
-  const { isInCart } = useCart();
+  const [searchQuery, setSearchQuery] = useState('');
+  const { wishlistItems, removeFromWishlist, isInitialized, refreshWishlist } = useWishlist();
+  const { isInCart, addToCart } = useCart();
 
+  // Dark mode persistence
   useEffect(() => {
     const stored = localStorage.getItem('darkMode');
-    if (stored !== null) setDarkMode(JSON.parse(stored));
+    if (stored) setDarkMode(JSON.parse(stored));
   }, []);
 
   useEffect(() => {
@@ -31,269 +26,190 @@ const Wishlist = () => {
     document.documentElement.classList.toggle('dark', darkMode);
   }, [darkMode]);
 
+  // Refresh wishlist when initialized
   useEffect(() => {
-    if (isInitialized && wishlistItems.length > 0) {
-      refreshWishlist();
-    }
+    if (isInitialized && wishlistItems.length > 0) refreshWishlist();
   }, [isInitialized]);
 
-  // Enhanced product click handler that works for both products and scents
   const handleProductClick = (item) => {
-    if (!item || !item.id) {
-      console.error('Invalid item for navigation:', item);
-      return;
-    }
-
-    // Check if the item has source information
-    if (item.source === 'scent' || item.collection === 'trending' || item.collection === 'best-seller' || 
-        item.collection === 'signature' || item.collection === 'limited-edition') {
-      // Navigate to scent detail page
+    if (!item || !item.id) return;
+    if (
+      item.source === 'scent' ||
+      ['trending', 'best-seller', 'signature', 'limited-edition'].includes(item.collection)
+    ) {
       navigate(`/scent/${item.id}`);
     } else if (item.source === 'product') {
-      // Navigate to product detail page
       navigate(`/product/${item.id}`);
     } else {
-      // Fallback: try to determine from the item structure
-      // If item has scent-specific fields, treat as scent
       if (item.scentFamily || item.intensity || item.concentration || item.brand) {
         navigate(`/scent/${item.id}`);
       } else {
-        // Default to product page
         navigate(`/product/${item.id}`);
       }
     }
   };
 
-  const handleMoveToCart = async (item) => {
-    const success = await moveToCart(item.id);
-    if (!success && !loading) {
-      // Fallback: manually add to cart and remove from wishlist
-      await addToCart({
-        id: item.id,
-        name: item.name,
-        price: item.price,
-        image: item.image,
-        quantity: 1,
-        selectedSize: item.selectedSize,
-        personalization: null
-      });
-      if (isInCart(item.id, item.selectedSize)) {
-        removeFromWishlist(item.id);
-      }
+  // Add to cart once with notification
+  const handleAddToCart = async (item) => {
+    if (isInCart(item.id, item.selectedSize)) return;
+    try {
+      await addToCart(item);
+      toast.success(`${item.name} added to cart`, { id: `cart-${item.id}` });
+    } catch (err) {
+      console.error(err);
+      toast.error(`Failed to add ${item.name} to cart`, { id: `cart-error-${item.id}` });
     }
   };
 
-  const handleContinueShopping = () => {
-    navigate('/');
+  // Remove from wishlist with notification
+  const handleRemoveFromWishlist = (item) => {
+    removeFromWishlist(item.id);
+    toast(`${item.name} removed from wishlist`, { id: `wishlist-${item.id}` });
   };
+
+  const handleContinueShopping = () => navigate('/');
 
   if (!isInitialized) {
     return (
-      <div className="bg-[#F5F5F5] dark:bg-[#220104] font-sans text-[#3b220c] dark:text-[#f6d110] min-h-screen">
+      <div className="bg-[#faf6f2] font-sans min-h-screen">
         <Header darkMode={darkMode} setDarkMode={setDarkMode} />
-        <div className="max-w-7xl mx-auto px-4 py-10">
-          <div className="text-center py-8">
-            <div className="flex justify-center items-center space-x-2">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#79300f] dark:border-[#f6d110]"></div>
-              <p className="text-xl">Loading wishlist...</p>
-            </div>
-          </div>
+        <div className="flex items-center justify-center py-24 text-[#5A2408] text-xl font-medium">
+          Loading wishlist...
         </div>
         <Footer />
       </div>
     );
   }
 
-  return (
-    <div className="bg-[#F5F5F5] dark:bg-[#220104] font-sans text-[#3b220c] dark:text-[#f6d110] min-h-screen">
-      <Header darkMode={darkMode} setDarkMode={setDarkMode} />
-      <div className="max-w-7xl mx-auto px-4 py-10">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-3xl font-bold flex items-center space-x-3">
-            <FiHeart className="text-red-500" />
-            <span>Your Wishlist</span>
-          </h2>
-          {wishlistItems && wishlistItems.length > 0 && (
-            <button
-              onClick={clearWishlist}
-              disabled={loading}
-              className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-2 rounded-lg shadow-md disabled:opacity-50 transition-all duration-300 transform hover:scale-105 flex items-center space-x-2"
-            >
-              <FiTrash2 size={16} />
-              <span>{loading ? 'Clearing...' : 'Clear Wishlist'}</span>
-            </button>
-          )}
-        </div>
+  const filteredItems = wishlistItems.filter((item) =>
+    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-        {loading && (!wishlistItems || wishlistItems.length === 0) ? (
-          <div className="text-center py-8">
-            <div className="flex justify-center items-center space-x-2">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#79300f] dark:border-[#f6d110]"></div>
-              <p>Loading wishlist...</p>
-            </div>
-          </div>
-        ) : (!wishlistItems || wishlistItems.length === 0) ? (
-          <div className="text-center py-12">
-            <div className="mb-4">
-              <FiHeart className="mx-auto h-24 w-24 text-gray-400 dark:text-gray-600" />
-            </div>
-            <p className="text-xl mb-4">Your wishlist is empty.</p>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">Start adding products you love to your wishlist!</p>
+  return (
+    <motion.div
+      className="bg-[#FAF6F2] font-sans min-h-screen flex flex-col"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: 'easeOut' }}
+    >
+      <Toaster position="top-center" reverseOrder={false} />
+      <Header darkMode={darkMode} setDarkMode={setDarkMode} />
+
+      {/* Page Title */}
+      <div className="max-w-[1616px] w-full mx-auto text-center pt-12">
+        <h2 className="text-[36px] font-playfair font-semibold tracking-[2px] uppercase text-[#5A2408] mb-10">
+          User’s Wishlist
+        </h2>
+
+        {/* Search and Sort Section */}
+        <div className="flex flex-col sm:flex-row justify-center items-center mb-12 gap-4 px-4">
+          <input
+            type="text"
+            placeholder="Search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="h-[48px] w-full sm:w-[60%] md:w-[600px] bg-transparent border border-[#5A2408] rounded font-manrope font-medium text-[#5A2408] text-[16px] px-4 placeholder-[#5A2408] focus:outline-none"
+          />
+          <select className="h-[48px] w-full sm:w-[30%] md:w-[150px] bg-transparent border border-[#5A2408] rounded font-manrope font-medium text-[#5A2408] text-[16px] px-4 focus:outline-none">
+            <option>Sort by</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Wishlist Content */}
+      <div className="max-w-[1400px] mx-auto flex-grow px-4">
+        {!filteredItems.length ? (
+          <div className="text-center py-24">
+            <FiHeart className="mx-auto h-20 w-20 text-[#D7C9B7]" />
+            <p className="text-[24px] font-semibold font-playfair text-[#5A2408] uppercase mt-4 mb-2">
+              Nothing in Wishlist
+            </p>
+            <p className="text-[#5A2408] font-medium font-manrope text-[17px] mb-6">
+              Start adding products you love to your wishlist!
+            </p>
             <button
               onClick={handleContinueShopping}
-              className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white px-6 py-3 rounded-lg shadow transition-all duration-300"
+              className="bg-[#5A2408] hover:bg-[#3B1505] text-white uppercase text-[15px] font-bold font-manrope px-8 py-3 rounded transition"
             >
               Continue Shopping
             </button>
           </div>
         ) : (
-          <div>
-            <div className="mb-8 p-4 bg-gradient-to-r from-[#F5E9DC] to-[#E7DDC6] dark:from-[#3d1a0a] dark:to-[#2c0f06] rounded-lg border border-[#79300f]/20 dark:border-[#f6d110]/30">
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="text-lg font-semibold text-[#79300f] dark:text-[#f6d110]">
-                    {wishlistItems.length} {wishlistItems.length === 1 ? 'Item' : 'Items'} in Wishlist
-                  </p>
-                  <p className="text-sm text-[#5a2408] dark:text-[#d4af37]">
-                    Keep track of products you love
-                  </p>
-                </div>
-                <FiHeart className="text-3xl text-red-500" />
-              </div>
-            </div>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {wishlistItems && wishlistItems.map((item) => (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 justify-items-center gap-x-8 gap-y-12 mb-16">
+              {filteredItems.map((item) => (
                 <motion.div
                   key={`${item.id}-${item.selectedSize || 'default'}`}
-                  className="bg-gradient-to-br from-[#F5E9DC] to-[#E7DDC6] dark:from-[#3d1a0a] dark:to-[#2c0f06] p-4 rounded-lg shadow-lg border border-[#79300f]/20 dark:border-[#f6d110]/30 transition-transform hover:scale-105 relative group"
+                  className="relative bg-white border border-[#E5E1DD] rounded-lg flex flex-col justify-between shadow-sm pt-6 pb-0 w-[300px] min-h-[460px] transition duration-200"
                   whileHover={{ scale: 1.02 }}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
                 >
+                  {/* Remove from Wishlist */}
                   <button
-                    onClick={() => removeFromWishlist(item.id)}
-                    disabled={loading}
-                    className="absolute top-2 right-2 p-2 bg-white dark:bg-[#220104] rounded-full shadow-md text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 opacity-0 group-hover:opacity-100 z-10"
+                    onClick={() => handleRemoveFromWishlist(item)}
+                    className="absolute top-4 right-5 text-[#5A2408] hover:text-[#B04C3C] bg-transparent focus:outline-none"
                     title="Remove from wishlist"
                   >
-                    <FiX size={16} />
+                    <FiX size={22} />
                   </button>
 
-                  <div className="relative mb-4">
+                  {/* Card Content */}
+                  <div className="flex flex-col items-center px-5 flex-grow">
                     <img
                       src={item.image}
                       alt={item.name}
-                      className="h-[200px] w-full object-contain rounded-lg cursor-pointer"
-                      loading="lazy"
+                      className="object-contain w-[190px] h-[190px] mb-5 cursor-pointer"
                       onClick={() => handleProductClick(item)}
                     />
-                    <div className="absolute top-2 left-2">
-                      <div className="bg-red-500 text-white p-2 rounded-full shadow-md">
-                        <FiHeart size={12} fill="currentColor" />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <h3 
-                      className="text-lg font-semibold line-clamp-2 text-[#79300f] dark:text-[#f6d110] cursor-pointer hover:underline"
+                    <h3
                       onClick={() => handleProductClick(item)}
+                      className="text-center font-playfair font-semibold text-[#5A2408] uppercase text-[17px] leading-snug tracking-wide cursor-pointer px-2 mb-2"
                     >
                       {item.name}
                     </h3>
+
+                    <div className="flex items-center justify-center mb-3">
+                      {[...Array(5)].map((_, i) => (
+                        <svg
+                          key={i}
+                          className="w-4 h-4 text-[#5A2408]"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <polygon points="10,1 12.5,7.5 19,8 14,12 15.5,18 10,14.5 4.5,18 6,12 1,8 7.5,7.5" />
+                        </svg>
+                      ))}
+                    </div>
+
                     {item.description && (
-                      <p className="text-sm text-[#5a2408] dark:text-[#d4af37] line-clamp-2">
+                      <p className="text-center text-[#5A2408] font-manrope text-[13px] px-3 mb-3 leading-relaxed">
                         {item.description}
                       </p>
                     )}
-                    {item.brand && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
-                        by {item.brand}
-                      </p>
-                    )}
-                    {item.selectedSize && (
-                      <p className="text-sm text-[#5a2408] dark:text-[#d4af37]">
-                        Size: <span className="font-medium">{item.selectedSize}</span>
-                      </p>
-                    )}
-                    
-                    {/* Display scent-specific details if available */}
-                    {(item.scentFamily || item.intensity || item.concentration) && (
-                      <div className="flex flex-wrap gap-1 text-xs">
-                        {item.scentFamily && (
-                          <span className="bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2 py-1 rounded-full capitalize">
-                            {item.scentFamily}
-                          </span>
-                        )}
-                        {item.intensity && (
-                          <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full capitalize">
-                            {item.intensity}
-                          </span>
-                        )}
-                        {item.concentration && (
-                          <span className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-1 rounded-full capitalize">
-                            {item.concentration}
-                          </span>
-                        )}
-                      </div>
-                    )}
-                    
-                    <p className="text-xl font-bold text-[#79300f] dark:text-[#f6d110]">
+
+                    <p className="text-[#5A2408] text-[16px] font-bold font-manrope mb-0">
                       ${item.price}
                     </p>
-                    {item.addedAt && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Added {new Date(item.addedAt).toLocaleDateString()}
-                      </p>
-                    )}
                   </div>
 
-                  <div className="mt-4 space-y-2">
-                    <button
-                      onClick={() => handleMoveToCart(item)}
-                      disabled={loading || isInCart(item.id, item.selectedSize)}
-                      className={`w-full font-medium py-2 px-4 rounded-lg shadow-md transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2 ${
-                        isInCart(item.id, item.selectedSize)
-                          ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400 cursor-not-allowed'
-                          : 'bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white disabled:opacity-50'
-                      }`}
-                      title={isInCart(item.id, item.selectedSize) ? 'Already in cart' : 'Add to cart'}
-                    >
-                      <FiShoppingCart size={16} />
-                      <span>
-                        {loading ? 'Adding...' : 
-                         isInCart(item.id, item.selectedSize) ? 'In Cart' : 'Add to Cart'}
-                      </span>
-                    </button>
-                  </div>
+                  {/* Add to Cart Button */}
+                  <button
+                    onClick={() => handleAddToCart(item)}
+                    disabled={isInCart(item.id, item.selectedSize)}
+                    className={`w-full h-[48px] bg-[#431A06] hover:bg-[#3B1505] uppercase text-white text-[14px] font-semibold font-manrope rounded-b-lg transition
+                    ${isInCart(item.id, item.selectedSize) ? 'opacity-60 cursor-not-allowed' : ''}`}
+                  >
+                    {isInCart(item.id, item.selectedSize) ? 'Already In Cart' : 'Add to Cart'}
+                  </button>
                 </motion.div>
               ))}
             </div>
 
-            <div className="text-center mt-8">
-              <button
-                onClick={handleContinueShopping}
-                className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white font-medium py-3 px-8 rounded-lg shadow-md transition-all duration-300"
-              >
-                Continue Shopping
-              </button>
-            </div>
-
-            {loading && (
-              <div className="fixed bottom-4 right-4 bg-white dark:bg-[#220104] p-4 rounded-lg shadow-lg border border-[#79300f]/20 dark:border-[#f6d110]/30">
-                <div className="flex items-center space-x-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#79300f] dark:border-[#f6d110]"></div>
-                  <span className="text-sm text-[#5a2408] dark:text-[#d4af37]">Updating wishlist...</span>
-                </div>
-              </div>
-            )}
-          </div>
+          </>
         )}
       </div>
+
       <Footer />
-    </div>
+    </motion.div>
   );
 };
 

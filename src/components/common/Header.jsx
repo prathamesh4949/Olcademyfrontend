@@ -1,64 +1,78 @@
-import React, { useState, useEffect, useContext } from "react";
-import { FiMenu, FiSearch, FiX, FiUser, FiShoppingCart, FiHeart } from "react-icons/fi";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import SignupModal from "./SignupModal";
-import { motion, AnimatePresence } from "framer-motion";
-import VerifyEmail from "./VerifyEmail";
-import Login from "./Login";
-import { AuthContext } from "../../context/AuthContext"; // Import AuthContext
+import React, { useState, useEffect, useContext } from 'react';
+import { FiMenu, FiSearch, FiX, FiUser, FiShoppingCart, FiHeart } from 'react-icons/fi';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import SignupModal from './SignupModal';
+import { motion, AnimatePresence } from 'framer-motion';
+import VerifyEmail from './VerifyEmail';
+import Login from './Login';
+import Footer from './Footer';
+import ProductCartSection from '@/pages/ProductCartSection';
+import { AuthContext } from '../../context/AuthContext'; // Import AuthContext
 
 const navItems = [
   {
-    label: "HOME",
-    path: "/",
+    label: 'HOME',
+    path: '/',
     items: [
-      "Petal Whisper",
-      "Bloomé Dusk",
-      "Rose Alchemy",
-      "Lush Reverie",
-      "Moonlit Peony",
-      "Jardin de Minuit",
-      "Blush Mirage",
-      "Secret Gardenia",
+      'Petal Whisper',
+      'Bloomé Dusk',
+      'Rose Alchemy',
+      'Lush Reverie',
+      'Moonlit Peony',
+      'Jardin de Minuit',
+      'Blush Mirage',
+      'Secret Gardenia',
     ],
   },
   {
     label: "MEN'S SCENTS",
-    path: "/mens-collection",
-    items: ["Petal Whisper", "Bloomé Dusk", "Rose Alchemy", "Lush Reverie"],
+    path: '/mens-collection',
+    items: ['Petal Whisper', 'Bloomé Dusk', 'Rose Alchemy', 'Lush Reverie'],
   },
   {
     label: "WOMEN'S SCENTS",
-    path: "/womens-collection",
-    items: ["Petal Whisper", "Bloomé Dusk", "Rose Alchemy", "Lush Reverie", "Moonlit Peony"],
+    path: '/womens-collection',
+    items: ['Petal Whisper', 'Bloomé Dusk', 'Rose Alchemy', 'Lush Reverie', 'Moonlit Peony'],
   },
   {
-    label: "UNISEX SCENTS",
-    path: "/unisex-collection",
-    items: ["Petal Whisper", "Bloomé Dusk", "Rose Alchemy", "Lush Reverie"],
+    label: 'UNISEX SCENTS',
+    path: '/unisex-collection',
+    items: ['Petal Whisper', 'Bloomé Dusk', 'Rose Alchemy', 'Lush Reverie'],
   },
   {
-    label: "GIFTS",
-    path: "/gift-collection",
-    items: ["Petal Whisper", "Bloomé Dusk", "Rose Alchemy"],
+    label: 'GIFTS',
+    path: '/gift-collection',
+    items: ['Petal Whisper', 'Bloomé Dusk', 'Rose Alchemy'],
   },
 ];
 
 const Header = ({ darkMode, setDarkMode }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [isSignupOpen, setIsSignupOpen] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [isVerifyOpen, setIsVerifyOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [email, setEmail] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
-  
+
   // Smart scroll behavior states
   const [isVisible, setIsVisible] = useState(true);
   const [prevScrollPos, setPrevScrollPos] = useState(0);
   const [scrollDirection, setScrollDirection] = useState('up');
+  // State to control cart visibility
+  const [isCartOpen, setIsCartOpen] = useState(false);
+
+  // Open the cart overlay
+  const openCart = () => {
+    setIsCartOpen(true);
+  };
+
+  // Close the cart overlay
+  const closeCart = () => {
+    setIsCartOpen(false);
+  };
 
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -67,7 +81,7 @@ const Header = ({ darkMode, setDarkMode }) => {
   // Smart scroll behavior effect
   useEffect(() => {
     let timeoutId;
-    
+
     const handleScroll = () => {
       const currentScrollPos = window.pageYOffset || document.documentElement.scrollTop;
       const scrollThreshold = 5;
@@ -85,10 +99,10 @@ const Header = ({ darkMode, setDarkMode }) => {
       }
 
       const scrollDifference = Math.abs(currentScrollPos - prevScrollPos);
-      
+
       if (scrollDifference > scrollThreshold) {
         const isScrollingDown = currentScrollPos > prevScrollPos;
-        
+
         if (isScrollingDown && currentScrollPos > 100) {
           setScrollDirection('down');
           setIsVisible(false);
@@ -96,13 +110,13 @@ const Header = ({ darkMode, setDarkMode }) => {
           setScrollDirection('up');
           setIsVisible(true);
         }
-        
+
         setPrevScrollPos(currentScrollPos);
       }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    
+
     return () => {
       window.removeEventListener('scroll', handleScroll);
       if (timeoutId) {
@@ -119,14 +133,14 @@ const Header = ({ darkMode, setDarkMode }) => {
   }, [searchOpen, menuOpen, isUserDropdownOpen, hoveredIndex]);
 
   useEffect(() => {
-    document.body.style.overflow = menuOpen ? "hidden" : "auto";
+    document.body.style.overflow = menuOpen ? 'hidden' : 'auto';
   }, [menuOpen]);
 
   const toggleMenu = () => setMenuOpen(!menuOpen);
   const toggleSearch = () => {
     setSearchOpen(!searchOpen);
     if (searchOpen) {
-      setSearchQuery("");
+      setSearchQuery('');
     }
   };
   const toggleUserDropdown = () => setIsUserDropdownOpen(!isUserDropdownOpen);
@@ -137,7 +151,7 @@ const Header = ({ darkMode, setDarkMode }) => {
     if (searchQuery.trim()) {
       navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
       setSearchOpen(false);
-      setSearchQuery("");
+      setSearchQuery('');
     }
   };
 
@@ -151,7 +165,7 @@ const Header = ({ darkMode, setDarkMode }) => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && searchOpen) {
         setSearchOpen(false);
-        setSearchQuery("");
+        setSearchQuery('');
       }
     };
     document.addEventListener('keydown', handleKeyDown);
@@ -166,14 +180,14 @@ const Header = ({ darkMode, setDarkMode }) => {
   return (
     <>
       {/* Header with exact dimensions and styling as specified */}
-      <motion.header 
+      <motion.header
         initial={{ y: 0 }}
-        animate={{ 
+        animate={{
           y: isVisible ? 0 : '-100%',
         }}
-        transition={{ 
+        transition={{
           duration: 0.3,
-          ease: [0.25, 0.46, 0.45, 0.94]
+          ease: [0.25, 0.46, 0.45, 0.94],
         }}
         className="fixed top-0 w-full z-50"
         style={{
@@ -188,9 +202,8 @@ const Header = ({ darkMode, setDarkMode }) => {
           transform: 'translateX(-50%)',
         }}
       >
-        
         {/* First Layer - Logo Only (Centered) */}
-        <div 
+        <div
           className="absolute flex justify-center items-center"
           style={{
             width: '80px',
@@ -213,7 +226,7 @@ const Header = ({ darkMode, setDarkMode }) => {
         </div>
 
         {/* Second Layer - Search Left, Icons Right */}
-        <div 
+        <div
           className="absolute flex justify-between items-center"
           style={{
             width: '1624px',
@@ -224,10 +237,17 @@ const Header = ({ darkMode, setDarkMode }) => {
         >
           {/* Left Section - Search */}
           <div className="flex items-center">
-            <button onClick={toggleMenu} className="text-2xl z-50 md:hidden focus:outline-none mr-4">
-              {menuOpen ? <FiX style={{ color: '#341405' }} /> : <FiMenu style={{ color: '#341405' }} />}
+            <button
+              onClick={toggleMenu}
+              className="text-2xl z-50 md:hidden focus:outline-none mr-4"
+            >
+              {menuOpen ? (
+                <FiX style={{ color: '#341405' }} />
+              ) : (
+                <FiMenu style={{ color: '#341405' }} />
+              )}
             </button>
-            
+
             <button
               onClick={toggleSearch}
               className="flex items-center transition duration-200"
@@ -242,7 +262,7 @@ const Header = ({ darkMode, setDarkMode }) => {
           </div>
 
           {/* Right Icons */}
-          <div 
+          <div
             className="flex items-center z-50"
             style={{
               width: '162px',
@@ -251,7 +271,7 @@ const Header = ({ darkMode, setDarkMode }) => {
             }}
           >
             {/* Wishlist Icon */}
-            <Link 
+            <Link
               to="/wishlist-collection"
               style={{
                 width: '34px',
@@ -262,17 +282,18 @@ const Header = ({ darkMode, setDarkMode }) => {
               <FiHeart size={34} />
             </Link>
 
-            {/* Cart Icon */}
-            <Link 
-              to="/product-cart"
+            <button
+              type="button"
+              onClick={openCart}
               style={{
                 width: '34px',
                 height: '34px',
                 color: '#341405',
               }}
+              aria-label="Open cart"
             >
               <FiShoppingCart size={34} />
-            </Link>
+            </button>
 
             {/* User Section */}
             {user ? (
@@ -285,7 +306,7 @@ const Header = ({ darkMode, setDarkMode }) => {
                     height: '34px',
                   }}
                 >
-                  <div 
+                  <div
                     className="rounded-full flex items-center justify-center"
                     style={{
                       width: '34px',
@@ -293,7 +314,7 @@ const Header = ({ darkMode, setDarkMode }) => {
                       backgroundColor: '#341405',
                     }}
                   >
-                    <span 
+                    <span
                       style={{
                         color: '#F9F7F6',
                         fontSize: '16px',
@@ -301,7 +322,9 @@ const Header = ({ darkMode, setDarkMode }) => {
                         fontFamily: 'Manrope, sans-serif',
                       }}
                     >
-                      {user.username ? user.username.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
+                      {user.username
+                        ? user.username.charAt(0).toUpperCase()
+                        : user.email.charAt(0).toUpperCase()}
                     </span>
                   </div>
                 </button>
@@ -336,7 +359,7 @@ const Header = ({ darkMode, setDarkMode }) => {
                       >
                         My Orders
                       </Link>
-                      
+
                       <button
                         onClick={() => {
                           logout();
@@ -356,7 +379,7 @@ const Header = ({ darkMode, setDarkMode }) => {
                 </AnimatePresence>
               </div>
             ) : (
-              <button 
+              <button
                 onClick={() => setIsSignupOpen(true)}
                 style={{
                   width: '34px',
@@ -371,7 +394,7 @@ const Header = ({ darkMode, setDarkMode }) => {
         </div>
 
         {/* Third Layer - Navigation Bar */}
-        <div 
+        <div
           className="absolute hidden md:flex items-center"
           style={{
             width: '1117px',
@@ -396,7 +419,7 @@ const Header = ({ darkMode, setDarkMode }) => {
             onMouseEnter={() => setHoveredIndex(0)}
             onMouseLeave={() => setHoveredIndex(null)}
           >
-            <Link 
+            <Link
               to="/"
               style={{
                 width: '78px',
@@ -432,7 +455,7 @@ const Header = ({ darkMode, setDarkMode }) => {
             onMouseEnter={() => setHoveredIndex(1)}
             onMouseLeave={() => setHoveredIndex(null)}
           >
-            <Link 
+            <Link
               to="/mens-collection"
               style={{
                 width: '195px',
@@ -522,7 +545,7 @@ const Header = ({ darkMode, setDarkMode }) => {
             onMouseEnter={() => setHoveredIndex(2)}
             onMouseLeave={() => setHoveredIndex(null)}
           >
-            <Link 
+            <Link
               to="/womens-collection"
               style={{
                 width: '240px',
@@ -612,7 +635,7 @@ const Header = ({ darkMode, setDarkMode }) => {
             onMouseEnter={() => setHoveredIndex(3)}
             onMouseLeave={() => setHoveredIndex(null)}
           >
-            <Link 
+            <Link
               to="/unisex-collection"
               style={{
                 width: '209px',
@@ -702,7 +725,7 @@ const Header = ({ darkMode, setDarkMode }) => {
             onMouseEnter={() => setHoveredIndex(4)}
             onMouseLeave={() => setHoveredIndex(null)}
           >
-            <Link 
+            <Link
               to="/gift-collection"
               style={{
                 width: '75px',
@@ -796,7 +819,11 @@ const Header = ({ darkMode, setDarkMode }) => {
               <div className="max-w-7xl mx-auto px-4 py-6">
                 <form onSubmit={handleSearchSubmit} className="flex gap-4">
                   <div className="flex-1 relative">
-                    <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2" style={{ color: '#341405' }} size={20} />
+                    <FiSearch
+                      className="absolute left-4 top-1/2 transform -translate-y-1/2"
+                      style={{ color: '#341405' }}
+                      size={20}
+                    />
                     <input
                       type="text"
                       value={searchQuery}
@@ -835,16 +862,28 @@ const Header = ({ darkMode, setDarkMode }) => {
 
                 {/* Search Suggestions */}
                 <div className="mt-6">
-                  <p className="text-sm mb-3" style={{ color: '#341405', fontFamily: 'Manrope, sans-serif' }}>Popular Searches:</p>
+                  <p
+                    className="text-sm mb-3"
+                    style={{ color: '#341405', fontFamily: 'Manrope, sans-serif' }}
+                  >
+                    Popular Searches:
+                  </p>
                   <div className="flex flex-wrap gap-2">
-                    {['Aventus', 'Rose Elegance', 'Midnight Steel', 'Golden Orchid', 'Cosmic Harmony', 'Royal Oud'].map((suggestion) => (
+                    {[
+                      'Aventus',
+                      'Rose Elegance',
+                      'Midnight Steel',
+                      'Golden Orchid',
+                      'Cosmic Harmony',
+                      'Royal Oud',
+                    ].map((suggestion) => (
                       <button
                         key={suggestion}
                         onClick={() => {
                           setSearchQuery(suggestion);
                           navigate(`/search?q=${encodeURIComponent(suggestion)}`);
                           setSearchOpen(false);
-                          setSearchQuery("");
+                          setSearchQuery('');
                         }}
                         className="px-3 py-2 rounded-full text-sm transition-colors"
                         style={{
@@ -866,10 +905,11 @@ const Header = ({ darkMode, setDarkMode }) => {
                     onClick={() => setSearchOpen(false)}
                     className="flex items-center gap-3 p-4 rounded-xl hover:shadow-md transition-all duration-200"
                     style={{
-                      background: 'linear-gradient(to right, rgba(52, 20, 5, 0.1), rgba(52, 20, 5, 0.05))',
+                      background:
+                        'linear-gradient(to right, rgba(52, 20, 5, 0.1), rgba(52, 20, 5, 0.05))',
                     }}
                   >
-                    <div 
+                    <div
                       className="rounded-full flex items-center justify-center"
                       style={{
                         width: '48px',
@@ -877,7 +917,7 @@ const Header = ({ darkMode, setDarkMode }) => {
                         backgroundColor: '#341405',
                       }}
                     >
-                      <span 
+                      <span
                         style={{
                           color: '#F9F7F6',
                           fontWeight: '500',
@@ -889,7 +929,9 @@ const Header = ({ darkMode, setDarkMode }) => {
                     </div>
                     <div style={{ fontFamily: 'Manrope, sans-serif' }}>
                       <h4 style={{ fontWeight: '500', color: '#341405' }}>Men's Collection</h4>
-                      <p style={{ fontSize: '14px', fontWeight: '400', color: '#341405' }}>Sophisticated masculine scents</p>
+                      <p style={{ fontSize: '14px', fontWeight: '400', color: '#341405' }}>
+                        Sophisticated masculine scents
+                      </p>
                     </div>
                   </Link>
 
@@ -898,10 +940,11 @@ const Header = ({ darkMode, setDarkMode }) => {
                     onClick={() => setSearchOpen(false)}
                     className="flex items-center gap-3 p-4 rounded-xl hover:shadow-md transition-all duration-200"
                     style={{
-                      background: 'linear-gradient(to right, rgba(52, 20, 5, 0.05), rgba(52, 20, 5, 0.1))',
+                      background:
+                        'linear-gradient(to right, rgba(52, 20, 5, 0.05), rgba(52, 20, 5, 0.1))',
                     }}
                   >
-                    <div 
+                    <div
                       className="rounded-full flex items-center justify-center"
                       style={{
                         width: '48px',
@@ -909,7 +952,7 @@ const Header = ({ darkMode, setDarkMode }) => {
                         backgroundColor: '#341405',
                       }}
                     >
-                      <span 
+                      <span
                         style={{
                           color: '#F9F7F6',
                           fontWeight: '500',
@@ -921,7 +964,9 @@ const Header = ({ darkMode, setDarkMode }) => {
                     </div>
                     <div style={{ fontFamily: 'Manrope, sans-serif' }}>
                       <h4 style={{ fontWeight: '500', color: '#341405' }}>Women's Collection</h4>
-                      <p style={{ fontSize: '14px', fontWeight: '400', color: '#341405' }}>Elegant feminine fragrances</p>
+                      <p style={{ fontSize: '14px', fontWeight: '400', color: '#341405' }}>
+                        Elegant feminine fragrances
+                      </p>
                     </div>
                   </Link>
 
@@ -930,10 +975,11 @@ const Header = ({ darkMode, setDarkMode }) => {
                     onClick={() => setSearchOpen(false)}
                     className="flex items-center gap-3 p-4 rounded-xl hover:shadow-md transition-all duration-200"
                     style={{
-                      background: 'linear-gradient(to right, rgba(52, 20, 5, 0.08), rgba(52, 20, 5, 0.12))',
+                      background:
+                        'linear-gradient(to right, rgba(52, 20, 5, 0.08), rgba(52, 20, 5, 0.12))',
                     }}
                   >
-                    <div 
+                    <div
                       className="rounded-full flex items-center justify-center"
                       style={{
                         width: '48px',
@@ -941,7 +987,7 @@ const Header = ({ darkMode, setDarkMode }) => {
                         background: 'linear-gradient(to right, #341405, #5E2509)',
                       }}
                     >
-                      <span 
+                      <span
                         style={{
                           color: '#F9F7F6',
                           fontWeight: '500',
@@ -953,7 +999,9 @@ const Header = ({ darkMode, setDarkMode }) => {
                     </div>
                     <div style={{ fontFamily: 'Manrope, sans-serif' }}>
                       <h4 style={{ fontWeight: '500', color: '#341405' }}>Unisex Collection</h4>
-                      <p style={{ fontSize: '14px', fontWeight: '400', color: '#341405' }}>Universal appeal scents</p>
+                      <p style={{ fontSize: '14px', fontWeight: '400', color: '#341405' }}>
+                        Universal appeal scents
+                      </p>
                     </div>
                   </Link>
                 </div>
@@ -964,7 +1012,7 @@ const Header = ({ darkMode, setDarkMode }) => {
 
         {/* Mobile Nav Dropdown */}
         {menuOpen && (
-          <div 
+          <div
             className="md:hidden px-4 py-6 space-y-4"
             style={{
               backgroundColor: '#F9F7F6',
@@ -972,12 +1020,47 @@ const Header = ({ darkMode, setDarkMode }) => {
               fontFamily: 'Manrope, sans-serif',
             }}
           >
-            <Link to="/" className="block text-base hover:opacity-70" onClick={() => setMenuOpen(false)} style={{ fontWeight: '400', color: '#341405' }}>HOME</Link>
-            <Link to="/mens-collection" className="block text-base hover:opacity-70" onClick={() => setMenuOpen(false)} style={{ fontWeight: '400', color: '#341405' }}>MEN'S SCENTS</Link>
-            <Link to="/womens-collection" className="block text-base hover:opacity-70" onClick={() => setMenuOpen(false)} style={{ fontWeight: '400', color: '#341405' }}>WOMEN'S SCENTS</Link>
-            <Link to="/unisex-collection" className="block text-base hover:opacity-70" onClick={() => setMenuOpen(false)} style={{ fontWeight: '400', color: '#341405' }}>UNISEX SCENTS</Link>
-            <Link to="/gift-collection" className="block text-base hover:opacity-70" onClick={() => setMenuOpen(false)} style={{ fontWeight: '400', color: '#341405' }}>GIFTS</Link>
-            
+            <Link
+              to="/"
+              className="block text-base hover:opacity-70"
+              onClick={() => setMenuOpen(false)}
+              style={{ fontWeight: '400', color: '#341405' }}
+            >
+              HOME
+            </Link>
+            <Link
+              to="/mens-collection"
+              className="block text-base hover:opacity-70"
+              onClick={() => setMenuOpen(false)}
+              style={{ fontWeight: '400', color: '#341405' }}
+            >
+              MEN'S SCENTS
+            </Link>
+            <Link
+              to="/womens-collection"
+              className="block text-base hover:opacity-70"
+              onClick={() => setMenuOpen(false)}
+              style={{ fontWeight: '400', color: '#341405' }}
+            >
+              WOMEN'S SCENTS
+            </Link>
+            <Link
+              to="/unisex-collection"
+              className="block text-base hover:opacity-70"
+              onClick={() => setMenuOpen(false)}
+              style={{ fontWeight: '400', color: '#341405' }}
+            >
+              UNISEX SCENTS
+            </Link>
+            <Link
+              to="/gift-collection"
+              className="block text-base hover:opacity-70"
+              onClick={() => setMenuOpen(false)}
+              style={{ fontWeight: '400', color: '#341405' }}
+            >
+              GIFTS
+            </Link>
+
             {/* Mobile Search */}
             <div className="pt-4" style={{ borderTop: '1px solid #B59B8E' }}>
               <form onSubmit={handleSearchSubmit} className="flex gap-2">
@@ -1016,10 +1099,10 @@ const Header = ({ darkMode, setDarkMode }) => {
 
       {/* Search Overlay Background */}
       {searchOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-30"
           onClick={toggleSearch}
-          style={{ 
+          style={{
             top: '197px',
             backgroundColor: 'rgba(52, 20, 5, 0.2)',
           }}
@@ -1052,13 +1135,13 @@ const Header = ({ darkMode, setDarkMode }) => {
       />
 
       <Login isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
-
+        <ProductCartSection isOpen={isCartOpen} onClose={closeCart} />
       {/* CSS Custom Properties for dynamic header height */}
       <style jsx>{`
         :root {
           --header-height: ${isVisible ? '197px' : '0px'};
         }
-        
+
         /* Responsive adjustments for smaller screens */
         @media (max-width: 1728px) {
           header {
@@ -1066,31 +1149,31 @@ const Header = ({ darkMode, setDarkMode }) => {
             left: 0 !important;
             transform: none !important;
           }
-          
-          .absolute[style*="left: 824px"] {
+
+          .absolute[style*='left: 824px'] {
             left: 50% !important;
             transform: translateX(-50%) !important;
           }
-          
-          .absolute[style*="left: 52px"] {
+
+          .absolute[style*='left: 52px'] {
             left: 2% !important;
             right: 2% !important;
             width: 96% !important;
           }
-          
-          .absolute[style*="left: 321px"] {
+
+          .absolute[style*='left: 321px'] {
             left: 50% !important;
             transform: translateX(-50%) !important;
           }
         }
-        
+
         /* Mobile responsive */
         @media (max-width: 768px) {
           header {
             height: auto !important;
           }
-          
-          .absolute[style*="top: 116px"] {
+
+          .absolute[style*='top: 116px'] {
             display: none !important;
           }
         }

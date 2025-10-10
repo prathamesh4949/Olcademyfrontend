@@ -205,14 +205,7 @@ const HomePage = () => {
             signature: scentsData.signature?.length || 0,
           });
 
-          // Option 1: Replace existing collections with scent data
-          // setCollections({
-          //   fragrant_favourites: scentsData.trending || [],
-          //   summer_scents: scentsData.bestSellers || [],
-          //   signature_collection: scentsData.signature || []
-          // });
-
-          // Option 2: Add scents as additional collections
+         
           setCollections((prev) => ({
             ...prev,
             trending_scents: scentsData.trending || [],
@@ -729,7 +722,7 @@ const HomePage = () => {
         return '/best-sellers-collection';
       }
 
-      return '#'; // Default fallback
+      return '#'; 
     };
 
     if (type === 'product_highlight') {
@@ -758,12 +751,7 @@ const HomePage = () => {
               <p className="text-[18px] mb-6 text-[#5a2408] leading-relaxed">
                 {banner.description}
               </p>
-              {/* <button
-                onClick={handleClick}
-                className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white px-8 py-4 text-lg font-semibold rounded-md transition-all duration-300 hover:shadow-lg transform hover:scale-105"
-              >
-                {banner.buttonText || 'Explore Collection'}
-              </button> */}
+             
               <button
                 onClick={handleClick}
                 className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white px-8 py-3 text-lg font-semibold rounded-lg transition-all duration-300 hover:shadow-lg transform hover:scale-105 flex items-center gap-3 w-fit"
@@ -1172,7 +1160,7 @@ const HomePage = () => {
                 />
                 <Button
                   onClick={handleSubscribe}
-                  className="bg-gradient-to-br from-[#CDAF6E] via-[#E4C77F] to-[#F5E6A1] text-[#341405] px-6 py-2 rounded-sm font-bold text-sm  hover:bg-[#E4BF8A] transition-colors tracking-wider whitespace-nowrap font-[Manrope]"
+                  className="bg-gradient-to-br from-[#CDAF6E] via-[#E4C77F] to-[#F5E6A1]  px-6 py-2 rounded-sm font-bold text-sm  hover:bg-[#E4BF8A] transition-colors tracking-wider whitespace-nowrap font-[Manrope] !text-[#341405]"
                 >
                   JOIN THE CIRCLE
                 </Button>
