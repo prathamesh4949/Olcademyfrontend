@@ -22,5 +22,5 @@ coverage/
 jest-test-results.json
 
 # Optional: if using IDEs
-.vscode/
+# .vscode/
 .idea/
