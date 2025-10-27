@@ -1,4 +1,4 @@
-import React, { useState, useEffect, memo, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, memo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/common/Header';
 import Footer from '@/components/common/Footer';
@@ -8,7 +8,6 @@ import { fadeIn } from '@/variants';
 import { useCart } from '@/CartContext';
 import { useWishlist } from '@/WishlistContext';
 import { 
-  ChevronLeft, 
   ChevronRight, 
   Gift, 
   Heart, 
@@ -17,11 +16,8 @@ import {
   CheckCircle,
   AlertCircle,
   RefreshCw,
-  ShoppingBag,
-  Eye,
-  Filter,
-  Search,
-  ShoppingCart
+  ShoppingCart,
+  Eye
 } from 'lucide-react';
 import { FiHeart } from 'react-icons/fi';
 import ProductService from '@/services/productService';
@@ -56,22 +52,17 @@ const GiftCollection = () => {
   const [retryCount, setRetryCount] = useState(0);
   const [cartNotifications, setCartNotifications] = useState([]);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
-  const [filterOptions, setFilterOptions] = useState({
-    priceRange: 'all',
-    category: 'all',
-    sortBy: 'featured'
-  });
 
-  // State for carousel navigation with better management
-  const [carouselStates, setCarouselStates] = useState({
-    for_her: 0,
-    for_him: 0,
-    by_price_under_50: 0,
-    by_price_under_100: 0,
-    by_price_under_200: 0,
-    home_gift: 0,
-    birthday_gift: 0,
-    wedding_gift: 0
+  // State for "View All" expanded sections
+  const [expandedSections, setExpandedSections] = useState({
+    for_her: false,
+    for_him: false,
+    by_price_under_50: false,
+    by_price_under_100: false,
+    by_price_under_200: false,
+    home_gift: false,
+    birthday_gift: false,
+    wedding_gift: false
   });
 
   // Load theme preference
@@ -144,12 +135,11 @@ const GiftCollection = () => {
         setBanners(bannersByType);
       }
 
-      setRetryCount(0); // Reset retry count on success
+      setRetryCount(0);
     } catch (err) {
       console.error('❌ Error fetching gift data:', err);
       setError(err.message || 'Failed to load gift collections');
       
-      // Show user-friendly error message
       if (!isRetry) {
         addNotification('Failed to load some content. Please try refreshing the page.', 'error');
       }
@@ -182,61 +172,28 @@ const GiftCollection = () => {
     }
   }, []);
 
-  // Enhanced carousel navigation
-  const updateCarouselIndex = useCallback((collection, direction) => {
-    setCarouselStates(prev => {
-      const products = collections[collection] || [];
-      const visibleCount = 4;
-      const currentIndex = prev[collection] || 0;
-      
-      let newIndex = currentIndex;
-      if (direction === 'next' && products.length > visibleCount) {
-        newIndex = Math.min(currentIndex + 1, products.length - visibleCount);
-      } else if (direction === 'prev' && products.length > visibleCount) {
-        newIndex = Math.max(currentIndex - 1, 0);
-      }
-      
-      return { ...prev, [collection]: newIndex };
-    });
-  }, [collections]);
+  // Toggle section expansion
+  const toggleSection = useCallback((sectionKey) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [sectionKey]: !prev[sectionKey]
+    }));
+  }, []);
 
-  // Enhanced Product Card Component with better UX
-  const ProductCard = memo(({ product, isCompact = false, collectionName = '' }) => {
+  // Product Card Component - EXACT MATCH TO MEN'S PAGE
+  const ProductCard = memo(({ product }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [imageError, setImageError] = useState({ primary: false, hover: false });
     const [isAddingToCart, setIsAddingToCart] = useState(false);
-    const [imageLoading, setImageLoading] = useState(true);
 
-    if (!product) {
-      return (
-        <div className={`${isCompact ? 'w-[300px]' : 'w-full'} bg-gray-200 dark:bg-gray-700 animate-pulse rounded-2xl p-6`}>
-          <div className="h-[200px] bg-gray-300 dark:bg-gray-600 rounded-xl mb-4"></div>
-          <div className="space-y-3">
-            <div className="h-6 bg-gray-300 dark:bg-gray-600 rounded"></div>
-            <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-3/4"></div>
-            <div className="h-8 bg-gray-300 dark:bg-gray-600 rounded"></div>
-          </div>
-        </div>
-      );
-    }
-
-    const validateProduct = (product) => {
-      const requiredFields = ['_id', 'name', 'price'];
-      return requiredFields.every(field => product[field]);
-    };
+    if (!product) return null;
 
     const productInCart = isInCart(product._id?.toString(), product.sizes && product.sizes.length > 0 ? product.sizes[0].size : null);
 
     const handleAddToCart = async (e) => {
       e.stopPropagation();
-
-      if (!validateProduct(product)) {
-        addNotification('Product information is incomplete', 'error');
-        return;
-      }
-
       setIsAddingToCart(true);
-
+      
       const cartItem = {
         id: product._id.toString(),
         name: product.name,
@@ -255,21 +212,15 @@ const GiftCollection = () => {
           addNotification('Failed to add item to cart', 'error');
         }
       } catch (error) {
-        console.error('❌ Add to cart error:', error);
+        console.error('Add to cart error:', error);
         addNotification('Something went wrong. Please try again.', 'error');
       } finally {
         setIsAddingToCart(false);
       }
     };
 
-    const handleViewInCart = (e) => {
-      e.stopPropagation();
-      navigate('/product-cart');
-    };
-
     const handleWishlistToggle = (e) => {
       e.stopPropagation();
-
       if (!product._id) {
         addNotification('Unable to add to wishlist', 'error');
         return;
@@ -278,7 +229,6 @@ const GiftCollection = () => {
       try {
         const wasInWishlist = isInWishlist(product._id);
         
-        // Transform the product object to match WishlistContext expectations
         const wishlistProduct = {
           id: product._id.toString(),
           name: product.name,
@@ -305,19 +255,7 @@ const GiftCollection = () => {
         addNotification('Product not available', 'error');
         return;
       }
-
-      const productId = product._id.toString();
-      try {
-        navigate(`/product/${productId}`);
-      } catch (error) {
-        console.error('❌ Navigation error:', error);
-        window.location.href = `/product/${productId}`;
-      }
-    };
-
-    const handleQuickView = (e) => {
-      e.stopPropagation();
-      setQuickViewProduct(product);
+      navigate(`/product/${product._id.toString()}`);
     };
 
     const getProductImage = () => {
@@ -331,187 +269,139 @@ const GiftCollection = () => {
     };
 
     const handleImageError = (e, type = 'primary') => {
-      console.warn(`ProductCard (${product._id}): Image error for ${type} image`, e.target.src);
       setImageError(prev => ({ ...prev, [type]: true }));
-      setImageLoading(false);
       e.target.src = '/images/default-gift.png';
-    };
-
-    const handleImageLoad = () => {
-      setImageLoading(false);
     };
 
     return (
       <motion.div
         layout
-        whileHover={{ scale: 1.02, y: -5 }}
-        transition={{ duration: 0.3, type: "spring", stiffness: 300 }}
-        className={`bg-gradient-to-br from-[#F5E9DC] to-[#E7DDC6] dark:from-gray-800 dark:to-gray-700 p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 text-left relative flex-shrink-0 border border-[#D4C5A9] dark:border-gray-600 group cursor-pointer ${isCompact ? 'w-[300px]' : 'w-full'} backdrop-blur-sm`}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        whileHover={{ y: -8, boxShadow: '0 10px 30px rgba(0,0,0,0.15)' }}
+        transition={{ duration: 0.3 }}
+        className="bg-white dark:bg-gray-800 overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300 w-full max-w-[331px]"
+        style={{ height: 'auto', minHeight: '528px' }}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         onClick={handleCardClick}
       >
-        {/* Wishlist Button */}
-        <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={handleWishlistToggle}
-          className="absolute top-4 right-4 text-[#79300f] hover:text-red-600 dark:text-[#f6d110] dark:hover:text-red-400 z-10 bg-white/90 dark:bg-black/90 backdrop-blur-sm rounded-full p-2 shadow-md transition-all duration-200"
-          aria-label={isInWishlist(product._id) ? 'Remove from wishlist' : 'Add to wishlist'}
-        >
-          <FiHeart
-            size={18}
-            className={isInWishlist(product._id) ? 'fill-red-600 text-red-600' : ''}
-          />
-        </motion.button>
-
-        {/* Quick View Button */}
-        <AnimatePresence>
-          {isHovered && (
-            <motion.button
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={handleQuickView}
-              className="absolute top-4 right-16 bg-white/90 dark:bg-black/90 backdrop-blur-sm rounded-full p-2 shadow-md transition-all duration-200 z-10"
-              aria-label="Quick view"
-            >
-              <Eye size={18} className="text-[#79300f] dark:text-[#f6d110]" />
-            </motion.button>
-          )}
-        </AnimatePresence>
-
-        {/* Product Badge */}
-        {product.isNew && (
-          <div className="absolute top-4 left-4 bg-gradient-to-r from-green-500 to-green-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md z-10">
-            NEW
-          </div>
-        )}
-
-        {/* In Cart Badge */}
-        {productInCart && (
-          <div className="absolute top-4 left-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md z-10 border border-emerald-400">
-            ✓ IN CART
-          </div>
-        )}
-
-        {/* Image Container */}
-        <div className="bg-white/50 dark:bg-black/20 backdrop-blur-sm rounded-xl p-4 mb-4 shadow-inner relative overflow-hidden">
-          {imageLoading && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#79300f]"></div>
-            </div>
-          )}
-          <img
+        {/* Image Container with Wishlist Icon */}
+        <div className="relative bg-white dark:bg-gray-700 flex items-center justify-center overflow-hidden w-full aspect-[331/273] p-3">
+          <motion.img
             src={getProductImage()}
-            alt={product.name || 'Gift'}
-            className={`${isCompact ? 'h-[200px]' : 'h-[300px]'} w-full object-contain transition-all duration-500 group-hover:scale-105 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
+            alt={product.name || 'Product'}
+            className="object-contain w-full h-full max-w-[248px] max-h-[248px]"
             onError={(e) => handleImageError(e, isHovered ? 'hover' : 'primary')}
-            onLoad={handleImageLoad}
+            animate={{ scale: isHovered ? 1.08 : 1 }}
+            transition={{ duration: 0.4 }}
             loading="lazy"
           />
           
-          {/* Overlay on hover */}
-          <AnimatePresence>
-            {isHovered && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent rounded-xl flex items-end justify-center pb-4"
-              >
-                <span className="text-white text-sm font-medium bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm">
-                  Click to view details
-                </span>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/* Wishlist Heart Icon */}
+          <motion.button
+            onClick={handleWishlistToggle}
+            whileHover={{ scale: 1.15 }}
+            whileTap={{ scale: 0.9 }}
+            className="absolute top-2.5 right-2.5 bg-white dark:bg-gray-800 rounded-full p-1.5 shadow-lg hover:shadow-xl transition-all duration-200 z-10 w-[27px] h-[27px] flex items-center justify-center"
+            aria-label={isInWishlist(product._id) ? 'Remove from wishlist' : 'Add to wishlist'}
+          >
+            <FiHeart
+              size={14}
+              className={`transition-all duration-200 ${isInWishlist(product._id) ? 'fill-red-600 text-red-600' : 'text-gray-700 dark:text-gray-300'}`}
+            />
+          </motion.button>
         </div>
 
-        {/* Product Info */}
-        <div className="space-y-3">
-          <div className="flex items-start justify-between">
-            <h3 className={`${isCompact ? 'text-lg' : 'text-xl'} font-alata text-[#5a2408] dark:text-gray-200 font-bold leading-tight`}>
-              {product.name || 'Unnamed Gift'}
-            </h3>
-            {product.rating && (
-              <div className="flex items-center space-x-1">
-                <Star size={14} className="text-yellow-500 fill-current" />
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                  {product.rating.toFixed(1)}
-                </span>
-              </div>
+        {/* Product Info Container */}
+        <div className="px-3.5 py-3.5 flex flex-col gap-3.5">
+          {/* Product Name */}
+          <h3 
+            className="font-bold uppercase text-center line-clamp-1 text-lg sm:text-xl md:text-2xl"
+            style={{
+              fontFamily: 'Playfair Display, serif',
+              letterSpacing: '0.05em',
+              color: '#5A2408'
+            }}
+          >
+            {product.name || 'Product'}
+          </h3>
+
+          {/* Rating */}
+          <div className="flex items-center justify-center gap-1">
+            {product.rating ? (
+              <>
+                {[...Array(5)].map((_, index) => (
+                  <Star
+                    key={index}
+                    size={14}
+                    style={{ color: '#5A2408', fill: index < Math.floor(product.rating) ? '#5A2408' : 'transparent' }}
+                    className={`${index < Math.floor(product.rating) ? '' : 'opacity-30'}`}
+                  />
+                ))}
+              </>
+            ) : (
+              <div className="h-3.5"></div>
             )}
           </div>
-          
-          {product.description && (
-            <p className={`${isCompact ? 'text-xs' : 'text-sm'} text-[#8b4513] dark:text-gray-400 leading-relaxed line-clamp-2`}>
-              {product.description}
-            </p>
-          )}
-          
-          <div className="flex items-center justify-between pt-2">
-            <div className="flex flex-col">
-              <p className={`${isCompact ? 'text-lg' : 'text-xl'} font-bold text-[#79300f] dark:text-[#f6d110]`}>
-                ${typeof product.price === 'number' ? product.price.toFixed(2) : '0.00'}
-              </p>
-              {product.originalPrice && product.originalPrice > product.price && (
-                <p className="text-sm text-gray-500 dark:text-gray-400 line-through">
-                  ${product.originalPrice.toFixed(2)}
-                </p>
-              )}
-            </div>
-            <div className="bg-[#79300f]/10 dark:bg-[#f6d110]/10 px-2 py-1 rounded-full">
-              <span className="text-xs text-[#79300f] dark:text-[#f6d110] font-medium">
-                PREMIUM
-              </span>
-            </div>
-          </div>
-        </div>
 
-        {/* Action Button */}
-        <motion.button
-          onClick={productInCart ? handleViewInCart : handleAddToCart}
-          disabled={isAddingToCart}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className={`w-full mt-4 font-semibold py-3 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 ${
-            productInCart 
-              ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-700 hover:via-teal-700 hover:to-cyan-700 text-white border border-emerald-400/30 shadow-emerald-500/20'
-              : 'bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white'
-          }`}
-        >
-          {isAddingToCart ? (
-            <RefreshCw size={18} className="animate-spin" />
-          ) : productInCart ? (
-            <ShoppingCart size={18} />
-          ) : (
-            <ShoppingBag size={18} />
-          )}
-          <span>
-            {isAddingToCart ? 'Adding...' : productInCart ? 'View in Cart' : 'Add to Cart'}
-          </span>
-        </motion.button>
+          {/* Description */}
+          <p 
+            className="text-center line-clamp-2 text-sm sm:text-base"
+            style={{
+              fontFamily: 'Manrope, sans-serif',
+              fontWeight: '500',
+              letterSpacing: '0.02em',
+              color: '#7E513A'
+            }}
+          >
+            {product.description || 'Premium gift'}
+          </p>
+
+          {/* Price */}
+          <p 
+            className="font-bold text-center text-lg sm:text-xl"
+            style={{
+              fontFamily: 'Manrope, sans-serif',
+              letterSpacing: '0.02em',
+              color: '#431A06'
+            }}
+          >
+            ${typeof product.price === 'number' ? product.price.toFixed(2) : '0.00'}
+          </p>
+
+          {/* Add to Cart Button - FULL WIDTH */}
+          <motion.button
+            onClick={productInCart ? (e) => { e.stopPropagation(); navigate('/product-cart'); } : handleAddToCart}
+            disabled={isAddingToCart}
+            whileHover={{ scale: 1.02, opacity: 0.9 }}
+            whileTap={{ scale: 0.98 }}
+            className="flex items-center justify-center gap-2 sm:gap-2.5 text-white font-bold uppercase transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed w-full h-[54px] sm:h-[60px] text-sm sm:text-base md:text-lg -mx-3.5 px-3.5"
+            style={{
+              backgroundColor: productInCart ? '#10B981' : '#431A06',
+              fontFamily: 'Manrope, sans-serif',
+              letterSpacing: '0.05em',
+              width: 'calc(100% + 28px)'
+            }}
+          >
+            <ShoppingCart size={20} className="sm:w-[24px] sm:h-[24px]" />
+            <span>
+              {isAddingToCart ? 'Adding...' : productInCart ? 'View Cart' : 'Add to Cart'}
+            </span>
+          </motion.button>
+        </div>
       </motion.div>
     );
   });
 
   ProductCard.displayName = 'ProductCard';
 
-  // Enhanced Collection Section with better loading states
-  const CollectionSection = memo(({ title, collectionKey, visibleCount = 4, accent = "rose" }) => {
+  // Collection Section Component - WITH VIEW ALL BUTTON
+  const CollectionSection = memo(({ title, collectionKey, visibleCount = 4 }) => {
     const products = collections[collectionKey] || [];
-    const index = carouselStates[collectionKey] || 0;
-    const cardWidth = 300;
-    const gap = 24;
-
-    const canNavigateNext = products.length > visibleCount && index < products.length - visibleCount;
-    const canNavigatePrev = products.length > visibleCount && index > 0;
-
-    const handleNext = () => canNavigateNext && updateCarouselIndex(collectionKey, 'next');
-    const handlePrev = () => canNavigatePrev && updateCarouselIndex(collectionKey, 'prev');
+    const isExpanded = expandedSections[collectionKey];
+    const displayProducts = isExpanded ? products : products.slice(0, 4);
+    const hasMoreProducts = products.length > 4;
 
     return (
       <motion.section
@@ -519,100 +409,69 @@ const GiftCollection = () => {
         initial="hidden"
         whileInView="show"
         viewport={{ once: false, amount: 0.2 }}
-        className="py-16 px-6 bg-[#F2F2F2] dark:bg-[#0d0603]"
+        className="py-10 sm:py-14 lg:py-16 px-4 sm:px-6 bg-[#F8F6F3] dark:bg-[#0d0603]"
         id={`collection-${collectionKey}`}
       >
-        <div className="relative z-10 max-w-7xl mx-auto">
+        <div className="max-w-[1555px] mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="text-center mb-12"
+            className="text-center mb-7 sm:mb-10 lg:mb-14"
           >
-            <h3 className="text-4xl md:text-5xl font-dm-serif text-[#79300f] dark:text-[#f6d110] mb-4">
+            <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4" style={{ fontFamily: 'Playfair Display, serif', color: darkMode ? '#f6d110' : '#271004' }}>
               {title}
             </h3>
             <div className="w-24 h-1 bg-gradient-to-r from-[#79300f] to-[#5a2408] rounded-full mx-auto"></div>
           </motion.div>
 
           {loading ? (
-            <div className="flex gap-6 overflow-hidden">
-              {[...Array(4)].map((_, idx) => (
-                <ProductCard key={idx} product={null} isCompact={true} />
-              ))}
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-16 w-16 sm:h-20 sm:w-20 lg:h-28 lg:w-28 border-b-2 border-[#79300f]"></div>
             </div>
           ) : products.length > 0 ? (
-            <div className="relative">
-              <div className="overflow-hidden rounded-2xl">
-                <motion.div
-                  className="flex flex-nowrap gap-6 transition-transform duration-500 ease-out will-change-transform"
-                  style={{ transform: `translateX(-${index * (cardWidth + gap)}px)` }}
-                >
-                  <AnimatePresence mode="popLayout">
-                    {products.map((product, idx) => (
-                      <ProductCard 
-                        key={`${product._id}-${idx}`} 
-                        product={product} 
-                        isCompact={true} 
-                        collectionName={collectionKey}
-                      />
-                    ))}
-                  </AnimatePresence>
-                </motion.div>
-              </div>
+            <>
+              <motion.div 
+                layout
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-7 lg:gap-10 mb-7 sm:mb-10 justify-items-center"
+              >
+                <AnimatePresence mode="popLayout">
+                  {displayProducts.map((product) => {
+                    if (!product || !product._id) return null;
+                    return (
+                      <ProductCard key={product._id} product={product} />
+                    );
+                  })}
+                </AnimatePresence>
+              </motion.div>
 
-              {/* Navigation Controls */}
-              <AnimatePresence>
-                {products.length > visibleCount && (
-                  <>
-                    <motion.button
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: canNavigatePrev ? 1 : 0.3 }}
-                      onClick={handlePrev}
-                      disabled={!canNavigatePrev}
-                      whileHover={{ scale: canNavigatePrev ? 1.1 : 1 }}
-                      whileTap={{ scale: canNavigatePrev ? 0.9 : 1 }}
-                      className="absolute left-[-40px] top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-[#79300f] to-[#5a2408] text-white rounded-full p-3 hover:from-[#5a2408] hover:to-[#79300f] transition-all duration-300 shadow-lg hover:shadow-xl disabled:cursor-not-allowed z-10"
-                      aria-label="Previous products"
+              {/* View All / Show Less Button */}
+              {hasMoreProducts && (
+                <div className="flex justify-center mt-7 sm:mt-10 lg:mt-14">
+                  <motion.button
+                    onClick={() => toggleSection(collectionKey)}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="border-2 transition-all duration-300 rounded-lg w-full max-w-[311px] h-[54px] sm:h-[60px] px-5 flex items-center justify-center"
+                    style={{
+                      borderColor: '#431A06',
+                      backgroundColor: 'transparent',
+                      color: '#431A06'
+                    }}
+                  >
+                    <span
+                      className="text-base sm:text-lg font-bold uppercase"
+                      style={{
+                        fontFamily: 'Manrope, sans-serif',
+                        letterSpacing: '0.05em'
+                      }}
                     >
-                      <ChevronLeft size={28} />
-                    </motion.button>
-                    <motion.button
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: canNavigateNext ? 1 : 0.3 }}
-                      onClick={handleNext}
-                      disabled={!canNavigateNext}
-                      whileHover={{ scale: canNavigateNext ? 1.1 : 1 }}
-                      whileTap={{ scale: canNavigateNext ? 0.9 : 1 }}
-                      className="absolute right-[-40px] top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-[#79300f] to-[#5a2408] text-white rounded-full p-3 hover:from-[#5a2408] hover:to-[#79300f] transition-all duration-300 shadow-lg hover:shadow-xl disabled:cursor-not-allowed z-10"
-                      aria-label="Next products"
-                    >
-                      <ChevronRight size={28} />
-                    </motion.button>
-                  </>
-                )}
-              </AnimatePresence>
-
-              {/* Progress Indicator */}
-              {products.length > visibleCount && (
-                <div className="flex justify-center mt-8 space-x-2">
-                  {[...Array(Math.ceil((products.length - visibleCount + 1)))].map((_, idx) => (
-                    <motion.button
-                      key={idx}
-                      onClick={() => setCarouselStates(prev => ({ ...prev, [collectionKey]: idx }))}
-                      className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                        index === idx 
-                          ? 'bg-[#79300f] scale-125' 
-                          : 'bg-gray-300 dark:bg-gray-600 hover:bg-gray-400'
-                      }`}
-                      whileHover={{ scale: 1.2 }}
-                      whileTap={{ scale: 0.9 }}
-                      aria-label={`Go to slide ${idx + 1}`}
-                    />
-                  ))}
+                      {isExpanded ? 'Show Less' : 'View All Gifts'}
+                    </span>
+                  </motion.button>
                 </div>
               )}
-            </div>
+            </>
           ) : (
             <motion.div
               initial={{ opacity: 0 }}
@@ -640,7 +499,7 @@ const GiftCollection = () => {
 
   CollectionSection.displayName = 'CollectionSection';
 
-  // Enhanced Hero Banner with better interaction
+  // Enhanced Hero Banner
   const HeroBanner = ({ banner }) => {
     const defaultHeroBanner = {
       title: 'Luxury Gifts',
@@ -674,10 +533,8 @@ const GiftCollection = () => {
         animate="show"
         className="relative min-h-screen flex items-center justify-center overflow-hidden"
       >
-        {/* Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#F5E9DC] via-[#E7DDC6] to-[#D4C5A9] dark:from-gray-900 dark:via-gray-800 dark:to-gray-900"></div>
         
-        {/* Floating Elements */}
         <motion.div
           animate={{ y: [-20, 20, -20], x: [-10, 10, -10] }}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
@@ -730,14 +587,13 @@ const GiftCollection = () => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white font-bold py-4 px-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center justify-center space-x-3"
-                aria-label="Start shopping for gifts"
               >
                 <span className="text-lg">{bannerData.buttonText}</span>
                 <ChevronRight size={20} />
               </motion.button>
               
               <motion.button
-                onClick={() => navigate('/wishlist')}
+                onClick={() => navigate('/wishlist-collection')}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-[#79300f] hover:text-[#79300f] dark:hover:border-[#f6d110] dark:hover:text-[#f6d110] font-semibold py-4 px-8 rounded-2xl transition-all duration-300 flex items-center justify-center space-x-3"
@@ -786,12 +642,10 @@ const GiftCollection = () => {
     );
   };
 
-  // Bottom Banners Section - New component for 3 banners at the bottom
+  // Bottom Banners Section
   const BottomBannersSection = () => {
-    // Use first 3 gift_highlight banners for bottom section
     const bottomBanners = banners.gift_highlight.slice(0, 3);
     
-    // Default banners if none available from backend
     const defaultBottomBanners = [
       {
         title: "Personalized Gifts",
@@ -1047,7 +901,7 @@ const GiftCollection = () => {
                       onClick={handleQuickViewAddToCart}
                       className="flex-1 bg-gradient-to-r from-[#79300f] to-[#5a2408] text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center space-x-2"
                     >
-                      <ShoppingBag size={18} />
+                      <ShoppingCart size={18} />
                       <span>Add to Cart</span>
                     </button>
                   )}
@@ -1197,7 +1051,6 @@ const GiftCollection = () => {
           title="Gifts For Her"
           collectionKey="for_her"
           visibleCount={4}
-          accent="rose"
         />
       </div>
 
@@ -1205,64 +1058,44 @@ const GiftCollection = () => {
         title="Gifts For Him"
         collectionKey="for_him"
         visibleCount={4}
-        accent="blue"
       />
 
-      <motion.section
-        variants={fadeIn('up', 0.3)}
-        initial="hidden"
-        whileInView="show"
-        viewport={{ once: false }}
-        className="py-24 px-4 md:px-8 relative"
-      >
-        <div className="relative z-10 max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-20"
-          >
-            <div className="inline-flex items-center space-x-3 mb-6">
-              <div className="w-12 h-12 bg-gradient-to-br from-[#79300f] to-[#5a2408] rounded-full flex items-center justify-center">
-                <span className="text-white text-xl font-bold">$</span>
-              </div>
-              <h2 className="text-4xl md:text-5xl font-dm-serif bg-gradient-to-r from-[#79300f] to-[#5a2408] bg-clip-text text-transparent">
-                Shop by Budget
-              </h2>
-              <div className="w-12 h-12 bg-gradient-to-br from-[#5a2408] to-[#79300f] rounded-full flex items-center justify-center">
-                <Gift className="text-white" size={24} />
-              </div>
-            </div>
-            <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">
-              Celebrate life's precious moments with gifts that create lasting memories
-            </p>
-            <div className="w-32 h-1 bg-gradient-to-r from-[#79300f] to-[#5a2408] rounded-full mx-auto mt-6"></div>
-          </motion.div>
+      <CollectionSection
+        title="Gifts Under $50"
+        collectionKey="by_price_under_50"
+        visibleCount={4}
+      />
 
-          <div className="space-y-24">
-            <CollectionSection
-              title="Home & Living"
-              collectionKey="home_gift"
-              visibleCount={4}
-              accent="emerald"
-            />
-            <CollectionSection
-              title="Birthday Celebrations"
-              collectionKey="birthday_gift"
-              visibleCount={4}
-              accent="purple"
-            />
-            <CollectionSection
-              title="Wedding Gifts"
-              collectionKey="wedding_gift"
-              visibleCount={4}
-              accent="rose"
-            />
-          </div>
-        </div>
-      </motion.section>
+      <CollectionSection
+        title="Gifts Under $100"
+        collectionKey="by_price_under_100"
+        visibleCount={4}
+      />
 
-      {/* Bottom Banners Section - 3 banners at the end */}
+      <CollectionSection
+        title="Gifts Under $200"
+        collectionKey="by_price_under_200"
+        visibleCount={4}
+      />
+
+      <CollectionSection
+        title="Home & Living"
+        collectionKey="home_gift"
+        visibleCount={4}
+      />
+
+      <CollectionSection
+        title="Birthday Celebrations"
+        collectionKey="birthday_gift"
+        visibleCount={4}
+      />
+
+      <CollectionSection
+        title="Wedding Gifts"
+        collectionKey="wedding_gift"
+        visibleCount={4}
+      />
+
       <BottomBannersSection />
 
       <Footer />
