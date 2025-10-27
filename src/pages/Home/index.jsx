@@ -5,7 +5,7 @@ import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import InputField from '../../components/ui/InputField';
 import Checkbox from '../../components/ui/Checkbox';
-import { useEffect, useRef, useState, useCallback, memo } from 'react';
+import { useEffect, useRef, useState, useCallback, memo, useMemo } from 'react';
 import { useCart } from '@/CartContext';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -40,6 +40,8 @@ const HomePage = () => {
   const [signatureCurrentIndex, setSignatureCurrentIndex] = useState(0);
   const { addToCart, cartItems, isInCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
+
+  const [expandedSections, setExpandedSections] = useState({});
 
   // Backend data state
   const [collections, setCollections] = useState({
@@ -205,7 +207,7 @@ const HomePage = () => {
             signature: scentsData.signature?.length || 0,
           });
 
-         
+
           setCollections((prev) => ({
             ...prev,
             trending_scents: scentsData.trending || [],
@@ -299,61 +301,28 @@ const HomePage = () => {
   };
 
   // Enhanced ProductCard component
-  const ProductCard = memo(({ product, isCompact = false }) => {
+
+  const ProductCard = memo(({ product }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [imageError, setImageError] = useState({ primary: false, hover: false });
     const [isAddingToCart, setIsAddingToCart] = useState(false);
-    const [imageLoading, setImageLoading] = useState(true);
 
-    if (!product) {
-      console.warn('ProductCard: No product data provided');
-      return (
-        // HEAD
-        <div
-          className={`${isCompact ? 'w-[300px]' : 'w-full'} bg-gray-200 animate-pulse rounded-2xl p-6`}
-        >
-          <div className="h-[200px] bg-gray-300 rounded-xl mb-4"></div>
+    if (!product) return null;
 
-          <div className="space-y-3">
-            <div className="h-6 bg-gray-300 rounded"></div>
-            <div className="h-4 bg-gray-300 rounded w-3/4"></div>
-            <div className="h-8 bg-gray-300 rounded"></div>
-          </div>
-        </div>
-      );
-    }
-
-    const validateProduct = (product) => {
-      const requiredFields = ['_id', 'name', 'price'];
-      return requiredFields.every((field) => product[field]);
-    };
-
-    const productInCart = isInCart(
-      product._id?.toString(),
-      product.sizes && product.sizes.length > 0 ? product.sizes[0].size : null
-    );
+    const productInCart = isInCart(product._id?.toString(), product.sizes && product.sizes.length > 0 ? product.sizes[0].size : null);
 
     const handleAddToCart = async (e) => {
       e.stopPropagation();
-
-      if (!validateProduct(product)) {
-        addNotification('Product information is incomplete', 'error');
-        return;
-      }
-
       setIsAddingToCart(true);
 
       const cartItem = {
         id: product._id.toString(),
         name: product.name,
         price: Number(product.price),
-        image:
-          product.images && product.images.length > 0
-            ? product.images[0]
-            : '/images/default-gift.png',
+        image: product.images && product.images.length > 0 ? product.images[0] : '/images/default-gift.png',
         quantity: 1,
         selectedSize: product.sizes && product.sizes.length > 0 ? product.sizes[0].size : null,
-        personalization: null,
+        personalization: null
       };
 
       try {
@@ -371,14 +340,8 @@ const HomePage = () => {
       }
     };
 
-    const handleViewInCart = (e) => {
-      e.stopPropagation();
-      navigate('/product-cart');
-    };
-
     const handleWishlistToggle = (e) => {
       e.stopPropagation();
-
       if (!product._id) {
         addNotification('Unable to add to wishlist', 'error');
         return;
@@ -391,17 +354,17 @@ const HomePage = () => {
           id: product._id.toString(),
           name: product.name,
           price: product.price,
-          image:
-            product.images && product.images.length > 0
-              ? product.images[0]
-              : '/images/default-gift.png',
+          image: product.images && product.images.length > 0 ? product.images[0] : '/images/default-gift.png',
           description: product.description || '',
           category: product.category || '',
-          selectedSize: null,
+          selectedSize: null
         };
 
         toggleWishlist(wishlistProduct);
-        addNotification(wasInWishlist ? 'Removed from wishlist' : 'Added to wishlist!', 'success');
+        addNotification(
+          wasInWishlist ? 'Removed from wishlist' : 'Added to wishlist!',
+          'success'
+        );
       } catch (error) {
         console.error('Wishlist toggle error:', error);
         addNotification('Failed to update wishlist', 'error');
@@ -413,288 +376,236 @@ const HomePage = () => {
         addNotification('Product not available', 'error');
         return;
       }
-
-      const productId = product._id.toString();
-      try {
-        navigate(`/product/${productId}`);
-      } catch (error) {
-        console.error('❌ Navigation error:', error);
-        window.location.href = `/product/${productId}`;
-      }
-    };
-
-    const handleQuickView = (e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      console.log('Quick View clicked for product:', product._id, product.name);
-      if (product && product._id) {
-        setQuickViewProduct(product);
-      } else {
-        console.error('❌ Invalid product for Quick View:', product);
-        addNotification('Unable to show quick view', 'error');
-      }
+      navigate(`/product/${product._id.toString()}`);
     };
 
     const getProductImage = () => {
       if (isHovered && product.hoverImage && !imageError.hover) {
         return product.hoverImage;
       }
-      if (
-        product.images &&
-        Array.isArray(product.images) &&
-        product.images.length > 0 &&
-        !imageError.primary
-      ) {
+      if (product.images && Array.isArray(product.images) && product.images.length > 0 && !imageError.primary) {
         return product.images[0];
       }
       return '/images/default-gift.png';
     };
 
     const handleImageError = (e, type = 'primary') => {
-      console.warn(`ProductCard (${product._id}): Image error for ${type} image`, e.target.src);
-      setImageError((prev) => ({ ...prev, [type]: true }));
-      setImageLoading(false);
+      setImageError(prev => ({ ...prev, [type]: true }));
       e.target.src = '/images/default-gift.png';
-    };
-
-    const handleImageLoad = () => {
-      setImageLoading(false);
     };
 
     return (
       <motion.div
         layout
-        whileHover={{ scale: 1.02, y: -5 }}
-        transition={{ duration: 0.3, type: 'spring', stiffness: 300 }}
-        className={`bg-white p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 text-left relative flex-shrink-0 border border-gray-200 group cursor-pointer ${isCompact ? 'w-[300px]' : 'w-full'} backdrop-blur-sm flex flex-col`}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        whileHover={{ y: -8, boxShadow: '0 10px 30px rgba(0,0,0,0.15)' }}
+        transition={{ duration: 0.3 }}
+        className="bg-white dark:bg-gray-800 overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300 w-full max-w-[331px]"
+        style={{ height: 'auto', minHeight: '528px' }}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         onClick={handleCardClick}
       >
-        {/* Wishlist Button */}
-        <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={handleWishlistToggle}
-          className="absolute top-4 right-4 text-[#79300f] hover:text-red-600 z-10 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-md transition-all duration-200"
-          aria-label={isInWishlist(product._id) ? 'Remove from wishlist' : 'Add to wishlist'}
-        >
-          <FiHeart
-            size={18}
-            className={isInWishlist(product._id) ? 'fill-red-600 text-red-600' : ''}
-          />
-        </motion.button>
-
-        {/* Quick View Button */}
-        <AnimatePresence>
-          {isHovered && (
-            <motion.button
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={handleQuickView}
-              className="absolute top-4 right-16 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-md transition-all duration-200 z-10"
-              aria-label="Quick view"
-            >
-              <Eye size={18} className="text-[#79300f]" />
-            </motion.button>
-          )}
-        </AnimatePresence>
-
-        {/* Product Badge */}
-        {product.isNew && (
-          <div className="absolute top-4 left-4 bg-gradient-to-r from-green-500 to-green-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md z-10">
-            NEW
-          </div>
-        )}
-
-        {/* In Cart Badge */}
-        {productInCart && (
-          <div className="absolute top-4 left-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md z-10 border border-emerald-400">
-            ✓ IN CART
-          </div>
-        )}
-
-        {/* Image Container */}
-        <div className="bg-gray-50 rounded-xl p-4 mb-4 shadow-inner relative overflow-hidden">
-          {imageLoading && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#79300f]"></div>
-            </div>
-          )}
-          <img
+        {/* Image Container with Wishlist Icon - RESPONSIVE */}
+        <div className="relative bg-white dark:bg-gray-700 flex items-center justify-center overflow-hidden w-full aspect-[331/273] p-3">
+          <motion.img
             src={getProductImage()}
-            alt={product.name || 'Gift'}
-            className={`${isCompact ? 'h-[200px]' : 'h-[300px]'} w-full object-contain transition-all duration-500 group-hover:scale-105 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
+            alt={product.name || 'Product'}
+            className="object-contain w-full h-full max-w-[248px] max-h-[248px]"
             onError={(e) => handleImageError(e, isHovered ? 'hover' : 'primary')}
-            onLoad={handleImageLoad}
+            animate={{ scale: isHovered ? 1.08 : 1 }}
+            transition={{ duration: 0.4 }}
             loading="lazy"
           />
 
-          {/* Overlay on hover */}
-          <AnimatePresence>
-            {isHovered && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent rounded-xl flex items-end justify-center pb-4"
-              >
-                <span className="text-white text-sm font-medium bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm">
-                  Click to view details
-                </span>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/* Wishlist Heart Icon */}
+          <motion.button
+            onClick={handleWishlistToggle}
+            whileHover={{ scale: 1.15 }}
+            whileTap={{ scale: 0.9 }}
+            className="absolute top-2.5 right-2.5 bg-white dark:bg-gray-800 rounded-full p-1.5 shadow-lg hover:shadow-xl transition-all duration-200 z-10 w-[27px] h-[27px] flex items-center justify-center"
+            aria-label={isInWishlist(product._id) ? 'Remove from wishlist' : 'Add to wishlist'}
+          >
+            <FiHeart
+              size={14}
+              className={`transition-all duration-200 ${isInWishlist(product._id) ? 'fill-red-600 text-red-600' : 'text-gray-700 dark:text-gray-300'}`}
+            />
+          </motion.button>
         </div>
 
-        {/* Product Info */}
-        <div className="space-y-3 flex-1">
-          <div className="flex items-start justify-between">
-            <h3
-              className={`${isCompact ? 'text-lg' : 'text-xl'} font-alata text-[#5a2408] font-bold leading-tight`}
-            >
-              =======
-              {product.name || 'Unnamed Product'}
-            </h3>
-            {product.rating && (
-              <div className="flex items-center space-x-1">
-                <Star size={14} className="text-yellow-500 fill-current" />
-                <span className="text-sm text-gray-600">{product.rating.toFixed(1)}</span>
-              </div>
+        {/* Product Info Container - RESPONSIVE */}
+        <div className="px-3.5 py-3.5 flex flex-col gap-3.5">
+          {/* Product Name */}
+          <h3
+            className="font-bold uppercase text-center line-clamp-1 text-lg sm:text-xl md:text-2xl"
+            style={{
+              fontFamily: 'Playfair Display, serif',
+              letterSpacing: '0.05em',
+              color: '#5A2408'
+            }}
+          >
+            {product.name || 'Product'}
+          </h3>
+
+          {/* Rating */}
+          <div className="flex items-center justify-center gap-1">
+            {product.rating ? (
+              <>
+                {[...Array(5)].map((_, index) => (
+                  <Star
+                    key={index}
+                    size={14}
+                    style={{ color: '#5A2408', fill: index < Math.floor(product.rating) ? '#5A2408' : 'transparent' }}
+                    className={`${index < Math.floor(product.rating) ? '' : 'opacity-30'}`}
+                  />
+                ))}
+              </>
+            ) : (
+              <div className="h-3.5"></div>
             )}
           </div>
 
-          {product.description && (
-            <p
-              className={`${isCompact ? 'text-xs' : 'text-sm'} text-[#8b4513] leading-relaxed line-clamp-2`}
-            >
-              {product.description}
-            </p>
-          )}
+          {/* Description */}
+          <p
+            className="text-center line-clamp-2 text-sm sm:text-base"
+            style={{
+              fontFamily: 'Manrope, sans-serif',
+              fontWeight: '500',
+              letterSpacing: '0.02em',
+              color: '#7E513A'
+            }}
+          >
+            {product.description || 'Premium fragrance'}
+          </p>
 
-          <div className="flex items-center justify-between pt-2">
-            <div className="flex flex-col">
-              <p className={`${isCompact ? 'text-lg' : 'text-xl'} font-bold text-[#79300f]`}>
-                ${typeof product.price === 'number' ? product.price.toFixed(2) : '0.00'}
-              </p>
-              {product.originalPrice && product.originalPrice > product.price && (
-                <p className="text-sm text-gray-500 line-through">
-                  ${product.originalPrice.toFixed(2)}
-                </p>
-              )}
-            </div>
+          {/* Price */}
+          <p
+            className="font-bold text-center text-lg sm:text-xl"
+            style={{
+              fontFamily: 'Manrope, sans-serif',
+              letterSpacing: '0.02em',
+              color: '#431A06'
+            }}
+          >
+            ${typeof product.price === 'number' ? product.price.toFixed(2) : '0.00'}
+          </p>
 
-            <div className="bg-[#79300f]/10 px-2 py-1 rounded-full">
-              <span className="text-xs text-[#79300f] font-medium">PREMIUM</span>
-            </div>
-          </div>
+          {/* Add to Cart Button - RESPONSIVE - FULL WIDTH */}
+          <motion.button
+            onClick={productInCart ? (e) => { e.stopPropagation(); navigate('/product-cart'); } : handleAddToCart}
+            disabled={isAddingToCart}
+            whileHover={{ scale: 1.02, opacity: 0.9 }}
+            whileTap={{ scale: 0.98 }}
+            className="flex items-center justify-center gap-2 sm:gap-2.5 text-white font-bold uppercase transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed w-full h-[54px] sm:h-[60px] text-sm sm:text-base md:text-lg -mx-3.5 px-3.5"
+            style={{
+              backgroundColor: productInCart ? '#10B981' : '#431A06',
+              fontFamily: 'Manrope, sans-serif',
+              letterSpacing: '0.05em',
+              width: 'calc(100% + 28px)'
+            }}
+          >
+            <ShoppingCart size={20} className="sm:w-[24px] sm:h-[24px]" />
+            <span>
+              {isAddingToCart ? 'Adding...' : productInCart ? 'View Cart' : 'Add to Cart'}
+            </span>
+          </motion.button>
         </div>
-
-        {/* Action Button */}
-        <motion.button
-          onClick={productInCart ? handleViewInCart : handleAddToCart}
-          disabled={isAddingToCart}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className={`w-full font-semibold py-3 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 mt-auto ${
-            productInCart
-              ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-700 hover:via-teal-700 hover:to-cyan-700 text-white border border-emerald-400/30 shadow-emerald-500/20'
-              : 'bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white'
-          }`}
-        >
-          {isAddingToCart ? (
-            <RefreshCw size={18} className="animate-spin" />
-          ) : productInCart ? (
-            <ShoppingCart size={18} />
-          ) : (
-            <ShoppingBag size={18} />
-          )}
-          <span>
-            {isAddingToCart ? 'Adding...' : productInCart ? 'View in Cart' : 'Add to Cart'}
-          </span>
-        </motion.button>
       </motion.div>
     );
   });
 
   ProductCard.displayName = 'ProductCard';
 
-  // Collection Section Component with smooth transitions
-  const CollectionSection = ({ title, products = [], index = 0, navigation, scrollRef }) => {
-    console.log(`Rendering ${title} with ${products?.length || 0} products`);
+  const CollectionSection = memo(({ title, products = [], sectionKey }) => {
+    const isExpanded = expandedSections[sectionKey];
+    const displayProducts = useMemo(() =>
+      isExpanded ? products : products.slice(0, 4),
+      [isExpanded, products]
+    );
+    const hasMoreProducts = products.length > 4;
 
     return (
-      <section className="py-16 px-6" style={{ backgroundColor: '#F9F7F6' }}>
-        <div className="max-w-7xl mx-auto text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
+      <section className="py-10 sm:py-14 lg:py-16 px-4 sm:px-6 bg-[#F8F6F3] dark:bg-[#0d0603]">
+        <div className="max-w-[1555px] mx-auto">
+          {/* Section Title - RESPONSIVE */}
+          <motion.h3
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="text-center font-bold mb-7 sm:mb-10 lg:mb-14 text-3xl sm:text-4xl lg:text-5xl"
+            style={{
+              fontFamily: 'Playfair Display, serif',
+              color: darkMode ? '#f6d110' : '#271004'
+            }}
           >
-            <h2 className="text-[50px] font-dm-serif mb-12 text-[#79300f]">{title}</h2>
-          </motion.div>
+            {title}
+          </motion.h3>
 
-          {products.length === 0 && !loading ? (
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-16 w-16 sm:h-20 sm:w-20 lg:h-28 lg:w-28 border-b-2 border-[#79300f]"></div>
+            </div>
+          ) : products && products.length > 0 ? (
+            <>
+              {/* Products Grid - RESPONSIVE */}
+              <motion.div
+                layout
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-7 lg:gap-10 mb-7 sm:mb-10 justify-items-center"
+              >
+                <AnimatePresence mode="popLayout">
+                  {displayProducts.map((product) => {
+                    if (!product || !product._id) return null;
+                    return (
+                      <ProductCard key={product._id} product={product} />
+                    );
+                  })}
+                </AnimatePresence>
+              </motion.div>
+
+              {/* View All Button - RESPONSIVE - EXACT STYLING MATCH */}
+              {hasMoreProducts && (
+                <div className="flex justify-center mt-7 sm:mt-10 lg:mt-14">
+                  <motion.button
+                    onClick={() => toggleSection(sectionKey)}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="border-2 transition-all duration-300 rounded-lg w-full max-w-[311px] h-[54px] sm:h-[60px] px-5 flex items-center justify-center"
+                    style={{
+                      borderColor: '#431A06',
+                      backgroundColor: 'transparent',
+                      color: '#431A06'
+                    }}
+                  >
+                    <span
+                      className="text-base sm:text-lg font-bold uppercase"
+                      style={{
+                        fontFamily: 'Manrope, sans-serif',
+                        letterSpacing: '0.05em'
+                      }}
+                    >
+                      {isExpanded ? 'Show Less' : 'View all Fragrances'}
+                    </span>
+                  </motion.button>
+                </div>
+              )}
+            </>
+          ) : (
             <div className="text-center py-16">
-              <p className="text-lg text-gray-500">No products available in this collection.</p>
-              <p className="text-sm text-gray-400 mt-2">
+              <p className="text-base sm:text-lg text-gray-500 dark:text-gray-400">
+                No products available in this collection.
+              </p>
+              <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">
                 Please check back later or try refreshing the page.
               </p>
-            </div>
-          ) : (
-            <div className="relative">
-              {loading ? (
-                <div className="flex justify-center items-center h-64">
-                  <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#79300f]"></div>
-                </div>
-              ) : (
-                <div className="overflow-hidden">
-                  <div
-                    className="flex gap-6 transition-transform duration-500 ease-in-out will-change-transform"
-                    style={{
-                      transform: `translateX(-${index * 312}px)`,
-                      width: `${products.length * 312}px`,
-                    }}
-                    ref={scrollRef}
-                  >
-                    {products.map((product) => (
-                      <ProductCard key={product._id} product={product} isCompact={true} />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {products.length > 4 && (
-                <>
-                  <button
-                    onClick={navigation.prev}
-                    disabled={index === 0}
-                    className={`absolute left-[-30px] top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-[#79300f] to-[#5a2408] text-white rounded-full p-3 hover:from-[#5a2408] hover:to-[#79300f] transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110 ${
-                      index === 0 ? 'opacity-50 cursor-not-allowed' : ''
-                    }`}
-                  >
-                    <ChevronLeft size={28} />
-                  </button>
-                  <button
-                    onClick={navigation.next}
-                    disabled={index >= products.length - 4}
-                    className={`absolute right-[-30px] top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-[#79300f] to-[#5a2408] text-white rounded-full p-3 hover:from-[#5a2408] hover:to-[#79300f] transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110 ${
-                      index >= products.length - 4 ? 'opacity-50 cursor-not-allowed' : ''
-                    }`}
-                  >
-                    <ChevronRight size={28} />
-                  </button>
-                </>
-              )}
             </div>
           )}
         </div>
       </section>
     );
-  };
+  });
+
+  CollectionSection.displayName = 'CollectionSection';
 
   // Enhanced Dynamic Banner Component with click handling
   const DynamicBanner = ({ banner, type = 'hero' }) => {
@@ -722,7 +633,7 @@ const HomePage = () => {
         return '/best-sellers-collection';
       }
 
-      return '#'; 
+      return '#';
     };
 
     if (type === 'product_highlight') {
@@ -751,10 +662,10 @@ const HomePage = () => {
               <p className="text-[18px] mb-6 text-[#5a2408] leading-relaxed">
                 {banner.description}
               </p>
-             
+
               <button
                 onClick={handleClick}
-                className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white px-8 py-3 text-lg font-semibold rounded-lg transition-all duration-300 hover:shadow-lg transform hover:scale-105 flex items-center gap-3 w-fit"
+                className="bg-gradient-to-r from-[#431A06] to-[#5a2408] hover:from-[#431A06] hover:to-[#79300f] text-white px-8 py-3 text-lg font-semibold rounded-lg transition-all duration-300 hover:shadow-lg transform hover:scale-105 flex items-center gap-3 w-fit"
               >
                 <span>{banner.buttonText || 'Explore Collection'}</span>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -771,7 +682,7 @@ const HomePage = () => {
               <img
                 src={banner.image || '/images/newimg1.PNG'}
                 alt={banner.altText || banner.title}
-                className="w-full h-full object-cover rounded-xl shadow-lg"
+                className="w-full h-full object-cover shadow-lg"
                 onError={(e) => {
                   console.warn('Banner image failed to load:', e.target.src);
                   e.target.src = '/images/newimg1.PNG';
@@ -812,7 +723,7 @@ const HomePage = () => {
 
               <button
                 onClick={handleClick}
-                className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white px-8 py-3 text-lg font-semibold rounded-lg transition-all duration-300 hover:shadow-lg transform hover:scale-105 flex items-center gap-3 w-fit"
+                className="bg-gradient-to-r from-[#431A06] to-[#5a2408] hover:from-[#431A06] hover:to-[#79300f] text-white px-8 py-3 text-lg font-semibold rounded-lg transition-all duration-300 hover:shadow-lg transform hover:scale-105 flex items-center gap-3 w-fit"
               >
                 <span>{banner.buttonText || 'View Collection'}</span>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -829,7 +740,7 @@ const HomePage = () => {
               <img
                 src={banner.image || '/images/newimg1.PNG'}
                 alt={banner.altText || banner.title}
-                className="w-full h-full object-cover rounded-xl shadow-lg"
+                className="w-full h-full object-cover shadow-lg"
                 onError={(e) => {
                   console.warn('Banner image failed to load:', e.target.src);
                   e.target.src = '/images/newimg1.PNG';
@@ -1044,11 +955,10 @@ const HomePage = () => {
             initial={{ opacity: 0, x: 100, scale: 0.8 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: 100, scale: 0.8 }}
-            className={`p-4 rounded-2xl shadow-lg backdrop-blur-sm border max-w-sm ${
-              notification.type === 'success'
+            className={`p-4 rounded-2xl shadow-lg backdrop-blur-sm border max-w-sm ${notification.type === 'success'
                 ? 'bg-green-500/90 text-white border-green-400'
                 : 'bg-red-500/90 text-white border-red-400'
-            }`}
+              }`}
           >
             <div className="flex items-center space-x-3">
               {notification.type === 'success' ? (

@@ -38,6 +38,7 @@ import ProtectedRoute from './components/common/ProtectedRoute';
 import AdminRoute from './components/common/AdminRoute';
 import Orders from './components/Orders';
 import SearchResults from './pages/SearchResults';
+import AboutPage from './components/common/AboutPage';
 
 const AppRoutes = ({ darkMode, setDarkMode }) => {
   return (
@@ -58,6 +59,7 @@ const AppRoutes = ({ darkMode, setDarkMode }) => {
               <Route path="/unisex-collection" element={<UnisexCollection />} />
               <Route path="/gift-collection" element={<GiftCollection />} />
               <Route path="/search" element={<SearchResults />} />
+              <Route path="/about-page" element={<AboutPage />} />
               
               {/* Collection Routes */}
               <Route path="/trending-collection" element={<TrendingCollection />} />
