@@ -29,7 +29,7 @@ const HeroSection = () => {
   return (
     <section
       className="flex flex-col items-center justify-center w-full min-h-screen bg-[#F9F7F6]"
-      style={{ minHeight: '502px', paddingTop: '197px' }}
+      style={{ minHeight: '502px'}}
     >
       <div
         className="w-full max-w-[1440px] px-0 mx-auto"

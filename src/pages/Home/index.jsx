@@ -59,6 +59,14 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+    // Toggle section expansion - MEMOIZED
+    const toggleSection = useCallback((sectionKey) => {
+      setExpandedSections(prev => ({
+        ...prev,
+        [sectionKey]: !prev[sectionKey]
+      }));
+    }, []);
+
   // Enhanced notification system
   const [notifications, setNotifications] = useState([]);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
@@ -1009,6 +1017,7 @@ const HomePage = () => {
           index={currentIndex}
           navigation={fragrantFavouritesNav}
           scrollRef={scrollRef}
+          sectionKey="fragrant_favourites"
         />
 
         {/* Dynamic Product Highlight Banners */}
@@ -1022,6 +1031,7 @@ const HomePage = () => {
           index={summerCurrentIndex}
           navigation={summerScentsNav}
           scrollRef={summerScrollRef}
+          sectionKey="summer_scents"
         />
 
         {/* Dynamic Collection Highlight Banners */}
@@ -1035,6 +1045,7 @@ const HomePage = () => {
           index={signatureCurrentIndex}
           navigation={signatureCollectionNav}
           scrollRef={signatureScrollRef}
+          sectionKey="signature_collection"
         />
 
         <section className="bg-gradient-to-br from-[#1C160C] via-[#1C160C] to-[#292218] py-20 px-6 ">
