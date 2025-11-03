@@ -18,8 +18,11 @@ const ProductCartSection = ({ isOpen, onClose }) => {
   useEffect(() => {
     if (isOpen) {
       setShowCart(true);
+      // Prevent body scroll when cart is open
+      document.body.style.overflow = 'hidden';
     } else {
-      const timer = setTimeout(() => setShowCart(false), 300); // matches transition duration
+      const timer = setTimeout(() => setShowCart(false), 300);
+      document.body.style.overflow = 'auto';
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
@@ -95,7 +98,7 @@ const ProductCartSection = ({ isOpen, onClose }) => {
 
   if (!isInitialized) {
     return (
-      <div className="fixed inset-0 bg-[#F9F7F6] z-[1100] flex flex-col">
+      <div className="fixed inset-0 bg-[#F9F7F6] flex flex-col" style={{ zIndex: 10100 }}>
         <div className="flex-1 flex justify-center items-center">
           <div className="flex items-center space-x-2">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#5A2408]" />
@@ -107,7 +110,7 @@ const ProductCartSection = ({ isOpen, onClose }) => {
   }
 
   return (
-    <div className="fixed inset-0 z-[1100] flex pointer-events-auto">
+    <div className="fixed inset-0 flex pointer-events-auto" style={{ zIndex: 10100 }}>
       {/* Overlay */}
       <div
         className={`flex-1 bg-black/50 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`}

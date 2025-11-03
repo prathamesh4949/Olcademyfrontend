@@ -12,30 +12,26 @@ import { CheckCircle, AlertCircle, RefreshCw, ShoppingBag } from 'lucide-react';
 import ProductService from '../services/productService';
 
 const SearchResults = () => {
+  // FIXED: Use React state instead of localStorage for darkMode
   const [darkMode, setDarkMode] = useState(false);
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const location = useLocation();
   const navigate = useNavigate();
   
-  // Search states
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [filteredResults, setFilteredResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  
-  // Enhanced notification system
   const [cartNotifications, setCartNotifications] = useState([]);
   
-  // Filter states
   const [filters, setFilters] = useState({
     category: '',
     priceRange: { min: 0, max: 1000 },
     sortBy: 'name'
   });
 
-  // Enhanced notification system
   const addNotification = useCallback((message, type = 'success') => {
     const id = Date.now();
     setCartNotifications(prev => [...prev, { id, message, type }]);
@@ -44,17 +40,12 @@ const SearchResults = () => {
     }, 3000);
   }, []);
 
+  // FIXED: Removed localStorage operations for darkMode
+  // Dark mode now controlled only by component state
   useEffect(() => {
-    const stored = localStorage.getItem('darkMode');
-    if (stored !== null) setDarkMode(JSON.parse(stored));
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem('darkMode', JSON.stringify(darkMode));
     document.documentElement.classList.toggle('dark', darkMode);
   }, [darkMode]);
 
-  // Get search query from URL params
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
     const query = urlParams.get('q') || '';
@@ -62,7 +53,6 @@ const SearchResults = () => {
     performSearch(query);
   }, [location.search]);
 
-  // Perform search using ProductService
   const performSearch = async (query) => {
     setIsLoading(true);
     try {
@@ -90,11 +80,9 @@ const SearchResults = () => {
     }
   };
 
-  // Apply client-side sorting
   useEffect(() => {
     let filtered = [...searchResults];
 
-    // Apply sorting
     filtered.sort((a, b) => {
       switch (filters.sortBy) {
         case 'price-low':
@@ -110,23 +98,19 @@ const SearchResults = () => {
     setFilteredResults(filtered);
   }, [searchResults, filters.sortBy]);
 
-  // Handle new search
   const handleSearch = (e) => {
     e.preventDefault();
     navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
   };
 
-  // Update filters
   const updateFilter = (key, value) => {
     setFilters(prev => ({
       ...prev,
       [key]: value
     }));
-    // Trigger new search with updated filters
     performSearch(searchQuery);
   };
 
-  // Clear filters
   const clearFilters = () => {
     setFilters({
       category: '',
@@ -136,23 +120,19 @@ const SearchResults = () => {
     performSearch(searchQuery);
   };
 
-  // Handle product click to navigate to product detail page
   const handleProductClick = (productId) => {
     navigate(`/product/${productId}`);
   };
 
-  // Product validation function
   const validateProduct = (product) => {
     const requiredFields = ['_id', 'name', 'price'];
     return requiredFields.every(field => product[field]);
   };
 
-  // Product Card Component with enhanced add to cart functionality
   const ProductCard = ({ product }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [isAddingToCart, setIsAddingToCart] = useState(false);
 
-    // Enhanced add to cart handler
     const handleAddToCart = async (e) => {
       e.stopPropagation();
       e.preventDefault();
@@ -189,7 +169,6 @@ const SearchResults = () => {
       }
     };
 
-    // Enhanced wishlist handler
     const handleWishlistToggle = (e) => {
       e.stopPropagation();
       e.preventDefault();
@@ -294,7 +273,6 @@ const SearchResults = () => {
     );
   };
 
-  // Notification System Component
   const NotificationSystem = () => (
     <div className="fixed top-4 right-4 z-50 space-y-2">
       <AnimatePresence>
@@ -330,7 +308,6 @@ const SearchResults = () => {
       <NotificationSystem />
       
       <main className="max-w-7xl mx-auto px-4 py-8">
-        {/* Search Header */}
         <motion.div
           variants={fadeIn('up', 0.2)}
           initial="hidden"
@@ -341,7 +318,6 @@ const SearchResults = () => {
             Search Results
           </h1>
           
-          {/* Search Bar */}
           <form onSubmit={handleSearch} className="flex gap-4 mb-6">
             <input
               type="text"
@@ -358,7 +334,6 @@ const SearchResults = () => {
             </Button>
           </form>
 
-          {/* Results Info */}
           <div className="flex items-center justify-between">
             <p className="text-[#5a2408] dark:text-[#f6d110]">
               {isLoading ? 'Searching...' : 
@@ -378,7 +353,6 @@ const SearchResults = () => {
         </motion.div>
 
         <div className="flex gap-8">
-          {/* Filters Sidebar */}
           <motion.div
             variants={fadeIn('left', 0.2)}
             initial="hidden"
@@ -396,7 +370,6 @@ const SearchResults = () => {
                 </button>
               </div>
 
-              {/* Category Filter */}
               <div className="mb-6">
                 <label className="block font-semibold mb-2 dark:text-white">Category</label>
                 <select
@@ -413,7 +386,6 @@ const SearchResults = () => {
                 </select>
               </div>
 
-              {/* Price Range Filter */}
               <div className="mb-6">
                 <label className="block font-semibold mb-2 dark:text-white">Price Range</label>
                 <div className="space-y-2">
@@ -435,7 +407,6 @@ const SearchResults = () => {
                 </div>
               </div>
 
-              {/* Sort By */}
               <div className="mb-4">
                 <label className="block font-semibold mb-2 dark:text-white">Sort By</label>
                 <select
@@ -451,7 +422,6 @@ const SearchResults = () => {
             </div>
           </motion.div>
 
-          {/* Results Grid */}
           <div className="flex-1">
             {isLoading ? (
               <div className="flex items-center justify-center h-64">
@@ -507,7 +477,6 @@ const SearchResults = () => {
           </div>
         </div>
 
-        {/* Mobile Filter Toggle */}
         {showFilters && (
           <div 
             className="lg:hidden fixed inset-0 bg-black/50 z-40"
