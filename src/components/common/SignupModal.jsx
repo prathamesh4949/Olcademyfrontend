@@ -122,7 +122,7 @@ const SignupModal = ({ isOpen, onClose, openLogin, openVerify, setEmail }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: 10010 }}>
       <div className="bg-white w-full max-w-5xl max-h-[90vh] rounded-2xl overflow-hidden flex shadow-2xl">
         {/* Left Side Image */}
         <div className="hidden md:block md:w-1/2 h-full relative">
