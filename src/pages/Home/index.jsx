@@ -5,6 +5,7 @@ import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import InputField from '../../components/ui/InputField';
 import Checkbox from '../../components/ui/Checkbox';
+import ProductCartSection from '../../pages/ProductCartSection'; // ADD THIS IMPORT
 import { useEffect, useRef, useState, useCallback, memo, useMemo } from 'react';
 import { useCart } from '@/CartContext';
 import { useNavigate } from 'react-router-dom';
@@ -25,7 +26,7 @@ import {
 import { FiHeart } from 'react-icons/fi';
 import { useWishlist } from '@/WishlistContext';
 import ProductService from '../../services/productService';
-import ScentService from '../../services/scentService'; // Import ScentService
+import ScentService from '../../services/scentService';
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -43,6 +44,9 @@ const HomePage = () => {
 
   const [expandedSections, setExpandedSections] = useState({});
 
+  // ADD THIS STATE FOR CART SIDEBAR
+  const [isCartOpen, setIsCartOpen] = useState(false);
+
   // Backend data state
   const [collections, setCollections] = useState({
     fragrant_favourites: [],
@@ -59,13 +63,13 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-    // Toggle section expansion - MEMOIZED
-    const toggleSection = useCallback((sectionKey) => {
-      setExpandedSections(prev => ({
-        ...prev,
-        [sectionKey]: !prev[sectionKey]
-      }));
-    }, []);
+  // Toggle section expansion - MEMOIZED
+  const toggleSection = useCallback((sectionKey) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [sectionKey]: !prev[sectionKey]
+    }));
+  }, []);
 
   // Enhanced notification system
   const [notifications, setNotifications] = useState([]);
@@ -101,24 +105,19 @@ const HomePage = () => {
       }
     }
 
-    // Navigate based on banner type or specific properties
     if (banner.buttonLink) {
-      // If banner has specific link, use it
       navigate(banner.buttonLink);
     } else if (
       banner.type === 'trending_collection' ||
       banner.title?.toLowerCase().includes('trending')
     ) {
-      // Navigate to trending collection
       navigate('/trending-collection');
     } else if (
       banner.type === 'best_seller_collection' ||
       banner.title?.toLowerCase().includes('best seller')
     ) {
-      // Navigate to best sellers collection
       navigate('/best-sellers-collection');
     } else {
-      // Default fallback
       console.log('Banner clicked but no specific navigation defined:', banner);
     }
   };
@@ -132,7 +131,6 @@ const HomePage = () => {
 
         console.log('🔍 Fetching home page data...');
 
-        // Fetch products, banners, and featured scents
         const [productsResponse, bannersResponse, scentsResponse] = await Promise.all([
           ProductService.getHomeCollections().catch((err) => {
             console.error('Products fetch error:', err);
@@ -142,7 +140,6 @@ const HomePage = () => {
             console.error('Banners fetch error:', err);
             return { success: false, error: err.message };
           }),
-          // NEW: Fetch featured scents
           ScentService.getFeaturedScents().catch((err) => {
             console.error('Scents fetch error:', err);
             return { success: false, error: err.message };
@@ -153,7 +150,6 @@ const HomePage = () => {
         console.log('Home Banners Response:', bannersResponse);
         console.log('Scents Response:', scentsResponse);
 
-        // Handle existing products
         if (productsResponse.success && productsResponse.data) {
           const safeCollections = {
             fragrant_favourites: productsResponse.data.fragrant_favourites || [],
@@ -177,7 +173,6 @@ const HomePage = () => {
           });
         }
 
-        // Handle banners
         if (bannersResponse.success && bannersResponse.data) {
           const bannersByType = {
             hero: null,
@@ -206,7 +201,6 @@ const HomePage = () => {
           });
         }
 
-        // NEW: Handle scents data
         if (scentsResponse.success && scentsResponse.data) {
           const scentsData = scentsResponse.data;
           console.log('✅ Featured scents loaded:', {
@@ -214,7 +208,6 @@ const HomePage = () => {
             bestSellers: scentsData.bestSellers?.length || 0,
             signature: scentsData.signature?.length || 0,
           });
-
 
           setCollections((prev) => ({
             ...prev,
@@ -226,7 +219,6 @@ const HomePage = () => {
         console.error('❌ Error fetching home data:', err);
         setError(err.message);
 
-        // Fallback to empty arrays to prevent crashes
         setCollections({
           fragrant_favourites: [],
           summer_scents: [],
@@ -286,7 +278,6 @@ const HomePage = () => {
       return;
     }
 
-    // Validate the product ID format
     const productId = product._id.toString();
     if (productId.length !== 24) {
       console.error('❌ Invalid product ID format:', productId);
@@ -303,13 +294,11 @@ const HomePage = () => {
       navigate(`/product/${productId}`);
     } catch (error) {
       console.error('❌ Navigation error:', error);
-      // Fallback navigation
       window.location.href = `/product/${productId}`;
     }
   };
 
   // Enhanced ProductCard component
-
   const ProductCard = memo(({ product }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [imageError, setImageError] = useState({ primary: false, hover: false });
@@ -499,9 +488,12 @@ const HomePage = () => {
             ${typeof product.price === 'number' ? product.price.toFixed(2) : '0.00'}
           </p>
 
-          {/* Add to Cart Button - RESPONSIVE - FULL WIDTH */}
+          {/* UPDATED Add to Cart Button - Opens Cart Sidebar when product is in cart */}
           <motion.button
-            onClick={productInCart ? (e) => { e.stopPropagation(); navigate('/product-cart'); } : handleAddToCart}
+            onClick={productInCart ? (e) => { 
+              e.stopPropagation(); 
+              setIsCartOpen(true); // CHANGED: Opens cart sidebar instead of navigating
+            } : handleAddToCart}
             disabled={isAddingToCart}
             whileHover={{ scale: 1.02, opacity: 0.9 }}
             whileTap={{ scale: 0.98 }}
@@ -623,7 +615,6 @@ const HomePage = () => {
       handleBannerClick(banner);
     };
 
-    // Determine navigation based on banner content
     const getButtonAction = () => {
       if (banner.buttonLink) return banner.buttonLink;
 
@@ -901,7 +892,7 @@ const HomePage = () => {
                   {productInQuickViewCart ? (
                     <button
                       onClick={() => {
-                        navigate('/product-cart');
+                        setIsCartOpen(true);
                         handleClose();
                       }}
                       className="flex-1 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-700 hover:via-teal-700 hover:to-cyan-700 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center space-x-2 border border-emerald-400/30 shadow-emerald-500/20"
@@ -987,6 +978,9 @@ const HomePage = () => {
       <Header />
       <NotificationSystem />
       <QuickViewModal />
+      
+      {/* CART SIDEBAR - ADD THIS */}
+      <ProductCartSection isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
 
       <main className="flex-1" style={{ backgroundColor: '#F9F7F6' }}>
         {/* HeroSection */}

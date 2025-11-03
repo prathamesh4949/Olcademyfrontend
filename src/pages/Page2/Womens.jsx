@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../../components/common/Header';
 import Footer from '@/components/common/Footer';
 import Button from '../../components/ui/Button';
+import ProductCartSection from '../../pages/ProductCartSection'; // ADD THIS IMPORT
 import { motion, AnimatePresence } from 'framer-motion';
 import { fadeIn } from '../../variants';
 import { useCart } from '@/CartContext';
@@ -16,6 +17,9 @@ const WomensCollection = () => {
   const [darkMode, setDarkMode] = useState(false);
   const { addToCart, isInCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
+  
+  // ADD THIS STATE FOR CART SIDEBAR
+  const [isCartOpen, setIsCartOpen] = useState(false);
   
   // State for products from backend
   const [collections, setCollections] = useState({
@@ -182,7 +186,7 @@ const WomensCollection = () => {
     }));
   }, []);
 
-  // Product Card Component - MATCHING MEN'S PAGE DESIGN
+  // Product Card Component - UPDATED WITH CART SIDEBAR FUNCTIONALITY
   const ProductCard = memo(({ product }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [imageError, setImageError] = useState({ primary: false, hover: false });
@@ -243,11 +247,6 @@ const WomensCollection = () => {
       } finally {
         setIsAddingToCart(false);
       }
-    };
-
-    const handleViewInCart = (e) => {
-      e.stopPropagation();
-      navigate('/product-cart');
     };
 
     const handleWishlistToggle = (e) => {
@@ -421,9 +420,12 @@ const WomensCollection = () => {
             ${typeof product.price === 'number' ? product.price.toFixed(2) : '0.00'}
           </p>
 
-          {/* Add to Cart Button */}
+          {/* UPDATED Add to Cart Button - Opens Cart Sidebar when product is in cart */}
           <motion.button
-            onClick={productInCart ? handleViewInCart : handleAddToCart}
+            onClick={productInCart ? (e) => { 
+              e.stopPropagation(); 
+              setIsCartOpen(true); // CHANGED: Opens cart sidebar instead of navigating
+            } : handleAddToCart}
             disabled={isAddingToCart}
             whileHover={{ scale: 1.02, opacity: 0.9 }}
             whileTap={{ scale: 0.98 }}
@@ -809,6 +811,9 @@ const WomensCollection = () => {
     <div className="min-h-screen bg-[#F8F6F3] text-[#79300f] dark:bg-[#0d0603] dark:text-[#f6d110]">
       <Header darkMode={darkMode} setDarkMode={setDarkMode} />
       <NotificationSystem />
+      
+      {/* CART SIDEBAR - ADD THIS */}
+      <ProductCartSection isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
       
       <main>
         {/* Hero Section */}

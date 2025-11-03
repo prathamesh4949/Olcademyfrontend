@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../../components/common/Header';
 import Footer from '@/components/common/Footer';
 import Button from '../../components/ui/Button';
+import ProductCartSection from '../../pages/ProductCartSection'; // ADD THIS IMPORT
 import { motion, AnimatePresence } from 'framer-motion';
 import { fadeIn } from '../../variants';
 import { useCart } from '@/CartContext';
@@ -16,6 +17,9 @@ const MensCollection = () => {
   const [darkMode, setDarkMode] = useState(false);
   const { addToCart, isInCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
+  
+  // ADD THIS STATE FOR CART SIDEBAR
+  const [isCartOpen, setIsCartOpen] = useState(false);
   
   // State for products from backend
   const [collections, setCollections] = useState({
@@ -153,7 +157,7 @@ const MensCollection = () => {
     }));
   }, []);
 
-  // Product Card Component - OPTIMIZED WITH RESPONSIVE DESIGN (90% scale for 100% zoom)
+  // Product Card Component - UPDATED WITH CART SIDEBAR FUNCTIONALITY
   const ProductCard = memo(({ product }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [imageError, setImageError] = useState({ primary: false, hover: false });
@@ -343,9 +347,12 @@ const MensCollection = () => {
             ${typeof product.price === 'number' ? product.price.toFixed(2) : '0.00'}
           </p>
 
-          {/* Add to Cart Button - RESPONSIVE - FULL WIDTH */}
+          {/* UPDATED Add to Cart Button - Opens Cart Sidebar when product is in cart */}
           <motion.button
-            onClick={productInCart ? (e) => { e.stopPropagation(); navigate('/product-cart'); } : handleAddToCart}
+            onClick={productInCart ? (e) => { 
+              e.stopPropagation(); 
+              setIsCartOpen(true); // CHANGED: Opens cart sidebar instead of navigating
+            } : handleAddToCart}
             disabled={isAddingToCart}
             whileHover={{ scale: 1.02, opacity: 0.9 }}
             whileTap={{ scale: 0.98 }}
@@ -684,6 +691,9 @@ const MensCollection = () => {
       <Header darkMode={darkMode} setDarkMode={setDarkMode} />
       <NotificationSystem />
       
+      {/* CART SIDEBAR - ADD THIS */}
+      <ProductCartSection isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+      
       <main>
         {/* Hero Section - RESPONSIVE (90% scale) */}
         <motion.section
@@ -752,3 +762,4 @@ const MensCollection = () => {
 };
 
 export default MensCollection;
+      

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../components/common/Header';
 import Footer from '@/components/common/Footer';
 import Button from '../components/ui/Button';
+import ProductCartSection from '../pages/ProductCartSection'; // ADD THIS IMPORT
 import { motion, AnimatePresence } from 'framer-motion';
 import { fadeIn } from '@/variants';
 import { useCart } from '@/CartContext';
@@ -52,6 +53,9 @@ const GiftCollection = () => {
   const [retryCount, setRetryCount] = useState(0);
   const [cartNotifications, setCartNotifications] = useState([]);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
+
+  // ADD THIS STATE FOR CART SIDEBAR
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   // State for "View All" expanded sections
   const [expandedSections, setExpandedSections] = useState({
@@ -180,7 +184,7 @@ const GiftCollection = () => {
     }));
   }, []);
 
-  // Product Card Component - EXACT MATCH TO MEN'S PAGE
+  // UPDATED Product Card Component - Opens Cart Sidebar
   const ProductCard = memo(({ product }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [imageError, setImageError] = useState({ primary: false, hover: false });
@@ -370,9 +374,12 @@ const GiftCollection = () => {
             ${typeof product.price === 'number' ? product.price.toFixed(2) : '0.00'}
           </p>
 
-          {/* Add to Cart Button - FULL WIDTH */}
+          {/* UPDATED Add to Cart Button - Opens Cart Sidebar when product is in cart */}
           <motion.button
-            onClick={productInCart ? (e) => { e.stopPropagation(); navigate('/product-cart'); } : handleAddToCart}
+            onClick={productInCart ? (e) => { 
+              e.stopPropagation(); 
+              setIsCartOpen(true); // CHANGED: Opens cart sidebar instead of navigating
+            } : handleAddToCart}
             disabled={isAddingToCart}
             whileHover={{ scale: 1.02, opacity: 0.9 }}
             whileTap={{ scale: 0.98 }}
@@ -767,7 +774,7 @@ const GiftCollection = () => {
     );
   };
 
-  // Quick View Modal
+  // Quick View Modal - UPDATED WITH CART SIDEBAR SUPPORT
   const QuickViewModal = () => {
     if (!quickViewProduct) return null;
 
@@ -888,7 +895,7 @@ const GiftCollection = () => {
                   {productInQuickViewCart ? (
                     <button
                       onClick={() => {
-                        navigate('/product-cart');
+                        setIsCartOpen(true);
                         handleClose();
                       }}
                       className="flex-1 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-700 hover:via-teal-700 hover:to-cyan-700 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center space-x-2 border border-emerald-400/30 shadow-emerald-500/20"
@@ -1043,6 +1050,9 @@ const GiftCollection = () => {
       <Header darkMode={darkMode} setDarkMode={setDarkMode} />
       <NotificationSystem />
       <QuickViewModal />
+      
+      {/* CART SIDEBAR - ADD THIS */}
+      <ProductCartSection isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
 
       <HeroBanner banner={banners.hero} />
 

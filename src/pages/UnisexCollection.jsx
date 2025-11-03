@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../components/common/Header';
 import Footer from '@/components/common/Footer';
 import Button from '../components/ui/Button';
+import ProductCartSection from '../pages/ProductCartSection'; // ADD THIS IMPORT
 import { motion, AnimatePresence } from 'framer-motion';
 import { fadeIn } from '../variants';
 import { useCart } from '@/CartContext';
@@ -43,6 +44,9 @@ const UnisexCollection = () => {
   
   // Enhanced state management
   const [cartNotifications, setCartNotifications] = useState([]);
+
+  // ADD THIS STATE FOR CART SIDEBAR
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   // Enhanced notification system
   const addNotification = useCallback((message, type = 'success') => {
@@ -153,7 +157,7 @@ const UnisexCollection = () => {
     }));
   }, []);
 
-  // Product Card Component - EXACT SAME AS MEN'S PAGE
+  // UPDATED Product Card Component - Opens Cart Sidebar
   const ProductCard = memo(({ product }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [imageError, setImageError] = useState({ primary: false, hover: false });
@@ -343,9 +347,12 @@ const UnisexCollection = () => {
             ${typeof product.price === 'number' ? product.price.toFixed(2) : '0.00'}
           </p>
 
-          {/* Add to Cart Button - RESPONSIVE - FULL WIDTH */}
+          {/* UPDATED Add to Cart Button - Opens Cart Sidebar when product is in cart */}
           <motion.button
-            onClick={productInCart ? (e) => { e.stopPropagation(); navigate('/product-cart'); } : handleAddToCart}
+            onClick={productInCart ? (e) => { 
+              e.stopPropagation(); 
+              setIsCartOpen(true); // CHANGED: Opens cart sidebar instead of navigating
+            } : handleAddToCart}
             disabled={isAddingToCart}
             whileHover={{ scale: 1.02, opacity: 0.9 }}
             whileTap={{ scale: 0.98 }}
@@ -369,7 +376,7 @@ const UnisexCollection = () => {
 
   ProductCard.displayName = 'ProductCard';
 
-  // Collection Section Component - EXACT SAME AS MEN'S PAGE
+  // Collection Section Component
   const CollectionSection = memo(({ title, products = [], sectionKey }) => {
     const isExpanded = expandedSections[sectionKey];
     const displayProducts = useMemo(() => 
@@ -416,7 +423,7 @@ const UnisexCollection = () => {
                 </AnimatePresence>
               </motion.div>
 
-              {/* View All Button - RESPONSIVE - EXACT STYLING MATCH */}
+              {/* View All Button - RESPONSIVE */}
               {hasMoreProducts && (
                 <div className="flex justify-center mt-7 sm:mt-10 lg:mt-14">
                   <motion.button
@@ -460,7 +467,7 @@ const UnisexCollection = () => {
 
   CollectionSection.displayName = 'CollectionSection';
 
-  // Dynamic Banner Component - FIXED PRODUCT HIGHLIGHT SIZE
+  // Dynamic Banner Component
   const DynamicBanner = memo(({ banner, type = 'hero' }) => {
     if (!banner) return null;
 
@@ -616,7 +623,7 @@ const UnisexCollection = () => {
 
   DynamicBanner.displayName = 'DynamicBanner';
 
-  // Notification System - RESPONSIVE
+  // Notification System
   const NotificationSystem = memo(() => (
     <div className="fixed top-3.5 right-3.5 z-50 space-y-2 max-w-[90vw] sm:max-w-sm">
       <AnimatePresence>
@@ -648,7 +655,7 @@ const UnisexCollection = () => {
 
   NotificationSystem.displayName = 'NotificationSystem';
 
-  // Error State - RESPONSIVE
+  // Error State
   if (error) {
     return (
       <div className="min-h-screen bg-[#F2F2F2] text-[#79300f] dark:bg-[#0d0603] dark:text-[#f6d110]">
@@ -683,8 +690,11 @@ const UnisexCollection = () => {
       <Header darkMode={darkMode} setDarkMode={setDarkMode} />
       <NotificationSystem />
       
+      {/* CART SIDEBAR - ADD THIS */}
+      <ProductCartSection isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+      
       <main>
-        {/* Hero Section - UPDATED TEXT & COLORS */}
+        {/* Hero Section */}
         <motion.section
           variants={fadeIn('up', 0.2)}
           initial="hidden"
