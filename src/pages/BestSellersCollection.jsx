@@ -170,44 +170,94 @@ const BestSellersCollection = () => {
     }
   };
 
-  const ScentCard = memo(({ scent }) => {
+const ScentCard = memo(({ scent }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [imageError, setImageError] = useState({ primary: false, hover: false });
   const [isAddingToCart, setIsAddingToCart] = useState(false);
-  const [imageLoading, setImageLoading] = useState(true);
 
-  if (!scent) {
-    console.warn('ScentCard: No scent data provided');
-    return (
-      <div className="w-full bg-gray-200 dark:bg-gray-700 animate-pulse rounded-2xl p-6">
-        <div className="h-[250px] bg-gray-300 dark:bg-gray-600 rounded-xl mb-4"></div>
-        <div className="space-y-3">
-          <div className="h-6 bg-gray-300 dark:bg-gray-600 rounded"></div>
-          <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-3/4"></div>
-          <div className="h-8 bg-gray-300 dark:bg-gray-600 rounded"></div>
-        </div>
-      </div>
-    );
-  }
+  if (!scent) return null;
 
-  const productInCart = isInCart(
+  const scentInCart = isInCart(
     scent._id?.toString(),
     scent.sizes && scent.sizes.length > 0 ? scent.sizes[0].size : null
   );
 
-  const handleAddToCartClick = async (e) => {
+  const handleAddToCart = async (e) => {
     e.stopPropagation();
     setIsAddingToCart(true);
-    await handleAddToCart(scent, e);
-    setIsAddingToCart(false);
+
+    const cartItem = {
+      id: scent._id.toString(),
+      name: scent.name,
+      price: Number(scent.price),
+      image:
+        scent.images && scent.images.length > 0
+          ? scent.images[0]
+          : "/images/default-scent.png",
+      quantity: 1,
+      selectedSize:
+        scent.sizes && scent.sizes.length > 0 ? scent.sizes[0].size : null,
+      personalization: null,
+    };
+
+    try {
+      const success = await addToCart(cartItem);
+      if (success) {
+        addNotification(`Added ${scent.name} to cart!`, "success");
+      } else {
+        addNotification("Failed to add item to cart", "error");
+      }
+    } catch (error) {
+      console.error("Add to cart error:", error);
+      addNotification("Something went wrong. Please try again.", "error");
+    } finally {
+      setIsAddingToCart(false);
+    }
   };
 
-  const handleViewInCart = (e) => {
+  const handleWishlistToggle = (e) => {
     e.stopPropagation();
-    navigate('/product-cart');
+    if (!scent._id) {
+      addNotification("Unable to add to wishlist", "error");
+      return;
+    }
+
+    try {
+      const wasInWishlist = isInWishlist(scent._id);
+
+      const wishlistItem = {
+        id: scent._id.toString(),
+        name: scent.name,
+        price: scent.price,
+        image:
+          scent.images && scent.images.length > 0
+            ? scent.images[0]
+            : "/images/default-scent.png",
+        description: scent.description || "",
+        category: scent.category || "",
+        selectedSize: null,
+      };
+
+      toggleWishlist(wishlistItem);
+      addNotification(
+        wasInWishlist ? "Removed from wishlist" : "Added to wishlist!",
+        "success"
+      );
+    } catch (error) {
+      console.error("Wishlist toggle error:", error);
+      addNotification("Failed to update wishlist", "error");
+    }
   };
 
-  const getProductImage = () => {
+  const handleCardClick = () => {
+    if (!scent._id) {
+      addNotification("Scent not available", "error");
+      return;
+    }
+    navigate(`/scent/${scent._id.toString()}`);
+  };
+
+  const getScentImage = () => {
     if (isHovered && scent.hoverImage && !imageError.hover) {
       return scent.hoverImage;
     }
@@ -219,18 +269,12 @@ const BestSellersCollection = () => {
     ) {
       return scent.images[0];
     }
-    return '/images/default-scent.png';
+    return "/images/default-scent.png";
   };
 
-  const handleImageError = (e, type = 'primary') => {
-    console.warn(`ScentCard (${scent._id}): Image error for ${type} image`, e.target.src);
+  const handleImageError = (e, type = "primary") => {
     setImageError((prev) => ({ ...prev, [type]: true }));
-    setImageLoading(false);
-    e.target.src = '/images/default-scent.png';
-  };
-
-  const handleImageLoad = () => {
-    setImageLoading(false);
+    e.target.src = "/images/default-scent.png";
   };
 
   return (
@@ -238,118 +282,138 @@ const BestSellersCollection = () => {
       layout
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -8, boxShadow: '0 10px 30px rgba(0,0,0,0.15)' }}
+      whileHover={{ y: -8, boxShadow: "0 10px 30px rgba(0,0,0,0.15)" }}
       transition={{ duration: 0.3 }}
       className="bg-white dark:bg-gray-800 overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300 w-full max-w-[331px]"
-      style={{ height: 'auto', minHeight: '528px' }}
+      style={{ height: "auto", minHeight: "528px" }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={() => handleProductClick(scent)}
+      onClick={handleCardClick}
     >
       {/* Image Container */}
       <div className="relative bg-white dark:bg-gray-700 flex items-center justify-center overflow-hidden w-full aspect-[331/273] p-3">
         <motion.img
-          src={getProductImage()}
-          alt={scent.name || 'Scent'}
+          src={getScentImage()}
+          alt={scent.name || "Scent"}
           className="object-contain w-full h-full max-w-[248px] max-h-[248px]"
-          onError={(e) => handleImageError(e, isHovered ? 'hover' : 'primary')}
+          onError={(e) => handleImageError(e, isHovered ? "hover" : "primary")}
           animate={{ scale: isHovered ? 1.08 : 1 }}
           transition={{ duration: 0.4 }}
           loading="lazy"
-          onLoad={handleImageLoad}
         />
+
+        {/* Wishlist Button */}
+        <motion.button
+          onClick={handleWishlistToggle}
+          whileHover={{ scale: 1.15 }}
+          whileTap={{ scale: 0.9 }}
+          className="absolute top-2.5 right-2.5 bg-white dark:bg-gray-800 rounded-full p-1.5 shadow-lg hover:shadow-xl transition-all duration-200 z-10 w-[27px] h-[27px] flex items-center justify-center"
+          aria-label={
+            isInWishlist(scent._id) ? "Remove from wishlist" : "Add to wishlist"
+          }
+        >
+          <FiHeart
+            size={14}
+            className={`transition-all duration-200 ${
+              isInWishlist(scent._id)
+                ? "fill-red-600 text-red-600"
+                : "text-gray-700 dark:text-gray-300"
+            }`}
+          />
+        </motion.button>
       </div>
 
-      {/* Product Info and Button Container */}
-      <div className="flex flex-col flex-1  space-y-3 min-h-[280px]">
+      {/* Info Section */}
+      <div className="px-3.5 py-3.5 flex flex-col gap-3.5">
         {/* Name */}
         <h3
           className="font-bold uppercase text-center line-clamp-1 text-lg sm:text-xl md:text-2xl"
           style={{
-            fontFamily: 'Playfair Display, serif',
-            letterSpacing: '0.05em',
-            color: '#5A2408',
+            fontFamily: "Playfair Display, serif",
+            letterSpacing: "0.05em",
+            color: "#5A2408",
+            minHeight: "28px", // ensures consistent height
           }}
         >
-          {scent.name || '\u00A0' /* Non-breaking space as blank */}
+          {scent.name || ""}
         </h3>
 
-        {/* Rating (show empty block if absent to keep height) */}
-        {scent.rating > 0 ? (
-          <div className="flex items-center justify-center gap-1">
-            {[...Array(5)].map((_, index) => (
+        {/* Rating */}
+        <div
+          className="flex items-center justify-center gap-1"
+          style={{ minHeight: "18px" }}
+        >
+          {scent.rating ? (
+            [...Array(5)].map((_, index) => (
               <Star
                 key={index}
                 size={14}
                 style={{
-                  color: '#5A2408',
-                  fill: index < Math.floor(scent.rating) ? '#5A2408' : 'transparent',
+                  color: "#5A2408",
+                  fill:
+                    index < Math.floor(scent.rating) ? "#5A2408" : "transparent",
                 }}
-                className={`${index < Math.floor(scent.rating) ? '' : 'opacity-30'}`}
+                className={`${
+                  index < Math.floor(scent.rating) ? "" : "opacity-30"
+                }`}
               />
-            ))}
-          </div>
-        ) : (
-          <div style={{ height: 20 }} /> /* Placeholder for alignment */
-        )}
+            ))
+          ) : (
+            <div className="h-3.5"></div>
+          )}
+        </div>
 
         {/* Description */}
         <p
           className="text-center line-clamp-2 text-sm sm:text-base"
           style={{
-            fontFamily: 'Manrope, sans-serif',
-            fontWeight: '500',
-            letterSpacing: '0.02em',
-            color: '#7E513A',
-            minHeight: '3rem', // maintain height for blank description
+            fontFamily: "Manrope, sans-serif",
+            fontWeight: "500",
+            letterSpacing: "0.02em",
+            color: "#7E513A",
+            minHeight: "40px", // fixed height for alignment
           }}
         >
-          {scent.description || '\u00A0'}
+          {scent.description || ""}
         </p>
 
         {/* Price */}
         <p
           className="font-bold text-center text-lg sm:text-xl"
           style={{
-            fontFamily: 'Manrope, sans-serif',
-            letterSpacing: '0.02em',
-            color: '#431A06',
-            minHeight: '1.5rem', // maintain space for price
+            fontFamily: "Manrope, sans-serif",
+            letterSpacing: "0.02em",
+            color: "#431A06",
+            minHeight: "24px", // consistent alignment with product card
           }}
         >
-          {typeof scent.price === 'number' ? `$${scent.price.toFixed(2)}` : '\u00A0'}
+          ${typeof scent.price === "number" ? scent.price.toFixed(2) : "0.00"}
         </p>
 
         {/* Add to Cart Button */}
         <motion.button
           onClick={
-            productInCart ? handleViewInCart : handleAddToCartClick
+            scentInCart
+              ? (e) => {
+                  e.stopPropagation();
+                  navigate("/product-cart");
+                }
+              : handleAddToCart
           }
           disabled={isAddingToCart}
           whileHover={{ scale: 1.02, opacity: 0.9 }}
           whileTap={{ scale: 0.98 }}
-          className="w-full h-[54px] sm:h-[60px] px-3.5 flex items-center justify-center gap-2 sm:gap-2.5 font-bold uppercase transition-all duration-300 mt-10"
+          className="flex items-center justify-center gap-2 sm:gap-2.5 text-white font-bold uppercase transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed w-full h-[54px] sm:h-[60px] text-sm sm:text-base md:text-lg -mx-3.5 px-3.5"
           style={{
-            backgroundColor: productInCart ? '#10B981' : '#431A06',
-            color: '#fff',
-            fontFamily: 'Manrope, sans-serif',
-            letterSpacing: '0.05em',
-            width: '100%',
+            backgroundColor: scentInCart ? "#431A06" : "#431A06",
+            fontFamily: "Manrope, sans-serif",
+            letterSpacing: "0.05em",
+            width: "calc(100% + 28px)",
           }}
         >
-          {isAddingToCart ? (
-            <RefreshCw size={18} className="animate-spin" />
-          ) : productInCart ? (
-            <ShoppingCart size={18} />
-          ) : (
-            <ShoppingBag size={18} />
-          )}
+          <ShoppingCart size={20} className="sm:w-[24px] sm:h-[24px]" />
           <span>
-            {isAddingToCart
-              ? 'Adding...'
-              : productInCart
-              ? 'View in Cart'
-              : 'Add to Cart'}
+            {isAddingToCart ? "Adding..." : scentInCart ? "View Cart" : "Add to Cart"}
           </span>
         </motion.button>
       </div>
@@ -602,7 +666,7 @@ const BestSellersCollection = () => {
           <img
             src="/images/best-sellar.png"
             alt="MA VESARII Trending Collection Banner"
-            className="w-full h-[824px] object-cover"
+            className="w-full h-[424px] object-cover"
           />
         </section>
 
