@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { fadeIn } from '../variants';
 import { useCart } from '@/CartContext';
 import { useWishlist } from '@/WishlistContext';
-import { FiHeart, FiFilter, FiX } from 'react-icons/fi';
+import { FiHeart, FiX } from 'react-icons/fi';
 import { CheckCircle, AlertCircle, Star, ShoppingCart } from 'lucide-react';
 import ProductService from '../services/productService';
 
@@ -20,7 +20,7 @@ const SearchResults = () => {
   const navigate = useNavigate();
   
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
+  const [allProducts, setAllProducts] = useState([]);
   const [filteredResults, setFilteredResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
@@ -45,99 +45,132 @@ const SearchResults = () => {
     document.documentElement.classList.toggle('dark', darkMode);
   }, [darkMode]);
 
+  // Initial load - fetch all products
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
     const query = urlParams.get('q') || '';
     setSearchQuery(query);
-    performSearch(query);
+    fetchAllProducts();
   }, [location.search]);
 
-  const clientSideSearch = (products, query) => {
-    if (!query || query.trim() === '') {
-      return products;
-    }
+  // Apply filters whenever products or filters change
+  useEffect(() => {
+    applyFilters();
+  }, [allProducts, filters, searchQuery]);
 
-    const searchTerm = query.toLowerCase().trim();
-    
-    return products.filter(product => {
-      const nameMatch = product.name?.toLowerCase().includes(searchTerm);
-      const brandMatch = product.brand?.toLowerCase().includes(searchTerm);
-      
-      return nameMatch || brandMatch;
-    });
-  };
-
-  const performSearch = async (query) => {
+  const fetchAllProducts = async () => {
     setIsLoading(true);
     try {
-      const response = await ProductService.searchProducts('', {
-        category: filters.category,
-        minPrice: filters.priceRange.min,
-        maxPrice: filters.priceRange.max,
-        limit: 100
+      console.log('🔍 Fetching all products...');
+      
+      // Fetch all products without any filters
+      const response = await ProductService.getAllProducts({
+        limit: 500 // Get all products
       });
 
-      if (response.success) {
-        const allProducts = response.data;
-        const filteredBySearch = clientSideSearch(allProducts, query);
-        
-        setSearchResults(filteredBySearch);
-        setFilteredResults(filteredBySearch);
+      if (response.success && response.data) {
+        const products = response.data.products || response.data;
+        console.log(`✅ Fetched ${products.length} products`);
+        setAllProducts(products);
       } else {
-        console.error('Search failed:', response.message);
-        setSearchResults([]);
-        setFilteredResults([]);
+        console.error('❌ Failed to fetch products:', response.message || response.error);
+        setAllProducts([]);
+        addNotification('Failed to load products', 'error');
       }
     } catch (error) {
-      console.error('Search error:', error);
-      setSearchResults([]);
-      setFilteredResults([]);
+      console.error('❌ Fetch error:', error);
+      setAllProducts([]);
+      addNotification('Error loading products', 'error');
     } finally {
       setIsLoading(false);
     }
   };
 
-  useEffect(() => {
-    let filtered = [...searchResults];
+  const applyFilters = () => {
+    let filtered = [...allProducts];
+    console.log(`📊 Starting filter with ${filtered.length} products`);
 
+    // 1. Apply search query filter (search in name, brand, description)
+    if (searchQuery && searchQuery.trim() !== '') {
+      const searchTerm = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(product => {
+        const nameMatch = product.name?.toLowerCase().includes(searchTerm);
+        const brandMatch = product.brand?.toLowerCase().includes(searchTerm);
+        const descriptionMatch = product.description?.toLowerCase().includes(searchTerm);
+        return nameMatch || brandMatch || descriptionMatch;
+      });
+      console.log(`🔍 After search filter (${searchQuery}): ${filtered.length} products`);
+    }
+
+    // 2. Apply category filter
+    if (filters.category && filters.category !== '') {
+      filtered = filtered.filter(product => {
+        const productCategory = product.category?.toLowerCase();
+        const filterCategory = filters.category.toLowerCase();
+        
+        // Handle both singular and plural forms, and 'gift' vs 'gifts'
+        if (filterCategory === 'gift' || filterCategory === 'gifts') {
+          return productCategory === 'gift' || productCategory === 'gifts';
+        }
+        
+        return productCategory === filterCategory;
+      });
+      console.log(`🏷️ After category filter (${filters.category}): ${filtered.length} products`);
+    }
+
+    // 3. Apply price range filter
+    filtered = filtered.filter(product => {
+      const price = Number(product.price) || 0;
+      return price >= filters.priceRange.min && price <= filters.priceRange.max;
+    });
+    console.log(`💰 After price filter ($${filters.priceRange.min}-$${filters.priceRange.max}): ${filtered.length} products`);
+
+    // 4. Apply sorting
     filtered.sort((a, b) => {
       switch (filters.sortBy) {
         case 'price-low':
-          return a.price - b.price;
+          return (Number(a.price) || 0) - (Number(b.price) || 0);
         case 'price-high':
-          return b.price - a.price;
+          return (Number(b.price) || 0) - (Number(a.price) || 0);
         case 'name':
         default:
-          return a.name.localeCompare(b.name);
+          return (a.name || '').localeCompare(b.name || '');
       }
     });
+    console.log(`🔤 After sorting (${filters.sortBy}): ${filtered.length} products`);
 
     setFilteredResults(filtered);
-  }, [searchResults, filters.sortBy]);
+  };
 
   const handleSearch = (e) => {
     e.preventDefault();
+    // Update URL with new search query
     navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
   };
 
   const updateFilter = (key, value) => {
+    console.log(`🔧 Updating filter: ${key} =`, value);
     setFilters(prev => ({
       ...prev,
       [key]: value
     }));
-    performSearch(searchQuery);
   };
 
   const clearFilters = () => {
+    console.log('🧹 Clearing all filters');
     setFilters({
       category: '',
       priceRange: { min: 0, max: 1000 },
       sortBy: 'name'
     });
-    performSearch(searchQuery);
   };
 
-  // EXACT SAME ProductCard from HomePage
+  const clearSearch = () => {
+    setSearchQuery('');
+    navigate('/search');
+  };
+
+  // ProductCard Component
   const ProductCard = memo(({ product }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [imageError, setImageError] = useState({ primary: false, hover: false });
@@ -145,7 +178,10 @@ const SearchResults = () => {
 
     if (!product) return null;
 
-    const productInCart = isInCart(product._id?.toString(), product.sizes && product.sizes.length > 0 ? product.sizes[0].size : null);
+    const productInCart = isInCart(
+      product._id?.toString(), 
+      product.sizes && product.sizes.length > 0 ? product.sizes[0].size : null
+    );
 
     const handleAddToCart = async (e) => {
       e.stopPropagation();
@@ -243,7 +279,7 @@ const SearchResults = () => {
         onMouseLeave={() => setIsHovered(false)}
         onClick={handleCardClick}
       >
-        {/* Image Container with Wishlist Icon - RESPONSIVE */}
+        {/* Image Container with Wishlist Icon */}
         <div className="relative bg-white dark:bg-gray-700 flex items-center justify-center overflow-hidden w-full aspect-[331/273] p-3">
           <motion.img
             src={getProductImage()}
@@ -270,7 +306,7 @@ const SearchResults = () => {
           </motion.button>
         </div>
 
-        {/* Product Info Container - RESPONSIVE */}
+        {/* Product Info Container */}
         <div className="px-3.5 py-3.5 flex flex-col gap-3.5">
           {/* Product Name */}
           <h3
@@ -415,7 +451,7 @@ const SearchResults = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by name or brand..."
+              placeholder="Search by name, brand, or description..."
               className="flex-1 px-4 py-3 rounded-xl border-2 border-[#D4C5A9] bg-white dark:bg-[#1a1410] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#431A06]"
               style={{ fontFamily: 'Manrope, sans-serif' }}
             />
@@ -442,20 +478,29 @@ const SearchResults = () => {
             >
               {isLoading ? 'Searching...' : 
                searchQuery ? `Found ${filteredResults.length} results for "${searchQuery}"` :
-               `Showing all ${filteredResults.length} products`
+               `Showing ${filteredResults.length} products`
               }
             </p>
           </div>
         </motion.div>
 
         <div className="flex gap-8">
+          {/* Mobile Filter Toggle */}
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="lg:hidden fixed bottom-4 right-4 z-30 bg-[#431A06] text-white p-4 rounded-full shadow-lg"
+          >
+            {showFilters ? <FiX size={24} /> : '🔍'}
+          </button>
+
+          {/* Filters Sidebar */}
           <motion.div
             variants={fadeIn('left', 0.2)}
             initial="hidden"
             animate="show"
-            className={`${showFilters ? 'block' : 'hidden'} lg:block w-full lg:w-64 flex-shrink-0`}
+            className={`${showFilters ? 'block fixed inset-y-0 left-0 z-40 w-80 overflow-y-auto' : 'hidden'} lg:block lg:relative lg:w-64 flex-shrink-0`}
           >
-            <div className="bg-white dark:bg-[#1a1410] p-6 rounded-2xl shadow-lg border-2 border-[#D4C5A9]">
+            <div className="bg-white dark:bg-[#1a1410] p-6 rounded-2xl shadow-lg border-2 border-[#D4C5A9] lg:sticky lg:top-4">
               <div className="flex items-center justify-between mb-4">
                 <h3 
                   className="font-bold text-xl"
@@ -475,6 +520,7 @@ const SearchResults = () => {
                 </button>
               </div>
 
+              {/* Category Filter */}
               <div className="mb-6">
                 <label 
                   className="block font-semibold mb-2"
@@ -489,14 +535,15 @@ const SearchResults = () => {
                   style={{ fontFamily: 'Manrope, sans-serif' }}
                 >
                   <option value="">All Categories</option>
+                  <option value="home">Home</option>
                   <option value="men">Men's</option>
                   <option value="women">Women's</option>
                   <option value="unisex">Unisex</option>
-                  <option value="home">Featured</option>
-                  <option value="summer">Summer Collection</option>
+                  <option value="gift">Gift</option>
                 </select>
               </div>
 
+              {/* Price Range Filter */}
               <div className="mb-6">
                 <label 
                   className="block font-semibold mb-2"
@@ -526,6 +573,7 @@ const SearchResults = () => {
                 </div>
               </div>
 
+              {/* Sort By */}
               <div className="mb-4">
                 <label 
                   className="block font-semibold mb-2"
@@ -544,9 +592,18 @@ const SearchResults = () => {
                   <option value="price-high">Price (High to Low)</option>
                 </select>
               </div>
+
+              {/* Close button for mobile */}
+              <button
+                onClick={() => setShowFilters(false)}
+                className="lg:hidden w-full mt-4 px-4 py-2 bg-[#431A06] text-white rounded-lg"
+              >
+                Apply Filters
+              </button>
             </div>
           </motion.div>
 
+          {/* Results Grid */}
           <div className="flex-1">
             {isLoading ? (
               <div className="flex items-center justify-center h-64">
@@ -579,16 +636,13 @@ const SearchResults = () => {
                   }}
                 >
                   {searchQuery 
-                    ? `No products found matching "${searchQuery}" in name or brand`
+                    ? `No products found matching "${searchQuery}"`
                     : "No products match your current filters"
                   }
                 </p>
                 <div className="space-x-4">
                   <Button
-                    onClick={() => {
-                      setSearchQuery('');
-                      navigate('/search');
-                    }}
+                    onClick={clearSearch}
                     className="border-2 px-6 py-3 rounded-lg"
                     style={{
                       borderColor: '#431A06',
@@ -625,9 +679,10 @@ const SearchResults = () => {
           </div>
         </div>
 
+        {/* Mobile filter overlay */}
         {showFilters && (
           <div 
-            className="lg:hidden fixed inset-0 bg-black/50 z-40"
+            className="lg:hidden fixed inset-0 bg-black/50 z-30"
             onClick={() => setShowFilters(false)}
           />
         )}
