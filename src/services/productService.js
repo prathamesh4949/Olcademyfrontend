@@ -1,12 +1,53 @@
 import { API_BASE_URL } from '../api/constant';
 
 class ProductService {
+  // ✅ ENHANCED: Helper to construct full image URLs from filenames
+  // Now handles both exact filenames AND timestamped versions
+  constructImageURL(imagePath) {
+    if (!imagePath) return '/images/default-gift.png';
+    
+    // If it's already a full URL, return as-is
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      return imagePath;
+    }
+    
+    // Remove any leading slashes or 'images/' prefix to get clean filename
+    const cleanPath = imagePath.replace(/^\/+/, '').replace(/^images\//, '');
+    
+    // ✅ IMPORTANT: Use the backend's image serving middleware
+    // The backend will automatically find both exact matches and timestamped versions
+    const fullURL = `${API_BASE_URL}/api/products/images/${cleanPath}`;
+    
+    console.log('🖼️ Constructed image URL:', {
+      input: imagePath,
+      cleanPath: cleanPath,
+      output: fullURL
+    });
+    
+    return fullURL;
+  }
+
+  // ✅ Helper to normalize product images
+  normalizeProductImages(product) {
+    if (!product) return product;
+    
+    return {
+      ...product,
+      images: product.images && Array.isArray(product.images) 
+        ? product.images.map(img => this.constructImageURL(img))
+        : [],
+      hoverImage: product.hoverImage 
+        ? this.constructImageURL(product.hoverImage)
+        : null
+    };
+  }
+
   // Base API call method with enhanced error handling
   async apiCall(endpoint, options = {}) {
     try {
       console.log('🌐 Making API call to:', `${API_BASE_URL}${endpoint}`);
       
-      const token = localStorage.getItem('token'); // Adjust key if your token is stored differently
+      const token = localStorage.getItem('token');
       
       const headers = {
         'Content-Type': 'application/json',
@@ -40,7 +81,7 @@ class ProductService {
       }
 
       const data = await response.json();
-      console.log('📡 Response data:', JSON.stringify(data, null, 2));
+      console.log('📡 Response data received');
       
       return data;
     } catch (error) {
@@ -58,7 +99,7 @@ class ProductService {
     try {
       console.log('🌐 Making FormData API call to:', `${API_BASE_URL}${endpoint}`);
       
-      const token = localStorage.getItem('token'); // Adjust key if your token is stored differently
+      const token = localStorage.getItem('token');
       
       const headers = {
         ...options.headers
@@ -91,7 +132,7 @@ class ProductService {
       }
 
       const data = await response.json();
-      console.log('📡 Response data:', JSON.stringify(data, null, 2));
+      console.log('📡 Response data received');
       
       return data;
     } catch (error) {
@@ -123,7 +164,16 @@ class ProductService {
     try {
       const queryString = new URLSearchParams(params).toString();
       const endpoint = `/api/products${queryString ? `?${queryString}` : ''}`;
-      return await this.apiCall(endpoint);
+      const response = await this.apiCall(endpoint);
+      
+      // Normalize images for all products
+      if (response.success && response.data) {
+        response.data = Array.isArray(response.data) 
+          ? response.data.map(product => this.normalizeProductImages(product))
+          : response.data;
+      }
+      
+      return response;
     } catch (error) {
       console.error('Error fetching products:', error);
       return { success: false, error: error.message };
@@ -142,7 +192,7 @@ class ProductService {
             formData.append('images', file);
           });
         } else if (key === 'hoverImage' && productData[key]) {
-          formData.append('hoverImage', productData[key]); // Append single hover image
+          formData.append('hoverImage', productData[key]);
         } else if (key === 'sizes' || key === 'fragrance_notes' || key === 'personalization') {
           formData.append(key, JSON.stringify(productData[key]));
         } else if (Array.isArray(productData[key])) {
@@ -152,10 +202,17 @@ class ProductService {
         }
       });
 
-      return await this.apiCallFormData('/api/products', {
+      const response = await this.apiCallFormData('/api/products', {
         method: 'POST',
         body: formData
       });
+      
+      // Normalize images in response
+      if (response.success && response.data) {
+        response.data = this.normalizeProductImages(response.data);
+      }
+      
+      return response;
     } catch (error) {
       console.error('Error creating product:', error);
       return { success: false, error: error.message };
@@ -173,7 +230,7 @@ class ProductService {
             formData.append('images', file);
           });
         } else if (key === 'hoverImage' && productData[key]) {
-          formData.append('hoverImage', productData[key]); // Append single hover image
+          formData.append('hoverImage', productData[key]);
         } else if (key === 'sizes' || key === 'fragrance_notes' || key === 'personalization') {
           formData.append(key, JSON.stringify(productData[key]));
         } else if (Array.isArray(productData[key])) {
@@ -183,10 +240,17 @@ class ProductService {
         }
       });
 
-      return await this.apiCallFormData(`/api/products/${productId}`, {
+      const response = await this.apiCallFormData(`/api/products/${productId}`, {
         method: 'PUT',
         body: formData
       });
+      
+      // Normalize images in response
+      if (response.success && response.data) {
+        response.data = this.normalizeProductImages(response.data);
+      }
+      
+      return response;
     } catch (error) {
       console.error('Error updating product:', error);
       return { success: false, error: error.message };
@@ -243,19 +307,43 @@ class ProductService {
 
   // ===== COLLECTION METHODS =====
   async getWomensCollections() {
-    return this.apiCall('/api/products/women/collections');
+    const response = await this.apiCall('/api/products/women/collections');
+    if (response.success && response.data) {
+      Object.keys(response.data).forEach(key => {
+        response.data[key] = response.data[key].map(product => this.normalizeProductImages(product));
+      });
+    }
+    return response;
   }
 
   async getMensCollections() {
-    return this.apiCall('/api/products/men/collections');
+    const response = await this.apiCall('/api/products/men/collections');
+    if (response.success && response.data) {
+      Object.keys(response.data).forEach(key => {
+        response.data[key] = response.data[key].map(product => this.normalizeProductImages(product));
+      });
+    }
+    return response;
   }
 
   async getUnisexCollections() {
-    return this.apiCall('/api/products/unisex/collections');
+    const response = await this.apiCall('/api/products/unisex/collections');
+    if (response.success && response.data) {
+      Object.keys(response.data).forEach(key => {
+        response.data[key] = response.data[key].map(product => this.normalizeProductImages(product));
+      });
+    }
+    return response;
   }
 
   async getGiftCollections() {
-    return this.apiCall('/api/products/gifts/collections');
+    const response = await this.apiCall('/api/products/gifts/collections');
+    if (response.success && response.data) {
+      Object.keys(response.data).forEach(key => {
+        response.data[key] = response.data[key].map(product => this.normalizeProductImages(product));
+      });
+    }
+    return response;
   }
 
   // Fetch home page collections
@@ -277,14 +365,17 @@ class ProductService {
         };
       }
 
-      // Normalize the response data
-      const normalizedData = {
-        fragrant_favourites: this.normalizeSizesForCollection(response.data.fragrant_favourites || []),
-        summer_scents: this.normalizeSizesForCollection(response.data.summer_scents || []),
-        signature_collection: this.normalizeSizesForCollection(response.data.signature_collection || [])
-      };
+      // Normalize images and sizes for each collection
+      const normalizedData = {};
+      Object.keys(response.data).forEach(key => {
+        normalizedData[key] = response.data[key].map(product => {
+          const normalizedProduct = this.normalizeProductImages(product);
+          normalizedProduct.sizes = this.normalizeSizes(normalizedProduct.sizes || []);
+          return normalizedProduct;
+        });
+      });
 
-      console.log('✅ Home collections normalized:', normalizedData);
+      console.log('✅ Home collections normalized');
       return {
         success: true,
         data: normalizedData
@@ -303,15 +394,6 @@ class ProductService {
     }
   }
 
-  // Helper to normalize sizes for a collection
-  normalizeSizesForCollection(products) {
-    if (!Array.isArray(products)) return [];
-    return products.map(product => ({
-      ...product,
-      sizes: this.normalizeSizes(product.sizes || [])
-    }));
-  }
-
   // Fetch home page banners
   async getHomeBanners() {
     try {
@@ -327,7 +409,16 @@ class ProductService {
         };
       }
 
-      console.log('✅ Home banners fetched:', response.data);
+      // Normalize banner images
+      if (Array.isArray(response.data)) {
+        response.data = response.data.map(banner => ({
+          ...banner,
+          image: banner.image ? this.constructImageURL(banner.image) : null,
+          backgroundImage: banner.backgroundImage ? this.constructImageURL(banner.backgroundImage) : null
+        }));
+      }
+
+      console.log('✅ Home banners fetched');
       return response;
     } catch (error) {
       console.error('❌ Error fetching home banners:', error);
@@ -352,7 +443,16 @@ class ProductService {
     const queryString = queryParams.toString();
     const endpoint = `/api/products${queryString ? `?${queryString}` : ''}`;
     
-    return this.apiCall(endpoint);
+    const response = await this.apiCall(endpoint);
+    
+    // Normalize images for all products
+    if (response.success && response.data) {
+      response.data = Array.isArray(response.data)
+        ? response.data.map(product => this.normalizeProductImages(product))
+        : response.data;
+    }
+    
+    return response;
   }
 
   async getProductsByCollection(category, collection, limit = 6) {
@@ -376,7 +476,16 @@ class ProductService {
       }
     });
 
-    return this.apiCall(`/api/products/search?${queryParams.toString()}`);
+    const response = await this.apiCall(`/api/products/search?${queryParams.toString()}`);
+    
+    // Normalize images
+    if (response.success && response.data) {
+      response.data = Array.isArray(response.data)
+        ? response.data.map(product => this.normalizeProductImages(product))
+        : response.data;
+    }
+    
+    return response;
   }
 
   async getProduct(id) {
@@ -407,7 +516,7 @@ class ProductService {
     try {
       console.log('🔍 Making API call for product:', cleanId);
       const response = await this.apiCall(`/api/products/${cleanId}`);
-      console.log('✅ ProductService.getProduct response:', JSON.stringify(response, null, 2));
+      console.log('✅ ProductService.getProduct response received');
       
       if (!response.success) {
         throw new Error(response.message || 'Failed to fetch product');
@@ -417,8 +526,11 @@ class ProductService {
         throw new Error('Invalid response format - missing product data');
       }
       
+      // Normalize images and sizes
+      response.data.product = this.normalizeProductImages(response.data.product);
       response.data.product.sizes = this.normalizeSizes(response.data.product.sizes || []);
-      console.log('🔍 Normalized sizes:', response.data.product.sizes);
+      
+      console.log('🔍 Normalized product data');
       
       return response;
     } catch (error) {
@@ -502,6 +614,16 @@ class ProductService {
     
     try {
       const response = await this.apiCall(endpoint);
+      
+      // Normalize banner images
+      if (response.success && response.data && Array.isArray(response.data)) {
+        response.data = response.data.map(banner => ({
+          ...banner,
+          image: banner.image ? this.constructImageURL(banner.image) : null,
+          backgroundImage: banner.backgroundImage ? this.constructImageURL(banner.backgroundImage) : null
+        }));
+      }
+      
       return response || { success: false, data: [], message: 'No banners found' };
     } catch (error) {
       console.error('❌ Failed to fetch banners:', error.message);
@@ -518,6 +640,16 @@ class ProductService {
     
     try {
       const response = await this.apiCall(endpoint);
+      
+      // Normalize banner images
+      if (response.success && response.data && Array.isArray(response.data)) {
+        response.data = response.data.map(banner => ({
+          ...banner,
+          image: banner.image ? this.constructImageURL(banner.image) : null,
+          backgroundImage: banner.backgroundImage ? this.constructImageURL(banner.backgroundImage) : null
+        }));
+      }
+      
       return response || { success: false, data: [], message: `No banners found for category: ${category}` };
     } catch (error) {
       console.error(`❌ Failed to fetch banners for category ${category}:`, error.message);
@@ -529,6 +661,16 @@ class ProductService {
     const endpoint = `/api/banners/${category.toLowerCase()}/${type}`;
     try {
       const response = await this.apiCall(endpoint);
+      
+      // Normalize banner images
+      if (response.success && response.data) {
+        response.data = {
+          ...response.data,
+          image: response.data.image ? this.constructImageURL(response.data.image) : null,
+          backgroundImage: response.data.backgroundImage ? this.constructImageURL(response.data.backgroundImage) : null
+        };
+      }
+      
       return response || { success: false, data: null, message: `No banner found for ${category}/${type}` };
     } catch (error) {
       console.error(`❌ Failed to fetch banner for ${category}/${type}:`, error.message);
@@ -550,18 +692,15 @@ class ProductService {
 
   async getGiftBanners() {
     try {
-      // First try 'gifts' (plural)
       const response = await this.getBannersByCategory('gifts');
       if (response.success && response.data && response.data.length > 0) {
         return response;
       }
       
-      // Fallback to 'gift' (singular) if no data found
       console.log('🔄 No banners found with "gifts", trying "gift"...');
       return await this.getBannersByCategory('gift');
     } catch (error) {
       console.error('❌ Error fetching gift banners, trying fallback:', error);
-      // Fallback to 'gift' (singular)
       return await this.getBannersByCategory('gift');
     }
   }
@@ -580,18 +719,15 @@ class ProductService {
 
   async getGiftHighlightBanners() {
     try {
-      // First try 'gifts' (plural)
       const response = await this.getBannersByCategory('gifts', 'gift_highlight');
       if (response.success && response.data && response.data.length > 0) {
         return response;
       }
       
-      // Fallback to 'gift' (singular) if no data found
       console.log('🔄 No gift highlight banners found with "gifts", trying "gift"...');
       return await this.getBannersByCategory('gift', 'gift_highlight');
     } catch (error) {
       console.error('❌ Error fetching gift highlight banners, trying fallback:', error);
-      // Fallback to 'gift' (singular)
       return await this.getBannersByCategory('gift', 'gift_highlight');
     }
   }
@@ -778,7 +914,6 @@ class ProductService {
     console.log('🔍 Starting comprehensive gift data debug...');
     
     try {
-      // Test different banner endpoints
       const bannerTests = [
         { endpoint: '/api/banners/gift', name: 'gift (singular)' },
         { endpoint: '/api/banners/gifts', name: 'gifts (plural)' },
@@ -796,7 +931,6 @@ class ProductService {
         }
       }
       
-      // Test gift collections endpoint
       console.log('🔍 Testing gift collections endpoint...');
       try {
         const collections = await this.apiCall('/api/products/gifts/collections');
@@ -805,7 +939,6 @@ class ProductService {
         console.log('❌ Gift collections failed:', error.message);
       }
       
-      // Test home collections endpoint
       console.log('🔍 Testing home collections endpoint...');
       try {
         const homeCollections = await this.apiCall('/api/products/home/collections');
@@ -814,7 +947,6 @@ class ProductService {
         console.log('❌ Home collections failed:', error.message);
       }
       
-      // Test debug counts
       console.log('🔍 Testing debug counts...');
       try {
         const debugCounts = await this.getDebugCounts();
