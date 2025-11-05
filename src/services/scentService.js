@@ -290,40 +290,50 @@ class ScentService {
     }
   }
 
-  // Update scent with improved file handling
+  // ⭐ FIXED: Update scent with improved file handling
   static async updateScent(id, scentData) {
     const service = new ScentService();
     try {
-      console.log('Updating scent:', id, scentData);
+      console.log('=== UPDATE SCENT START ===');
+      console.log('Scent ID:', id);
+      console.log('Scent Data received:', scentData);
+      console.log('keepExistingImages value:', scentData.keepExistingImages);
      
       // Process form data with proper file handling
       const formData = new FormData();
      
-      // Handle image files first
+      // ⭐ CRITICAL FIX: Add keepExistingImages FIRST before handling anything else
+      // This ensures it's always present and correctly formatted
+      const keepExisting = scentData.keepExistingImages === true || scentData.keepExistingImages === 'true';
+      formData.append('keepExistingImages', keepExisting ? 'true' : 'false');
+      console.log('✅ keepExistingImages added to FormData:', keepExisting ? 'true' : 'false');
+     
+      // Handle image files
       if (scentData.images && scentData.images.length > 0) {
         // Validate image files
         this.validateImageFiles(scentData.images);
        
-        console.log('Adding images to FormData:', Array.from(scentData.images).map(f => f.name));
+        console.log('Adding NEW images to FormData:', Array.from(scentData.images).map(f => f.name));
         Array.from(scentData.images).forEach(file => {
           formData.append('images', file);
         });
+      } else {
+        console.log('No new images to upload');
       }
+      
       if (scentData.hoverImage) {
         // Validate hover image
         this.validateImageFiles([scentData.hoverImage]);
        
-        console.log('Adding hover image to FormData:', scentData.hoverImage.name);
+        console.log('Adding NEW hover image to FormData:', scentData.hoverImage.name);
         formData.append('hoverImage', scentData.hoverImage);
-      }
-      // Handle keepExistingImages flag
-      if (scentData.keepExistingImages !== undefined) {
-        formData.append('keepExistingImages', scentData.keepExistingImages);
+      } else {
+        console.log('No new hover image to upload');
       }
      
-      // Append all other scent fields
+      // Append all other scent fields (skip images, hoverImage, and keepExistingImages since already handled)
       Object.keys(scentData).forEach(key => {
-        if (key === 'images' || key === 'hoverImage') {
+        if (key === 'images' || key === 'hoverImage' || key === 'keepExistingImages') {
           // Skip - already handled above
           return;
         } else if (key === 'sizes' || key === 'fragrance_notes' || key === 'personalization') {
@@ -342,7 +352,7 @@ class ScentService {
       });
 
       // Log FormData contents for debugging
-      console.log('FormData contents for update:');
+      console.log('=== FormData contents for update ===');
       for (let [key, value] of formData.entries()) {
         if (value instanceof File) {
           console.log(`${key}:`, `File(${value.name}, ${value.size} bytes, ${value.type})`);
@@ -350,6 +360,7 @@ class ScentService {
           console.log(`${key}:`, value);
         }
       }
+      console.log('=== END FormData contents ===');
 
       const response = await service.apiCallFormData(`/${id}`, {
         method: 'PUT',
@@ -361,6 +372,7 @@ class ScentService {
         response.data = this.normalizeScentImages(response.data);
       }
       console.log('Scent updated successfully:', response);
+      console.log('=== UPDATE SCENT END ===');
       return response;
     } catch (error) {
       console.error('Error updating scent:', error);
