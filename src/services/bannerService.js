@@ -1,6 +1,47 @@
 import { API_BASE_URL } from '../api/constant';
 
 class BannerService {
+  // ✅ ENHANCED: Helper to construct full image URLs from filenames
+  // Now handles both exact filenames AND timestamped versions
+  constructImageURL(imagePath) {
+    if (!imagePath) return null;
+    
+    // If it's already a full URL, return as-is
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      return imagePath;
+    }
+    
+    // Remove any leading slashes or 'images/' prefix to get clean filename
+    const cleanPath = imagePath.replace(/^\/+/, '').replace(/^images\//, '');
+    
+    // ✅ IMPORTANT: Use the backend's image serving middleware
+    // The backend will automatically find both exact matches and timestamped versions
+    const fullURL = `${API_BASE_URL}/api/banners/images/${cleanPath}`;
+    
+    console.log('🖼️ Constructed banner image URL:', {
+      input: imagePath,
+      cleanPath: cleanPath,
+      output: fullURL
+    });
+    
+    return fullURL;
+  }
+
+  // ✅ Helper to normalize banner images
+  normalizeBannerImages(banner) {
+    if (!banner) return banner;
+    
+    return {
+      ...banner,
+      image: banner.image 
+        ? this.constructImageURL(banner.image)
+        : null,
+      backgroundImage: banner.backgroundImage 
+        ? this.constructImageURL(banner.backgroundImage)
+        : null
+    };
+  }
+
   // Helper function to validate ObjectId format
   isValidObjectId(id) {
     if (!id || typeof id !== 'string') return false;
@@ -46,7 +87,7 @@ class BannerService {
       }
 
       const data = await response.json();
-      console.log('📡 Response data:', JSON.stringify(data, null, 2));
+      console.log('📡 Response data received');
       
       return data;
     } catch (error) {
@@ -98,7 +139,7 @@ class BannerService {
       }
 
       const data = await response.json();
-      console.log('📡 Response data:', JSON.stringify(data, null, 2));
+      console.log('📡 Response data received');
       
       return data;
     } catch (error) {
@@ -118,7 +159,16 @@ class BannerService {
     try {
       const queryString = new URLSearchParams(params).toString();
       const endpoint = `/api/banners${queryString ? `?${queryString}` : ''}`;
-      return await this.apiCall(endpoint);
+      const response = await this.apiCall(endpoint);
+      
+      // Normalize images for all banners
+      if (response.success && response.data) {
+        response.data = Array.isArray(response.data) 
+          ? response.data.map(banner => this.normalizeBannerImages(banner))
+          : response.data;
+      }
+      
+      return response;
     } catch (error) {
       console.error('Error fetching banners:', error);
       return { success: false, error: error.message };
@@ -163,10 +213,17 @@ class BannerService {
         }
       }
 
-      return await this.apiCallFormData('/api/banners', {
+      const response = await this.apiCallFormData('/api/banners', {
         method: 'POST',
         body: formData
       });
+      
+      // Normalize images in response
+      if (response.success && response.data) {
+        response.data = this.normalizeBannerImages(response.data);
+      }
+      
+      return response;
     } catch (error) {
       console.error('Error creating banner:', error);
       return { success: false, error: error.message };
@@ -225,6 +282,11 @@ class BannerService {
         method: 'PUT',
         body: formData
       });
+
+      // Normalize images in response
+      if (result.success && result.data) {
+        result.data = this.normalizeBannerImages(result.data);
+      }
 
       console.log('✅ Update result:', result);
       return result;
@@ -300,6 +362,14 @@ class BannerService {
     
     try {
       const response = await this.apiCall(endpoint);
+      
+      // Normalize banner images
+      if (response.success && response.data) {
+        response.data = Array.isArray(response.data) 
+          ? response.data.map(banner => this.normalizeBannerImages(banner))
+          : response.data;
+      }
+      
       return response || { success: false, data: [], message: 'No banners found' };
     } catch (error) {
       console.error('❌ Failed to fetch banners:', error.message);
@@ -316,6 +386,14 @@ class BannerService {
     
     try {
       const response = await this.apiCall(endpoint);
+      
+      // Normalize banner images
+      if (response.success && response.data) {
+        response.data = Array.isArray(response.data) 
+          ? response.data.map(banner => this.normalizeBannerImages(banner))
+          : response.data;
+      }
+      
       return response || { success: false, data: [], message: `No banners found for category: ${category}` };
     } catch (error) {
       console.error(`❌ Failed to fetch banners for category ${category}:`, error.message);
@@ -327,6 +405,12 @@ class BannerService {
     const endpoint = `/api/banners/${category.toLowerCase()}/${type}`;
     try {
       const response = await this.apiCall(endpoint);
+      
+      // Normalize banner images
+      if (response.success && response.data) {
+        response.data = this.normalizeBannerImages(response.data);
+      }
+      
       return response || { success: false, data: null, message: `No banner found for ${category}/${type}` };
     } catch (error) {
       console.error(`❌ Failed to fetch banner for ${category}/${type}:`, error.message);
@@ -468,6 +552,7 @@ class BannerService {
         { endpoint: '/api/banners/women', name: 'women banners' },
         { endpoint: '/api/banners/unisex', name: 'unisex banners' },
         { endpoint: '/api/banners/gift', name: 'gift banners' },
+        { endpoint: '/api/banners/gifts', name: 'gifts banners' },
       ];
       
       console.log('🔍 Testing banner endpoints...');
@@ -512,16 +597,19 @@ class BannerService {
       '/api/banners/women',
       '/api/banners/unisex',
       '/api/banners/gift',
+      '/api/banners/gifts',
       '/api/banners/home/hero',
       '/api/banners/men/hero',
       '/api/banners/women/hero',
       '/api/banners/unisex/hero',
       '/api/banners/gift/hero',
+      '/api/banners/gifts/hero',
       '/api/banners/home/product_highlight',
       '/api/banners/men/product_highlight',
       '/api/banners/women/product_highlight',
       '/api/banners/unisex/product_highlight',
-      '/api/banners/gift/gift_highlight'
+      '/api/banners/gift/gift_highlight',
+      '/api/banners/gifts/gift_highlight'
     ];
     
     const results = {};
