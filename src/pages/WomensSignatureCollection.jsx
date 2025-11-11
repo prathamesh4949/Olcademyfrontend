@@ -1,6 +1,3 @@
-// NEW: pages/WomensSignatureCollection.jsx
-// Created new page for Signature Women's Collection, using 'signature' collection
-
 import React, { useState, useEffect, useCallback, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -18,7 +15,8 @@ import {
   RefreshCw,
   Award,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Sparkles
 } from 'lucide-react';
 import { FiHeart } from 'react-icons/fi';
 
@@ -270,7 +268,7 @@ const WomensSignatureCollection = () => {
 
         {/* Collection Badge */}
         <div className="absolute top-4 left-4 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md z-10 flex items-center space-x-1">
-          <Star size={12} />
+          <Sparkles size={12} />
           <span>SIGNATURE</span>
         </div>
 
@@ -388,7 +386,7 @@ const WomensSignatureCollection = () => {
           className={`w-full font-semibold py-3 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 mt-4 ${
             productInCart 
               ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-700 hover:via-teal-700 hover:to-cyan-700 text-white border border-emerald-400/30 shadow-emerald-500/20'
-              : 'bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white'
+              : 'bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white'
           }`}
         >
           {isAddingToCart ? (
@@ -497,7 +495,7 @@ const WomensSignatureCollection = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold text-[#79300f] dark:text-[#f6d110]">
+              <h3 className="text-2xl font-bold text-pink-600 dark:text-pink-400">
                 Quick View
               </h3>
               <button
@@ -533,7 +531,7 @@ const WomensSignatureCollection = () => {
                 <p className="text-gray-600 dark:text-gray-400">
                   {quickViewProduct.description || 'No description available'}
                 </p>
-                <p className="text-2xl font-bold text-[#79300f] dark:text-[#f6d110]">
+                <p className="text-2xl font-bold text-pink-600 dark:text-pink-400">
                   ${quickViewProduct.price ? quickViewProduct.price.toFixed(2) : '0.00'}
                 </p>
                 
@@ -571,7 +569,7 @@ const WomensSignatureCollection = () => {
                   ) : (
                     <button
                       onClick={handleQuickViewAddToCart}
-                      className="flex-1 bg-gradient-to-r from-[#79300f] to-[#5a2408] text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center space-x-2"
+                      className="flex-1 bg-gradient-to-r from-pink-600 to-purple-600 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center space-x-2"
                     >
                       <ShoppingBag size={20} />
                       <span>Add to Cart</span>
@@ -579,7 +577,7 @@ const WomensSignatureCollection = () => {
                   )}
                   <button
                     onClick={handleQuickViewWishlist}
-                    className="px-4 py-3 border-2 border-[#79300f] text-[#79300f] rounded-xl hover:bg-[#79300f] hover:text-white transition-all duration-300"
+                    className="px-4 py-3 border-2 border-pink-600 text-pink-600 rounded-xl hover:bg-pink-600 hover:text-white transition-all duration-300"
                     aria-label="Add to wishlist"
                   >
                     <Heart size={20} className={isInWishlist(quickViewProduct._id) ? 'fill-red-600 text-red-600' : ''} />
@@ -644,24 +642,94 @@ const WomensSignatureCollection = () => {
       <QuickViewModal />
       
       <main className="flex-1">
-        {/* Hero Section */}
-        <section className="bg-gradient-to-br from-pink-500 via-purple-500 to-indigo-600 text-white py-20 px-6">
-          <div className="max-w-7xl mx-auto text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-            >
-              <div className="flex items-center justify-center space-x-3 mb-6">
-                <Star size={48} />
-                <h1 className="text-5xl md:text-6xl font-dm-serif font-bold">
-                  Signature Women's Collection
-                </h1>
+        {/* Hero Section - Updated with unisex.png banner */}
+        <section className="relative overflow-hidden w-full bg-gradient-to-br from-pink-900 via-purple-900 to-rose-900">
+          <div className="relative w-full h-[500px] md:h-[600px] lg:h-[700px] flex items-center justify-center">
+            <img
+              src="/images/unisex.png"
+              alt="Women's Signature Collection"
+              className="w-full h-full object-cover object-center"
+              style={{
+                objectFit: 'cover',
+                objectPosition: 'center'
+              }}
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.parentElement.innerHTML = '<div class="flex items-center justify-center w-full h-full bg-gradient-to-br from-pink-900 to-purple-900"><div class="text-center"><div class="mx-auto mb-4 text-pink-400"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="5"/></svg></div><h2 class="text-4xl font-bold text-white">Women\'s Signature Collection</h2></div></div>';
+              }}
+            />
+            
+            {/* Overlay with gradient */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-black/20 pointer-events-none"></div>
+            
+            {/* Women's Signature Collection Text Overlay - Center */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-center px-6">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.8, delay: 0.2 }}
+                  className="mb-6"
+                >
+                  <Sparkles className="w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 mx-auto text-pink-400 drop-shadow-[0_0_15px_rgba(236,72,153,0.8)]" />
+                </motion.div>
+                
+                <motion.h1
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.4 }}
+                  className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold uppercase tracking-wider mb-6"
+                  style={{
+                    fontFamily: "Playfair Display, serif",
+                    color: "#FFFFFF",
+                    textShadow: "3px 3px 12px rgba(0,0,0,0.8), 0 0 30px rgba(0,0,0,0.5)",
+                    letterSpacing: "0.1em",
+                    lineHeight: "1.1"
+                  }}
+                >
+                  Women's Signature Collection
+                </motion.h1>
+                
+                <motion.div
+                  initial={{ opacity: 0, scaleX: 0 }}
+                  animate={{ opacity: 1, scaleX: 1 }}
+                  transition={{ duration: 0.8, delay: 0.6 }}
+                  className="h-1.5 w-48 md:w-64 lg:w-80 bg-gradient-to-r from-transparent via-pink-400 to-transparent mx-auto rounded-full mb-6"
+                  style={{
+                    boxShadow: "0 0 20px rgba(236, 72, 153, 0.8)"
+                  }}
+                ></motion.div>
+                
+                <motion.p
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.8 }}
+                  className="text-xl md:text-2xl lg:text-3xl font-semibold"
+                  style={{
+                    fontFamily: "Manrope, sans-serif",
+                    color: "#FFF",
+                    textShadow: "2px 2px 8px rgba(0,0,0,0.8)",
+                    letterSpacing: "0.08em"
+                  }}
+                >
+                  Feminine Elegance Redefined
+                </motion.p>
+                
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 1, delay: 1 }}
+                  className="text-base md:text-lg lg:text-xl mt-4 text-pink-100 font-medium"
+                  style={{
+                    fontFamily: "Manrope, sans-serif",
+                    textShadow: "1px 1px 4px rgba(0,0,0,0.7)",
+                    letterSpacing: "0.05em"
+                  }}
+                >
+                  Discover Enchanting Scents That Captivate and Inspire
+                </motion.p>
               </div>
-              <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto leading-relaxed">
-                Discover our signature fragrances crafted exclusively for women. Timeless scents that embody elegance and sophistication.
-              </p>
-            </motion.div>
+            </div>
           </div>
         </section>
 
@@ -670,37 +738,37 @@ const WomensSignatureCollection = () => {
           <div className="max-w-7xl mx-auto">
             {loading ? (
               <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-500"></div>
+                <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-pink-500"></div>
               </div>
             ) : error ? (
               <div className="text-center py-16">
                 <AlertCircle size={48} className="text-red-500 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                <h3 className="text-xl font-semibold text-white mb-2">
                   Something went wrong
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
+                <p className="text-gray-400 mb-4">{error}</p>
                 <button
                   onClick={fetchWomensSignatureScents}
-                  className="bg-gradient-to-r from-pink-500 to-purple-500 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
+                  className="bg-gradient-to-r from-pink-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
                 >
                   Try Again
                 </button>
               </div>
             ) : scents.length === 0 ? (
               <div className="text-center py-16">
-                <Star size={48} className="text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                <Sparkles size={48} className="text-gray-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-white mb-2">
                   No signature scents found
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-gray-400">
                   Please try again later.
                 </p>
               </div>
             ) : (
               <>
                 <div className="mb-6 text-center">
-                  <p className="text-gray-600 dark:text-gray-400">
-                    Showing {scents.length} of {totalPages * itemsPerPage} womens signature scents
+                  <p className="text-gray-400">
+                    Showing {scents.length} of {totalPages * itemsPerPage} women's signature scents
                   </p>
                 </div>
 
@@ -722,7 +790,7 @@ const WomensSignatureCollection = () => {
                     <button
                       onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                       disabled={currentPage === 1}
-                      className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                      className="px-4 py-2 border border-gray-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700 transition-colors"
                     >
                       Previous
                     </button>
@@ -747,8 +815,8 @@ const WomensSignatureCollection = () => {
                             onClick={() => setCurrentPage(pageNum)}
                             className={`px-3 py-1 rounded ${
                               currentPage === pageNum
-                                ? 'bg-purple-500 text-white'
-                                : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-500'
+                                ? 'bg-pink-600 text-white'
+                                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                             }`}
                           >
                             {pageNum}
@@ -760,7 +828,7 @@ const WomensSignatureCollection = () => {
                     <button
                       onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                       disabled={currentPage === totalPages}
-                      className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                      className="px-4 py-2 border border-gray-600 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700 transition-colors"
                     >
                       Next
                     </button>

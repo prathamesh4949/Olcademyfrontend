@@ -406,7 +406,7 @@ const MensSignatureCollection = () => {
 
   ScentCard.displayName = 'ScentCard';
 
-  // Quick View Modal (reusing the same structure with updated colors)
+  // Quick View Modal
   const QuickViewModal = () => {
     if (!quickViewProduct) {
       return null;
@@ -642,25 +642,94 @@ const MensSignatureCollection = () => {
       <QuickViewModal />
       
       <main className="flex-1">
-        {/* Hero Section */}
-        <section className="bg-gradient-to-br from-purple-800 via-indigo-800 to-blue-900 text-white py-20 px-6">
-          <div className="max-w-7xl mx-auto text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-            >
-              <div className="flex items-center justify-center space-x-3 mb-6">
-                <Crown size={48} />
-                <h1 className="text-5xl md:text-6xl font-dm-serif font-bold">
+        {/* Hero Section - Updated with unisex.png banner */}
+        <section className="relative overflow-hidden w-full bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900">
+          <div className="relative w-full h-[500px] md:h-[600px] lg:h-[700px] flex items-center justify-center">
+            <img
+              src="/images/unisex.png"
+              alt="Men's Signature Collection"
+              className="w-full h-full object-cover object-center"
+              style={{
+                objectFit: 'cover',
+                objectPosition: 'center'
+              }}
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.parentElement.innerHTML = '<div class="flex items-center justify-center w-full h-full bg-gradient-to-br from-purple-900 to-indigo-900"><div class="text-center"><div class="mx-auto mb-4 text-purple-400"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="5"/></svg></div><h2 class="text-4xl font-bold text-white">Men\'s Signature Collection</h2></div></div>';
+              }}
+            />
+            
+            {/* Overlay with gradient */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-black/20 pointer-events-none"></div>
+            
+            {/* Men's Signature Collection Text Overlay - Center */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-center px-6">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.8, delay: 0.2 }}
+                  className="mb-6"
+                >
+                  <Crown className="w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 mx-auto text-purple-400 drop-shadow-[0_0_15px_rgba(168,85,247,0.8)]" />
+                </motion.div>
+                
+                <motion.h1
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.4 }}
+                  className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold uppercase tracking-wider mb-6"
+                  style={{
+                    fontFamily: "Playfair Display, serif",
+                    color: "#FFFFFF",
+                    textShadow: "3px 3px 12px rgba(0,0,0,0.8), 0 0 30px rgba(0,0,0,0.5)",
+                    letterSpacing: "0.1em",
+                    lineHeight: "1.1"
+                  }}
+                >
                   Men's Signature Collection
-                </h1>
+                </motion.h1>
+                
+                <motion.div
+                  initial={{ opacity: 0, scaleX: 0 }}
+                  animate={{ opacity: 1, scaleX: 1 }}
+                  transition={{ duration: 0.8, delay: 0.6 }}
+                  className="h-1.5 w-48 md:w-64 lg:w-80 bg-gradient-to-r from-transparent via-purple-400 to-transparent mx-auto rounded-full mb-6"
+                  style={{
+                    boxShadow: "0 0 20px rgba(168, 85, 247, 0.8)"
+                  }}
+                ></motion.div>
+                
+                <motion.p
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.8 }}
+                  className="text-xl md:text-2xl lg:text-3xl font-semibold"
+                  style={{
+                    fontFamily: "Manrope, sans-serif",
+                    color: "#FFF",
+                    textShadow: "2px 2px 8px rgba(0,0,0,0.8)",
+                    letterSpacing: "0.08em"
+                  }}
+                >
+                  Masculine Elegance Redefined
+                </motion.p>
+                
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 1, delay: 1 }}
+                  className="text-base md:text-lg lg:text-xl mt-4 text-purple-100 font-medium"
+                  style={{
+                    fontFamily: "Manrope, sans-serif",
+                    textShadow: "1px 1px 4px rgba(0,0,0,0.7)",
+                    letterSpacing: "0.05em"
+                  }}
+                >
+                  Discover Sophisticated Scents That Leave a Lasting Impression
+                </motion.p>
               </div>
-              <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto leading-relaxed">
-                Discover our exclusive men's signature fragrances. These sophisticated scents 
-                define masculine elegance and leave a lasting impression.
-              </p>
-            </motion.div>
+            </div>
           </div>
         </section>
 

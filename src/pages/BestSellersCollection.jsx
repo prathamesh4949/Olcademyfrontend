@@ -82,6 +82,11 @@ const BestSellersCollection = () => {
     fetchBestSellerScents();
   }, [fetchBestSellerScents]);
 
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Handle add to cart
   const handleAddToCart = async (scent, e) => {
     e.stopPropagation();
@@ -332,7 +337,7 @@ const ScentCard = memo(({ scent }) => {
             fontFamily: "Playfair Display, serif",
             letterSpacing: "0.05em",
             color: "#5A2408",
-            minHeight: "28px", // ensures consistent height
+            minHeight: "28px",
           }}
         >
           {scent.name || ""}
@@ -371,7 +376,7 @@ const ScentCard = memo(({ scent }) => {
             fontWeight: "500",
             letterSpacing: "0.02em",
             color: "#7E513A",
-            minHeight: "40px", // fixed height for alignment
+            minHeight: "40px",
           }}
         >
           {scent.description || ""}
@@ -384,7 +389,7 @@ const ScentCard = memo(({ scent }) => {
             fontFamily: "Manrope, sans-serif",
             letterSpacing: "0.02em",
             color: "#431A06",
-            minHeight: "24px", // consistent alignment with product card
+            minHeight: "24px",
           }}
         >
           ${typeof scent.price === "number" ? scent.price.toFixed(2) : "0.00"}
@@ -660,14 +665,95 @@ const ScentCard = memo(({ scent }) => {
       <QuickViewModal />
       
       <main className="flex-1">
-        {/* Hero Section */}
-
-                <section className="relative overflow-hidden w-full">
-          <img
-            src="/images/best-sellar.png"
-            alt="MA VESARII Trending Collection Banner"
-            className="w-full h-[424px] object-cover"
-          />
+        {/* Hero Section - Updated with don1.png */}
+        <section className="relative overflow-hidden w-full bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800">
+          <div className="relative w-full h-[500px] md:h-[600px] lg:h-[700px] flex items-center justify-center">
+            <img
+              src="/images/don1.png"
+              alt="MA VESARII Best Sellers Collection"
+              className="w-full h-full object-cover object-center"
+              style={{
+                objectFit: 'cover',
+                objectPosition: 'center'
+              }}
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.parentElement.innerHTML = '<div class="flex items-center justify-center w-full h-full bg-gradient-to-br from-amber-100 to-orange-100"><div class="text-center"><Award size="64" class="mx-auto mb-4 text-amber-600" /><h2 class="text-4xl font-bold text-amber-900">Best Sellers Collection</h2></div></div>';
+              }}
+            />
+            
+            {/* Overlay with Text */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-black/20 pointer-events-none"></div>
+            
+            {/* Best Seller Text Overlay - Center */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-center px-6">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.8, delay: 0.2 }}
+                  className="mb-6"
+                >
+                  <Award className="w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 mx-auto text-amber-400 drop-shadow-[0_0_15px_rgba(251,191,36,0.8)]" />
+                </motion.div>
+                
+                <motion.h1
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.4 }}
+                  className="text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-bold uppercase tracking-wider mb-6"
+                  style={{
+                    fontFamily: "Playfair Display, serif",
+                    color: "#FFFFFF",
+                    textShadow: "3px 3px 12px rgba(0,0,0,0.8), 0 0 30px rgba(0,0,0,0.5)",
+                    letterSpacing: "0.1em",
+                    lineHeight: "1.1"
+                  }}
+                >
+                  Best Seller
+                </motion.h1>
+                
+                <motion.div
+                  initial={{ opacity: 0, scaleX: 0 }}
+                  animate={{ opacity: 1, scaleX: 1 }}
+                  transition={{ duration: 0.8, delay: 0.6 }}
+                  className="h-1.5 w-48 md:w-64 lg:w-80 bg-gradient-to-r from-transparent via-amber-400 to-transparent mx-auto rounded-full mb-6"
+                  style={{
+                    boxShadow: "0 0 20px rgba(251, 191, 36, 0.8)"
+                  }}
+                ></motion.div>
+                
+                <motion.p
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.8 }}
+                  className="text-xl md:text-2xl lg:text-3xl font-semibold"
+                  style={{
+                    fontFamily: "Manrope, sans-serif",
+                    color: "#FFF",
+                    textShadow: "2px 2px 8px rgba(0,0,0,0.8)",
+                    letterSpacing: "0.08em"
+                  }}
+                >
+                  Our Most Loved Fragrances
+                </motion.p>
+                
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 1, delay: 1 }}
+                  className="text-base md:text-lg lg:text-xl mt-4 text-amber-100 font-medium"
+                  style={{
+                    fontFamily: "Manrope, sans-serif",
+                    textShadow: "1px 1px 4px rgba(0,0,0,0.7)",
+                    letterSpacing: "0.05em"
+                  }}
+                >
+                  Discover What Everyone is Raving About
+                </motion.p>
+              </div>
+            </div>
+          </div>
         </section>
 
         {/* Products Grid */}
