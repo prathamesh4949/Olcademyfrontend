@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Star, Plus, Edit, Trash2, Eye, Search, Upload, X, Save, Loader2, AlertCircle, CheckCircle, Image as ImageIcon, DollarSign, Package, RefreshCw, Grid, List, ToggleLeft, ToggleRight, Zap, Heart, Sparkles } from 'lucide-react';
-import ScentService from '@/services/scentService'; // Import the ScentService
+import ScentService from '@/services/scentService';
 
 const AdminScentsSection = () => {
   // State management
@@ -11,7 +11,7 @@ const AdminScentsSection = () => {
   const [filterCollection, setFilterCollection] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [sortBy, setSortBy] = useState('-createdAt');
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+  const [viewMode, setViewMode] = useState('grid');
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState({ total: 0, totalPages: 1, current: 1 });
 
@@ -55,7 +55,7 @@ const AdminScentsSection = () => {
     concentration: 'eau de parfum',
     inStock: true,
     salePercentage: 0,
-    keepExistingImages: true // For edit mode
+    keepExistingImages: true
   });
 
   const [message, setMessage] = useState({ type: '', text: '' });
@@ -67,7 +67,7 @@ const AdminScentsSection = () => {
     { value: 'men', label: 'Men' },
     { value: 'unisex', label: 'Unisex' },
     { value: 'home', label: 'Home' },
-    { value: 'summer', label: 'Summer' }
+    { value: 'gift', label: 'Gift' }
   ];
 
   const collections = {
@@ -103,13 +103,19 @@ const AdminScentsSection = () => {
   const seasons = ['spring', 'summer', 'autumn', 'winter'];
   const occasions = ['casual', 'formal', 'romantic', 'office', 'party', 'evening'];
 
+  // Get filtered collections based on category
+  const getFilteredCollections = (category) => {
+    if (category === 'all') return allCollections;
+    return collections[category] || [];
+  };
+
   // Fetch scents
   const fetchScents = async (page = 1, resetPagination = false) => {
     try {
       setLoading(true);
       const params = {
         page,
-        limit: 1000, // Set high limit to fetch all scents
+        limit: 1000,
         sortBy: sortBy.replace('-', ''),
         sortOrder: sortBy.startsWith('-') ? 'desc' : 'asc',
         ...(filterCategory !== 'all' && { category: filterCategory }),
@@ -117,9 +123,7 @@ const AdminScentsSection = () => {
         ...(filterStatus !== 'all' && { isActive: filterStatus === 'active' })
       };
 
-      console.log('Fetching scents with params:', params);
       const result = await ScentService.getAllScents(params);
-      console.log('Scents fetch result:', { success: result.success, dataLength: result.data?.length || 0, data: result.data, pagination: result.pagination });
 
       if (result.success) {
         setScents(result.data || []);
@@ -139,28 +143,33 @@ const AdminScentsSection = () => {
     }
   };
 
-  // Show message
   const showMessage = (type, text) => {
     setMessage({ type, text });
     setTimeout(() => setMessage({ type: '', text: '' }), 5000);
   };
 
-  // Handle form changes
   const handleFormChange = (field, value) => {
-    setScentForm(prev => ({ ...prev, [field]: value }));
+    setScentForm(prev => {
+      const updated = { ...prev, [field]: value };
+      
+      // If category changes, reset collection to first available for that category
+      if (field === 'category') {
+        const availableCollections = getFilteredCollections(value);
+        updated.collection = availableCollections[0] || '';
+      }
+      
+      return updated;
+    });
   };
 
-  // Handle nested personalization changes
   const handlePersonalizationChange = (subField, value) => {
     setScentForm(prev => ({ ...prev, personalization: { ...prev.personalization, [subField]: value } }));
   };
 
-  // Handle array field changes
   const handleArrayChange = (field, value) => {
     setScentForm(prev => ({ ...prev, [field]: Array.isArray(value) ? value : value.split(',').map(item => item.trim()).filter(item => item) }));
   };
 
-  // Handle sizes change
   const handleSizesChange = (index, field, value) => {
     setScentForm(prev => ({ ...prev, sizes: prev.sizes.map((size, i) => i === index ? { ...size, [field]: value } : size ) }));
   };
@@ -173,12 +182,10 @@ const AdminScentsSection = () => {
     setScentForm(prev => ({ ...prev, sizes: prev.sizes.filter((_, i) => i !== index) }));
   };
 
-  // Handle fragrance notes change
   const handleFragranceNotesChange = (type, value) => {
     setScentForm(prev => ({ ...prev, fragrance_notes: { ...prev.fragrance_notes, [type]: Array.isArray(value) ? value : value.split(',').map(item => item.trim()).filter(item => item) } }));
   };
 
-  // Create scent
   const handleCreateScent = async (e) => {
     e.preventDefault();
     setOperationLoading(true);
@@ -200,7 +207,6 @@ const AdminScentsSection = () => {
     }
   };
 
-  // Update scent
   const handleUpdateScent = async (e) => {
     e.preventDefault();
     if (!selectedScent) return;
@@ -224,7 +230,6 @@ const AdminScentsSection = () => {
     }
   };
 
-  // Delete scent
   const handleDeleteScent = async (scentId, scentName) => {
     if (!confirm(`Are you sure you want to delete "${scentName}"? This action cannot be undone.`)) {
       return;
@@ -246,7 +251,6 @@ const AdminScentsSection = () => {
     }
   };
 
-  // Toggle scent status
   const handleToggleStatus = async (scentId) => {
     setOperationLoading(true);
     try {
@@ -265,7 +269,6 @@ const AdminScentsSection = () => {
     }
   };
 
-  // Open edit modal
   const handleEditScent = (scent) => {
     setSelectedScent(scent);
     setScentForm({
@@ -285,8 +288,8 @@ const AdminScentsSection = () => {
       rating: scent.rating || '',
       reviewCount: scent.reviewCount || '',
       tags: scent.tags || [],
-      images: null, // Reset images for editing
-      hoverImage: null, // Reset hoverImage for editing
+      images: null,
+      hoverImage: null,
       sizes: scent.sizes || [{ size: '50ml', price: '', available: true, stock: '' }],
       fragrance_notes: scent.fragrance_notes || { top: [], middle: [], base: [] },
       scentFamily: scent.scentFamily || 'floral',
@@ -301,12 +304,11 @@ const AdminScentsSection = () => {
       concentration: scent.concentration || 'eau de parfum',
       inStock: scent.inStock || true,
       salePercentage: scent.salePercentage || 0,
-      keepExistingImages: true // Default to append for edit
+      keepExistingImages: true
     });
     setShowEditModal(true);
   };
 
-  // Reset form
   const resetForm = () => {
     setScentForm({
       name: '',
@@ -345,7 +347,6 @@ const AdminScentsSection = () => {
     });
   };
 
-  // Filter scents
   const filteredScents = scents.filter(scent => {
     const matchesSearch = scent.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       scent.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -353,7 +354,6 @@ const AdminScentsSection = () => {
     return matchesSearch;
   });
 
-  // Stats
   const stats = {
     total: scents.length,
     active: scents.filter(s => s.isActive).length,
@@ -363,22 +363,31 @@ const AdminScentsSection = () => {
     totalValue: scents.reduce((sum, s) => sum + (s.price * s.stock || 0), 0)
   };
 
-  // Load initial data
   useEffect(() => {
     fetchScents();
   }, [sortBy, filterCategory, filterCollection, filterStatus]);
 
-  // Handle search with debounce
   useEffect(() => {
     const timer = setTimeout(() => {
       if (searchTerm) {
-        // Filter locally for now, could implement server-side search
+        // Filter locally
       }
     }, 300);
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  // Define ScentCard and ScentListItem
+  // Handle filter category change
+  const handleFilterCategoryChange = (category) => {
+    setFilterCategory(category);
+    // Reset collection filter when category changes
+    if (category !== 'all') {
+      const availableCollections = getFilteredCollections(category);
+      if (!availableCollections.includes(filterCollection)) {
+        setFilterCollection('all');
+      }
+    }
+  };
+
   const ScentCard = ({ scent }) => (
     <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 hover:shadow-lg transition-all border">
       <div className="relative mb-4">
@@ -389,7 +398,6 @@ const AdminScentsSection = () => {
             <Sparkles className="w-16 h-16 text-purple-300" />
           )}
         </div>
-        {/* Status Badge */}
         <div className="absolute top-2 left-2">
           <button
             onClick={() => handleToggleStatus(scent._id)}
@@ -401,7 +409,6 @@ const AdminScentsSection = () => {
             {scent.isActive ? 'Active' : 'Inactive'}
           </button>
         </div>
-        {/* Featured Badge */}
         {(scent.featured || scent.isFeatured) && (
           <div className="absolute top-2 right-2">
             <span className="bg-amber-100 text-amber-800 px-2 py-1 text-xs font-medium rounded-full">
@@ -534,7 +541,6 @@ const AdminScentsSection = () => {
 
   return (
     <div className="space-y-6">
-      {/* Message Display */}
       {message.text && (
         <div
           className={`p-4 rounded-xl flex items-center gap-3 shadow-sm ${
@@ -550,7 +556,6 @@ const AdminScentsSection = () => {
         </div>
       )}
 
-      {/* Scents Stats */}
       <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
         <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
@@ -608,11 +613,9 @@ const AdminScentsSection = () => {
         </div>
       </div>
 
-      {/* Controls */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
           <div className="flex flex-col sm:flex-row gap-4 flex-1">
-            {/* Search */}
             <div className="relative flex-1">
               <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
@@ -623,10 +626,9 @@ const AdminScentsSection = () => {
                 className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
               />
             </div>
-            {/* Filters */}
             <select
               value={filterCategory}
-              onChange={(e) => setFilterCategory(e.target.value)}
+              onChange={(e) => handleFilterCategoryChange(e.target.value)}
               className="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
             >
               <option value="all">All Categories</option>
@@ -640,7 +642,7 @@ const AdminScentsSection = () => {
               className="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
             >
               <option value="all">All Collections</option>
-              {allCollections.map(col => (
+              {getFilteredCollections(filterCategory).map(col => (
                 <option key={col} value={col}>{col.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>
               ))}
             </select>
@@ -667,7 +669,6 @@ const AdminScentsSection = () => {
             </select>
           </div>
           <div className="flex gap-3">
-            {/* View Toggle */}
             <div className="flex bg-gray-100 rounded-lg p-1">
               <button
                 onClick={() => setViewMode('grid')}
@@ -699,7 +700,6 @@ const AdminScentsSection = () => {
         </div>
       </div>
 
-      {/* Scents Grid/List */}
       {loading ? (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
           <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-gray-400" />
@@ -738,7 +738,6 @@ const AdminScentsSection = () => {
         </div>
       )}
 
-      {/* Pagination */}
       {pagination.totalPages > 1 && (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center justify-between">
@@ -790,7 +789,6 @@ const AdminScentsSection = () => {
         </div>
       )}
 
-      {/* Create Scent Modal */}
       {showCreateModal && (
         <ScentModal
           title="Create New Scent"
@@ -816,10 +814,10 @@ const AdminScentsSection = () => {
           addSize={addSize}
           removeSize={removeSize}
           fetchScents={fetchScents}
+          getFilteredCollections={getFilteredCollections}
         />
       )}
 
-      {/* Edit Scent Modal */}
       {showEditModal && selectedScent && (
         <ScentModal
           title="Edit Scent"
@@ -847,10 +845,10 @@ const AdminScentsSection = () => {
           removeSize={removeSize}
           isEdit={true}
           fetchScents={fetchScents}
+          getFilteredCollections={getFilteredCollections}
         />
       )}
 
-      {/* View Scent Modal */}
       {showViewModal && selectedScent && (
         <ScentViewModal
           scent={selectedScent}
@@ -864,8 +862,7 @@ const AdminScentsSection = () => {
   );
 };
 
-// Scent Modal Component
-const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, onPersonalizationChange, onArrayChange, onSizesChange, onFragranceNotesChange, onClose, loading, categories, collections, allCollections, scentFamilies, intensities, longevities, sillages, concentrations, seasons, occasions, addSize, removeSize, isEdit = false, fetchScents }) => {
+const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, onPersonalizationChange, onArrayChange, onSizesChange, onFragranceNotesChange, onClose, loading, categories, collections, allCollections, scentFamilies, intensities, longevities, sillages, concentrations, seasons, occasions, addSize, removeSize, isEdit = false, fetchScents, getFilteredCollections }) => {
   const [activeTab, setActiveTab] = useState('basic');
 
   const tabs = [
@@ -881,7 +878,7 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
     try {
       const result = await ScentService.deleteScentImage(existingScent._id, index);
       if (result.success) {
-        fetchScents(); // Refresh the scent list
+        fetchScents();
         alert('Image deleted successfully. Please reopen the modal to see changes.');
       } else {
         alert(result.message || 'Failed to delete image');
@@ -897,7 +894,7 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
     try {
       const result = await ScentService.deleteScentHoverImage(existingScent._id);
       if (result.success) {
-        fetchScents(); // Refresh the scent list
+        fetchScents();
         alert('Hover image deleted successfully. Please reopen the modal to see changes.');
       } else {
         alert(result.message || 'Failed to delete hover image');
@@ -911,7 +908,6 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
-        {/* Header */}
         <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-purple-600 to-purple-700 text-white">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold">{title}</h2>
@@ -921,7 +917,6 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
           </div>
         </div>
 
-        {/* Tabs */}
         <div className="border-b border-gray-200">
           <div className="flex overflow-x-auto">
             {tabs.map((tab) => (
@@ -938,13 +933,12 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
           </div>
         </div>
 
-        {/* Content */}
         <form onSubmit={onSubmit} className="overflow-y-auto max-h-[60vh]">
           <div className="p-6">
             {activeTab === 'basic' && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2"> Scent Name * </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Scent Name *</label>
                   <input
                     type="text"
                     required
@@ -955,7 +949,7 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2"> SKU * </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">SKU *</label>
                   <input
                     type="text"
                     required
@@ -966,7 +960,7 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2"> Brand </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Brand</label>
                   <input
                     type="text"
                     value={scent.brand}
@@ -976,7 +970,7 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2"> Category * </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Category *</label>
                   <select
                     required
                     value={scent.category}
@@ -989,20 +983,20 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2"> Collection * </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Collection *</label>
                   <select
                     required
                     value={scent.collection}
                     onChange={(e) => onChange('collection', e.target.value)}
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                   >
-                    {allCollections.map(col => (
+                    {getFilteredCollections(scent.category).map(col => (
                       <option key={col} value={col}>{col.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2"> Scent Family </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Scent Family</label>
                   <select
                     value={scent.scentFamily}
                     onChange={(e) => onChange('scentFamily', e.target.value)}
@@ -1036,7 +1030,7 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
             {activeTab === 'pricing' && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2"> Base Price * </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Base Price *</label>
                   <input
                     type="number"
                     required
@@ -1049,7 +1043,7 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2"> Original Price </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Original Price</label>
                   <input
                     type="number"
                     min="0"
@@ -1061,7 +1055,7 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2"> Base Stock </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Base Stock</label>
                   <input
                     type="number"
                     min="0"
@@ -1072,7 +1066,7 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2"> Sale Percentage </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Sale Percentage</label>
                   <input
                     type="number"
                     min="0"
@@ -1084,7 +1078,7 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2"> Sizes </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Sizes</label>
                   {scent.sizes.map((size, index) => (
                     <div key={index} className="flex items-center gap-4 mb-4">
                       <input
@@ -1134,7 +1128,7 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
                     <label className="text-sm font-medium text-gray-700">Personalization Available</label>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2"> Max Characters </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Max Characters</label>
                     <input
                       type="number"
                       min="0"
@@ -1145,7 +1139,7 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2"> Personalization Price </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Personalization Price</label>
                     <input
                       type="number"
                       min="0"
@@ -1162,7 +1156,7 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
             {activeTab === 'details' && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2"> Description * </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Description *</label>
                   <textarea
                     required
                     rows={6}
@@ -1173,7 +1167,7 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2"> Intensity </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Intensity</label>
                   <select
                     value={scent.intensity}
                     onChange={(e) => onChange('intensity', e.target.value)}
@@ -1185,7 +1179,7 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2"> Longevity </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Longevity</label>
                   <select
                     value={scent.longevity}
                     onChange={(e) => onChange('longevity', e.target.value)}
@@ -1197,7 +1191,7 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2"> Sillage </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Sillage</label>
                   <select
                     value={scent.sillage}
                     onChange={(e) => onChange('sillage', e.target.value)}
@@ -1209,7 +1203,7 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2"> Concentration </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Concentration</label>
                   <select
                     value={scent.concentration}
                     onChange={(e) => onChange('concentration', e.target.value)}
@@ -1221,7 +1215,7 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2"> Volume </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Volume</label>
                   <input
                     type="text"
                     value={scent.volume}
@@ -1231,7 +1225,7 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2"> Rating </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Rating</label>
                   <input
                     type="number"
                     min="0"
@@ -1244,7 +1238,7 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2"> Review Count </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Review Count</label>
                   <input
                     type="number"
                     min="0"
@@ -1255,7 +1249,7 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2"> Tags </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Tags</label>
                   <input
                     type="text"
                     value={scent.tags.join(', ')}
@@ -1265,7 +1259,7 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2"> Seasons </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Seasons</label>
                   <select
                     multiple
                     value={scent.season}
@@ -1278,7 +1272,7 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2"> Occasions </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Occasions</label>
                   <select
                     multiple
                     value={scent.occasion}
@@ -1291,7 +1285,7 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
                   </select>
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2"> Ingredients </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Ingredients</label>
                   <textarea
                     rows={4}
                     value={scent.ingredients.join(', ')}
@@ -1305,7 +1299,7 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
             {activeTab === 'fragrance' && (
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2"> Top Notes </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Top Notes</label>
                   <input
                     type="text"
                     value={Array.isArray(scent.fragrance_notes.top) ? scent.fragrance_notes.top.join(', ') : ''}
@@ -1316,7 +1310,7 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
                   <p className="text-sm text-gray-500 mt-1">The initial scent that hits first</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2"> Middle Notes (Heart) </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Middle Notes (Heart)</label>
                   <input
                     type="text"
                     value={Array.isArray(scent.fragrance_notes.middle) ? scent.fragrance_notes.middle.join(', ') : ''}
@@ -1327,7 +1321,7 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
                   <p className="text-sm text-gray-500 mt-1">The core of the fragrance</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2"> Base Notes </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Base Notes</label>
                   <input
                     type="text"
                     value={Array.isArray(scent.fragrance_notes.base) ? scent.fragrance_notes.base.join(', ') : ''}
@@ -1337,7 +1331,6 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
                   />
                   <p className="text-sm text-gray-500 mt-1">The lasting foundation of the scent</p>
                 </div>
-                {/* Fragrance Pyramid Visual */}
                 <div className="bg-gradient-to-b from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-100">
                   <h4 className="font-semibold text-gray-800 mb-4 text-center">Fragrance Pyramid Preview</h4>
                   <div className="space-y-3">
@@ -1366,26 +1359,25 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
             {activeTab === 'media' && (
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2"> Scent Images </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Scent Images</label>
                   <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-purple-500 transition-colors">
                     <input type="file" accept="image/*" multiple onChange={(e) => onChange('images', e.target.files)} className="hidden" id="images-upload" />
                     <label htmlFor="images-upload" className="cursor-pointer">
                       <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-lg font-medium text-gray-600 mb-2"> Click to upload images </p>
-                      <p className="text-sm text-gray-500"> PNG, JPG, JPEG up to 5MB each (Max 5 images) </p>
+                      <p className="text-lg font-medium text-gray-600 mb-2">Click to upload images</p>
+                      <p className="text-sm text-gray-500">PNG, JPG, JPEG up to 5MB each (Max 5 images)</p>
                     </label>
                   </div>
                   {isEdit && (
                     <div className="flex items-center gap-2 mt-4">
                       <input type="checkbox" checked={scent.keepExistingImages} onChange={(e) => onChange('keepExistingImages', e.target.checked)} className="w-4 h-4" id="keep-images" />
-                      <label htmlFor="keep-images" className="text-sm font-medium text-gray-700"> Append new images to existing ones (uncheck to replace) </label>
+                      <label htmlFor="keep-images" className="text-sm font-medium text-gray-700">Append new images to existing ones (uncheck to replace)</label>
                     </div>
                   )}
                 </div>
-                {/* Show existing images if editing */}
                 {isEdit && existingScent && existingScent.images && existingScent.images.length > 0 && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-4"> Current Images </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-4">Current Images</label>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                       {existingScent.images.map((image, index) => (
                         <div key={index} className="relative group">
@@ -1398,26 +1390,24 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
                         </div>
                       ))}
                     </div>
-                    <p className="text-sm text-purple-600 mt-2"> 💡 Tip: Upload new images to replace existing ones, or keep existing images by not selecting new ones </p>
+                    <p className="text-sm text-purple-600 mt-2">💡 Tip: Upload new images to replace existing ones, or keep existing images by not selecting new ones</p>
                   </div>
                 )}
-                {/* Hover Image Upload */}
                 <div className="mt-8">
-                  <label className="block text-sm font-medium text-gray-700 mb-2"> Hover Image </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Hover Image</label>
                   <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-purple-500 transition-colors">
                     <input type="file" accept="image/*" onChange={(e) => onChange('hoverImage', e.target.files[0])} className="hidden" id="hover-image-upload" />
                     <label htmlFor="hover-image-upload" className="cursor-pointer">
                       <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-lg font-medium text-gray-600 mb-2"> Click to upload hover image </p>
-                      <p className="text-sm text-gray-500"> PNG, JPG, JPEG up to 5MB (Single image, different from main image) </p>
+                      <p className="text-lg font-medium text-gray-600 mb-2">Click to upload hover image</p>
+                      <p className="text-sm text-gray-500">PNG, JPG, JPEG up to 5MB (Single image, different from main image)</p>
                     </label>
                   </div>
                   <p className="text-sm text-gray-500 mt-2">This image will be shown on hover in scent cards (optional)</p>
                 </div>
-                {/* Show existing hover image if editing */}
                 {isEdit && existingScent && existingScent.hoverImage && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-4"> Current Hover Image </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-4">Current Hover Image</label>
                     <div className="relative group w-48">
                       <img src={existingScent.hoverImage} alt="Hover image" className="w-full h-32 object-cover rounded-lg border border-gray-200" onError={(e) => { e.target.src = '/images/default-perfume.png'; }} />
                       <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all rounded-lg flex items-center justify-center">
@@ -1426,10 +1416,9 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
                         </button>
                       </div>
                     </div>
-                    <p className="text-sm text-purple-600 mt-2"> 💡 Tip: Upload a new hover image to replace the existing one </p>
+                    <p className="text-sm text-purple-600 mt-2">💡 Tip: Upload a new hover image to replace the existing one</p>
                   </div>
                 )}
-                {/* Image Upload Guidelines */}
                 <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
                   <h4 className="font-semibold text-blue-800 mb-2">Image Guidelines</h4>
                   <ul className="text-sm text-blue-700 space-y-1">
@@ -1444,7 +1433,6 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
             )}
           </div>
 
-          {/* Footer */}
           <div className="p-6 border-t border-gray-200 bg-gray-50 flex justify-end gap-4">
             <button type="button" onClick={onClose} className="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-medium">
               Cancel
@@ -1464,12 +1452,10 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
   );
 };
 
-// ScentViewModal Component
 const ScentViewModal = ({ scent, onClose, onEdit, onDelete, onToggleStatus }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
         <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-purple-600 to-purple-700 text-white">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold">{scent.name}</h2>
@@ -1479,9 +1465,7 @@ const ScentViewModal = ({ scent, onClose, onEdit, onDelete, onToggleStatus }) =>
           </div>
         </div>
 
-        {/* Content */}
         <div className="p-6 space-y-6">
-          {/* Basic Info */}
           <div>
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Basic Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1512,13 +1496,11 @@ const ScentViewModal = ({ scent, onClose, onEdit, onDelete, onToggleStatus }) =>
             </div>
           </div>
 
-          {/* Description */}
           <div>
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Description</h3>
             <p className="text-gray-700 leading-relaxed">{scent.description || 'N/A'}</p>
           </div>
 
-          {/* Pricing & Stock */}
           <div>
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Pricing & Stock</h3>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -1541,7 +1523,6 @@ const ScentViewModal = ({ scent, onClose, onEdit, onDelete, onToggleStatus }) =>
             </div>
           </div>
 
-          {/* Sizes */}
           {scent.sizes && scent.sizes.length > 0 && (
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Sizes</h3>
@@ -1558,7 +1539,6 @@ const ScentViewModal = ({ scent, onClose, onEdit, onDelete, onToggleStatus }) =>
             </div>
           )}
 
-          {/* Fragrance Notes */}
           {scent.fragrance_notes && (
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Fragrance Notes</h3>
@@ -1579,7 +1559,6 @@ const ScentViewModal = ({ scent, onClose, onEdit, onDelete, onToggleStatus }) =>
             </div>
           )}
 
-          {/* Scent Characteristics */}
           <div>
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Scent Characteristics</h3>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -1602,7 +1581,6 @@ const ScentViewModal = ({ scent, onClose, onEdit, onDelete, onToggleStatus }) =>
             </div>
           </div>
 
-          {/* Seasons and Occasions */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <h4 className="font-medium text-gray-800 mb-2">Seasons</h4>
@@ -1632,7 +1610,6 @@ const ScentViewModal = ({ scent, onClose, onEdit, onDelete, onToggleStatus }) =>
             </div>
           </div>
 
-          {/* Personalization */}
           {scent.personalization && (
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Personalization</h3>
@@ -1653,7 +1630,6 @@ const ScentViewModal = ({ scent, onClose, onEdit, onDelete, onToggleStatus }) =>
             </div>
           )}
 
-          {/* Ingredients */}
           {scent.ingredients && scent.ingredients.length > 0 && (
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Ingredients</h3>
@@ -1663,7 +1639,6 @@ const ScentViewModal = ({ scent, onClose, onEdit, onDelete, onToggleStatus }) =>
             </div>
           )}
 
-          {/* Metadata */}
           <div className="bg-gray-50 rounded-xl p-4">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Scent Metadata</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
@@ -1687,7 +1662,6 @@ const ScentViewModal = ({ scent, onClose, onEdit, onDelete, onToggleStatus }) =>
           </div>
         </div>
 
-        {/* Footer Actions */}
         <div className="p-6 border-t border-gray-200 bg-gray-50 flex justify-end gap-4">
           <button onClick={onClose} className="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-medium">
             Close

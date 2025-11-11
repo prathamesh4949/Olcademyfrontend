@@ -23,7 +23,7 @@ import {
   ToggleRight
 } from 'lucide-react';
 
-import ProductService from '@/services/productService'; // Adjust path based on your project structure
+import ProductService from '@/services/productService';
 
 const AdminProductsSection = () => {
   // State management
@@ -33,7 +33,7 @@ const AdminProductsSection = () => {
   const [filterCategory, setFilterCategory] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [sortBy, setSortBy] = useState('-createdAt');
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+  const [viewMode, setViewMode] = useState('grid');
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState({ total: 0, totalPages: 1, current: 1 });
   
@@ -69,17 +69,18 @@ const AdminProductsSection = () => {
     sillage: '',
     season: [],
     occasion: [],
-    keepExistingImages: true // New field for update mode
+    keepExistingImages: true
   });
   
   const [message, setMessage] = useState({ type: '', text: '' });
   const [operationLoading, setOperationLoading] = useState(false);
 
-  // Categories and collections
+  // Categories and collections - UPDATED with home category
   const categories = [
     { value: 'men', label: 'Men' },
     { value: 'women', label: 'Women' },
     { value: 'unisex', label: 'Unisex' },
+    { value: 'home', label: 'Home' },
     { value: 'gifts', label: 'Gifts' }
   ];
 
@@ -87,6 +88,7 @@ const AdminProductsSection = () => {
     men: ['just-arrived', 'best-sellers', 'huntsman-savile-row'],
     women: ['just-arrived', 'best-sellers', 'huntsman-savile-row'],
     unisex: ['just-arrived', 'best-sellers', 'huntsman-savile-row'],
+    home: ['fragrant-favourites', 'summer-scents', 'signature-collection'],
     gifts: ['for-her', 'for-him', 'by-price-under-50', 'by-price-under-100', 'by-price-under-200', 'home-gift', 'birthday-gift', 'wedding-gift']
   };
 
@@ -100,7 +102,7 @@ const AdminProductsSection = () => {
       
       const params = {
         page,
-        limit: 1000, // Set high limit to fetch all products
+        limit: 1000,
         sort: sortBy,
         ...(filterCategory !== 'all' && { category: filterCategory }),
         ...(filterStatus !== 'all' && { isActive: filterStatus === 'active' })
@@ -315,8 +317,8 @@ const AdminProductsSection = () => {
       sku: product.sku || '',
       rating: product.rating || '',
       tags: product.tags || [],
-      images: null, // Reset images for editing
-      hoverImage: null, // Reset hoverImage for editing
+      images: null,
+      hoverImage: null,
       sizes: product.sizes || [{ size: '50ml', price: '', stock: '', available: true }],
       fragrance_notes: product.fragrance_notes || { top: [], middle: [], base: [] },
       personalization: product.personalization || { available: false, max_characters: 15, price: 0 },
@@ -327,7 +329,7 @@ const AdminProductsSection = () => {
       sillage: product.sillage || '',
       season: product.season || [],
       occasion: product.occasion || [],
-      keepExistingImages: true // Default to append for edit
+      keepExistingImages: true
     });
     setShowEditModal(true);
   };
@@ -390,7 +392,7 @@ const AdminProductsSection = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       if (searchTerm) {
-        // Filter locally for now, could implement server-side search
+        // Filter locally for now
       }
     }, 300);
     return () => clearTimeout(timer);
@@ -975,8 +977,7 @@ const ProductModal = ({
     try {
       const result = await ProductService.deleteProductImage(existingProduct._id, index);
       if (result.success) {
-        fetchProducts(); // Refresh the product list
-        // To update the modal, we could refetch the single product, but for simplicity, close and reopen if needed
+        fetchProducts();
         alert('Image deleted successfully. Please reopen the modal to see changes.');
       } else {
         alert(result.message || 'Failed to delete image');
@@ -992,7 +993,7 @@ const ProductModal = ({
     try {
       const result = await ProductService.deleteProductHoverImage(existingProduct._id);
       if (result.success) {
-        fetchProducts(); // Refresh the product list
+        fetchProducts();
         alert('Hover image deleted successfully. Please reopen the modal to see changes.');
       } else {
         alert(result.message || 'Failed to delete hover image');
@@ -1652,7 +1653,7 @@ const ProductModal = ({
   );
 };
 
-// ProductViewModal Component (unchanged)
+// ProductViewModal Component
 const ProductViewModal = ({ product, onClose, onEdit, onDelete, onToggleStatus }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -1675,11 +1676,11 @@ const ProductViewModal = ({ product, onClose, onEdit, onDelete, onToggleStatus }
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-gray-600">Category</p>
-                <p className="font-medium">{product.category}</p>
+                <p className="font-medium capitalize">{product.category}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-600">Collection</p>
-                <p className="font-medium">{product.productCollection}</p>
+                <p className="font-medium capitalize">{product.productCollection}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-600">Brand</p>
@@ -1735,23 +1736,25 @@ const ProductViewModal = ({ product, onClose, onEdit, onDelete, onToggleStatus }
           )}
 
           {/* Fragrance Notes */}
-          <div>
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Fragrance Notes</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-yellow-50 rounded-xl p-4">
-                <h4 className="font-medium text-yellow-800">Top Notes</h4>
-                <p className="text-yellow-700">{product.fragrance_notes.top.join(', ') || 'N/A'}</p>
-              </div>
-              <div className="bg-amber-50 rounded-xl p-4">
-                <h4 className="font-medium text-amber-800">Middle Notes</h4>
-                <p className="text-amber-700">{product.fragrance_notes.middle.join(', ') || 'N/A'}</p>
-              </div>
-              <div className="bg-orange-50 rounded-xl p-4">
-                <h4 className="font-medium text-orange-800">Base Notes</h4>
-                <p className="text-orange-700">{product.fragrance_notes.base.join(', ') || 'N/A'}</p>
+          {product.fragrance_notes && (
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Fragrance Notes</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-yellow-50 rounded-xl p-4">
+                  <h4 className="font-medium text-yellow-800">Top Notes</h4>
+                  <p className="text-yellow-700">{product.fragrance_notes.top?.join(', ') || 'N/A'}</p>
+                </div>
+                <div className="bg-amber-50 rounded-xl p-4">
+                  <h4 className="font-medium text-amber-800">Middle Notes</h4>
+                  <p className="text-amber-700">{product.fragrance_notes.middle?.join(', ') || 'N/A'}</p>
+                </div>
+                <div className="bg-orange-50 rounded-xl p-4">
+                  <h4 className="font-medium text-orange-800">Base Notes</h4>
+                  <p className="text-orange-700">{product.fragrance_notes.base?.join(', ') || 'N/A'}</p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Personalization */}
           {product.personalization && (
