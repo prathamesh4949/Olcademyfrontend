@@ -1,4 +1,6 @@
+
 import React, { useEffect, useState } from 'react';
+import { FiX } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '@/CartContext';
 import { toast } from 'react-hot-toast';
@@ -14,15 +16,11 @@ const ProductCartSection = ({ isOpen, onClose }) => {
     if (isInitialized && cartItems.length > 0) refreshCart();
   }, [isInitialized]);
 
-  // Handle smooth mount/unmount
   useEffect(() => {
     if (isOpen) {
       setShowCart(true);
-      // Prevent body scroll when cart is open
-      document.body.style.overflow = 'hidden';
     } else {
       const timer = setTimeout(() => setShowCart(false), 300);
-      document.body.style.overflow = 'auto';
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
@@ -37,7 +35,11 @@ const ProductCartSection = ({ isOpen, onClose }) => {
   };
 
   const handleQuantityChange = async (id, newQuantity) => {
-    if (newQuantity < 1 || isUpdatingQuantity) return;
+    if (newQuantity < 1) {
+      removeFromCart(id);
+      return;
+    }
+    if (isUpdatingQuantity) return;
     const item = cartItems.find(cartItem => cartItem.id === id);
     if (!item) return;
     const availableStock = item.availableStock || 0;
@@ -98,7 +100,7 @@ const ProductCartSection = ({ isOpen, onClose }) => {
 
   if (!isInitialized) {
     return (
-      <div className="fixed inset-0 bg-[#F9F7F6] flex flex-col" style={{ zIndex: 10100 }}>
+      <div className="fixed inset-0 bg-[#F9F7F6] z-[1100] flex flex-col">
         <div className="flex-1 flex justify-center items-center">
           <div className="flex items-center space-x-2">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#5A2408]" />
@@ -108,9 +110,9 @@ const ProductCartSection = ({ isOpen, onClose }) => {
       </div>
     );
   }
-
+// 1100 - z value before
   return (
-    <div className="fixed inset-0 flex pointer-events-auto" style={{ zIndex: 10100 }}>
+    <div className="fixed inset-0 z-[9999] flex pointer-events-auto">
       {/* Overlay */}
       <div
         className={`flex-1 bg-black/50 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`}
@@ -122,7 +124,7 @@ const ProductCartSection = ({ isOpen, onClose }) => {
 
       {/* Sliding Cart */}
       <aside
-        className={`relative h-full w-full max-w-[410px] bg-[#F9F7F6] shadow-xl flex flex-col pointer-events-auto outline-none transform transition-transform duration-300 ease-in-out
+        className={`relative h-full w-full max-w-[50vw] bg-[#F9F7F6] shadow-xl flex flex-col pointer-events-auto outline-none transform transition-transform duration-300 ease-in-out
           ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
       >
         <div className="flex justify-between items-center px-4 pb-5 pt-7 border-b border-[#EAE1DC]">
@@ -130,13 +132,23 @@ const ProductCartSection = ({ isOpen, onClose }) => {
             CART
           </h2>
           {!!cartItems?.length && (
-            <button
-              onClick={clearCart}
-              disabled={loading}
-              className="ml-28 md:ml-20 text-[#5A2408] border border-[#5A2408] rounded-full px-4 py-1 text-sm font-medium hover:bg-[#EAE1DC] transition"
-            >
-              {loading ? 'Clearing...' : 'Clear Cart'}
-            </button>
+            <div className="flex items-center">
+              <button
+                onClick={clearCart}
+                disabled={loading}
+                className="ml-28 md:ml-20 text-[#5A2408] border border-[#5A2408] rounded-full px-4 py-1 text-sm font-medium hover:bg-[#EAE1DC] transition"
+              >
+                {loading ? 'Clearing...' : 'Clear Cart'}
+              </button>
+              <button
+                onClick={onClose}
+                aria-label="Close cart"
+                className="ml-4"
+                style={{ color: '#5A2408', fontSize: 28 }}
+              >
+                <FiX />
+              </button>
+            </div>
           )}
         </div>
 
@@ -158,7 +170,7 @@ const ProductCartSection = ({ isOpen, onClose }) => {
             </div>
           ) : (
             cartItems.map((item) => (
-              <div key={item.id} className="pt-2 pb-8">
+              <div key={item.id} className="py-2">
                 <div className="flex items-stretch p-3 rounded-md hover:bg-[#efecece9] transition-colors duration-200">
                   <img
                     src={item.image}
@@ -168,29 +180,40 @@ const ProductCartSection = ({ isOpen, onClose }) => {
                   />
                   <div className="flex-1 flex flex-col justify-between">
                     <div>
-                      <span
-                        className="text-sm font-semibold text-[#3A3A3A] tracking-wide uppercase cursor-pointer font-playfair"
-                        onClick={() => handleProductClick(item)}
-                      >
-                        {item.name}
-                      </span>
-                      <div className="mt-1 text-[13px] font-playfair text-[#3A3A3A]">
+                      {/* Product name with remove (x) button */}
+                      <div className="flex items-center justify-between">
+                        <span
+                          className="text-[16px] font-semibold text-[#3A3A3A] tracking-wide uppercase cursor-pointer font-playfair"
+                          onClick={() => handleProductClick(item)}
+                        >
+                          {item.name}
+                        </span>
+                        <button
+                          onClick={() => removeFromCart(item.id)}
+                          aria-label="Remove product"
+                          className="ml-2 text-[#5A2408] hover:text-[#9d6c4a] transition"
+                          style={{ fontSize: 20 }}
+                        >
+                          <FiX />
+                        </button>
+                      </div>
+                      <div className="mt-1 text-[14px] font-playfair text-[#3A3A3A]">
                         Size: {item.selectedSize || '100ml'}
                       </div>
                     </div>
-
-                    <div className="flex items-center mt-2 justify-between">
+                    {/* Swap order: Quantity left, MRP right */}
+                    <div className="flex items-center justify-between mt-2">
                       <div className="flex rounded-[6px] ml-2">
                         <button
                           onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                          disabled={item.quantity <= 1 || loading || isUpdatingQuantity}
-                          className="px-5 py-0.5 text-[#3A3A3A] text-lg font-medium bg-transparent"
+                          disabled={item.quantity <= 1 && loading || isUpdatingQuantity}
+                          className="px-5 py-0.5 text-[#3A3A3A] text-[15px] font-medium bg-transparent"
                           style={{ minWidth: 28 }}
                         >
                           –
                         </button>
                         <span
-                          className="px-5 py-0.5 text-base text-[#5A2408]"
+                          className="px-5 py-0.5 text-[15px] text-[#5A2408]"
                           style={{ minWidth: 24, textAlign: 'center' }}
                         >
                           {item.quantity}
@@ -198,14 +221,14 @@ const ProductCartSection = ({ isOpen, onClose }) => {
                         <button
                           onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
                           disabled={loading || isUpdatingQuantity}
-                          className="px-5 py-0.5 text-[#3A3A3A] text-lg font-medium bg-transparent"
+                          className="px-5 py-0.5 text-[#3A3A3A] text-[15px] font-medium bg-transparent"
                           style={{ minWidth: 28 }}
                         >
                           +
                         </button>
                       </div>
                       <span
-                        className="ml-4 text-[16px] font-medium text-[#484848]"
+                        className="ml-4 text-[15px] font-medium text-[#484848]"
                         style={{ whiteSpace: 'nowrap' }}
                       >
                         MRP: ${item.price}
@@ -217,7 +240,7 @@ const ProductCartSection = ({ isOpen, onClose }) => {
             ))
           )}
         </div>
-
+        {/* 3A3A3A */}
         <div className="pt-4 pb-5 px-7 bg-[#F9F7F6]">
           <div className="flex justify-between items-center mb-3">
             <span className="text-[16px] font-manrope font-medium text-[#3A3A3A]">SUBTOTAL</span>
@@ -225,7 +248,7 @@ const ProductCartSection = ({ isOpen, onClose }) => {
               MRP: ${calculateTotal()}
             </span>
           </div>
-          <div className="text-black text-[11px] mx-4 mb-4">
+          <div className="text-black text-[13px] mb-4 text-center">
             Shipping, taxes, and discount codes calculated at checkout.
           </div>
           <button
@@ -242,3 +265,5 @@ const ProductCartSection = ({ isOpen, onClose }) => {
 };
 
 export default ProductCartSection;
+
+
