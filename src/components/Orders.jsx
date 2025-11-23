@@ -256,9 +256,9 @@ const Orders = () => {
                         <button onClick={() => handleViewDetails(order)} className="flex-1 bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] dark:from-[#f6d110] dark:to-[#d4af37] dark:hover:from-[#d4af37] dark:hover:to-[#f6d110] text-white font-bold py-4 px-6 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center justify-center gap-3">
                           <Eye className="w-5 h-5" /> View Details
                         </button>
-                        <button className="flex-1 bg-gradient-to-br from-[#F5E9DC] to-[#E7DDC6] dark:from-[#3d1a0a] dark:to-[#2c0f06] border border-[#79300f]/20 dark:border-[#f6d110]/30 text-[#79300f] dark:text-[#f6d110] font-bold py-4 px-6 rounded-lg hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-3">
+                        {/* <button className="flex-1 bg-gradient-to-br from-[#F5E9DC] to-[#E7DDC6] dark:from-[#3d1a0a] dark:to-[#2c0f06] border border-[#79300f]/20 dark:border-[#f6d110]/30 text-[#79300f] dark:text-[#f6d110] font-bold py-4 px-6 rounded-lg hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-3">
                           <MapPin className="w-5 h-5" /> Track Package
-                        </button>
+                        </button> */}
                       </div>
                     </div>
                   </motion.div>

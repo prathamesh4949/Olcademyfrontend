@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from '../components/common/Header';
 import Footer from '../components/common/Footer';
+import ProductCartSection from '../pages/ProductCartSection';
 import { useCart } from '../CartContext';
 import { useWishlist } from '../WishlistContext';
 import ScentService from '../services/scentService';
@@ -16,7 +17,8 @@ import {
   Gift,
   CheckCircle,
   AlertCircle,
-  Crown
+  Crown,
+  X
 } from 'lucide-react';
 import { FiHeart } from 'react-icons/fi';
 
@@ -37,12 +39,15 @@ const PerfectGiftsPremiumCollection = () => {
   const [totalPages, setTotalPages] = useState(1);
   const itemsPerPage = 12;
 
+  // ADD THIS STATE FOR CART SIDEBAR
+  const [isCartOpen, setIsCartOpen] = useState(false);
+
   // Add notification helper
-  const addNotification = useCallback((message, type = 'success') => {
+  const addNotification = useCallback((message, type = 'success', productName = null, actionType = 'general') => {
     const id = Date.now();
-    setNotifications(prev => [...prev, { id, message, type }]);
+    setNotifications((prev) => [...prev, { id, message, type, productName, actionType }]);
     setTimeout(() => {
-      setNotifications(prev => prev.filter(n => n.id !== id));
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
     }, 3000);
   }, []);
 
@@ -82,93 +87,25 @@ const PerfectGiftsPremiumCollection = () => {
     fetchPerfectGiftsPremium();
   }, [fetchPerfectGiftsPremium]);
 
-  // Handle add to cart
-  const handleAddToCart = async (scent, e) => {
-    e.stopPropagation();
-    if (!scent._id) {
-      addNotification('Product information is incomplete', 'error');
-      return;
-    }
-
-    const cartItem = {
-      id: scent._id.toString(),
-      name: scent.name,
-      price: Number(scent.price),
-      image: scent.images && scent.images.length > 0 ? scent.images[0] : '/images/default-scent.png',
-      quantity: 1,
-      selectedSize: scent.sizes && scent.sizes.length > 0 ? scent.sizes[0].size : null,
-      personalization: null,
-      brand: scent.brand || '',
-      sku: scent.sku || ''
-    };
-
-    try {
-      const success = await addToCart(cartItem);
-      if (success) {
-        addNotification(`Added ${scent.name} to cart!`, 'success');
-      } else {
-        addNotification('Failed to add item to cart', 'error');
-      }
-    } catch (error) {
-      console.error('Add to cart error:', error);
-      addNotification('Something went wrong. Please try again.', 'error');
-    }
-  };
-
-  // Handle wishlist toggle
-  const handleWishlistToggle = (scent, e) => {
-    e.stopPropagation();
-    
-    if (!scent._id) {
-      addNotification('Unable to add to wishlist', 'error');
-      return;
-    }
-
-    try {
-      const wasInWishlist = isInWishlist(scent._id);
-      
-      const wishlistProduct = {
-        id: scent._id.toString(),
-        name: scent.name,
-        price: scent.price,
-        image: scent.images && scent.images.length > 0 ? scent.images[0] : '/images/default-scent.png',
-        description: scent.description || '',
-        category: scent.category || '',
-        brand: scent.brand || '',
-        selectedSize: null
-      };
-      
-      toggleWishlist(wishlistProduct);
-      addNotification(
-        wasInWishlist ? 'Removed from wishlist' : 'Added to wishlist!',
-        'success'
-      );
-    } catch (error) {
-      console.error('Wishlist toggle error:', error);
-      addNotification('Failed to update wishlist', 'error');
-    }
-  };
-
-  // Navigate to product detail
-  const handleProductClick = (scent) => {
-    if (scent._id) {
-      navigate(`/scent/${scent._id}`);
-    }
-  };
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   // Handle Quick View
   const handleQuickView = (scent, e) => {
     e.stopPropagation();
     e.preventDefault();
+    console.log('Quick View clicked for scent:', scent._id, scent.name);
     if (scent && scent._id) {
       setQuickViewProduct(scent);
     } else {
+      console.error('Invalid scent for Quick View:', scent);
       addNotification('Unable to show quick view', 'error');
     }
   };
 
-  // Scent Card Component
-  const ScentCard = memo(({ scent }) => {
+  const ScentCard = memo(({ scent, addToCart, isInCart, toggleWishlist, isInWishlist, navigate, addNotification, setIsCartOpen }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [imageError, setImageError] = useState({ primary: false, hover: false });
     const [isAddingToCart, setIsAddingToCart] = useState(false);
@@ -192,13 +129,78 @@ const PerfectGiftsPremiumCollection = () => {
     const handleAddToCartClick = async (e) => {
       e.stopPropagation();
       setIsAddingToCart(true);
-      await handleAddToCart(scent, e);
-      setIsAddingToCart(false);
+
+      const cartItem = {
+        id: scent._id.toString(),
+        name: scent.name,
+        price: Number(scent.price),
+        image: scent.images && scent.images.length > 0 ? scent.images[0] : '/images/default-scent.png',
+        quantity: 1,
+        selectedSize: scent.sizes && scent.sizes.length > 0 ? scent.sizes[0].size : null,
+        personalization: null,
+        brand: scent.brand || '',
+        sku: scent.sku || ''
+      };
+
+      try {
+        const success = await addToCart(cartItem);
+        if (success) {
+          addNotification(null, 'success', scent.name, 'cart');
+        } else {
+          addNotification('Failed to add item to cart', 'error');
+        }
+      } catch (error) {
+        console.error('Add to cart error:', error);
+        addNotification('Something went wrong. Please try again.', 'error');
+      } finally {
+        setIsAddingToCart(false);
+      }
     };
 
     const handleViewInCart = (e) => {
       e.stopPropagation();
-      navigate('/product-cart');
+      setIsCartOpen(true);
+    };
+
+    const handleWishlistToggle = (e) => {
+      e.stopPropagation();
+      
+      if (!scent._id) {
+        addNotification('Unable to add to wishlist', 'error');
+        return;
+      }
+
+      try {
+        const wasInWishlist = isInWishlist(scent._id);
+        
+        const wishlistProduct = {
+          id: scent._id.toString(),
+          name: scent.name,
+          price: scent.price,
+          image: scent.images && scent.images.length > 0 ? scent.images[0] : '/images/default-scent.png',
+          description: scent.description || '',
+          category: scent.category || '',
+          brand: scent.brand || '',
+          selectedSize: null
+        };
+        
+        toggleWishlist(wishlistProduct);
+        addNotification(
+          wasInWishlist ? 'Removed from wishlist' : 'Added to wishlist!',
+          'success',
+          scent.name,
+          'wishlist'
+        );
+      } catch (error) {
+        console.error('Wishlist toggle error:', error);
+        addNotification('Failed to update wishlist', 'error');
+      }
+    };
+
+    const handleProductClick = () => {
+      if (scent._id) {
+        navigate(`/scent/${scent._id}`);
+      }
     };
 
     const getProductImage = () => {
@@ -229,13 +231,13 @@ const PerfectGiftsPremiumCollection = () => {
         className="bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 dark:from-gray-800 dark:to-gray-700 p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 text-left relative border border-amber-200 dark:border-gray-600 group cursor-pointer backdrop-blur-sm flex flex-col"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        onClick={() => handleProductClick(scent)}
+        onClick={handleProductClick}
       >
         {/* Wishlist Button */}
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
-          onClick={(e) => handleWishlistToggle(scent, e)}
+          onClick={handleWishlistToggle}
           className="absolute top-4 right-4 text-amber-600 hover:text-red-600 dark:text-yellow-400 dark:hover:text-red-400 z-10 bg-white/90 dark:bg-black/90 backdrop-blur-sm rounded-full p-2 shadow-md transition-all duration-200"
           aria-label={isInWishlist(scent._id) ? 'Remove from wishlist' : 'Add to wishlist'}
         >
@@ -401,13 +403,83 @@ const PerfectGiftsPremiumCollection = () => {
     );
   });
 
+
   ScentCard.displayName = 'ScentCard';
 
   // Quick View Modal (similar structure but with amber/premium theme)
   const QuickViewModal = () => {
-    if (!quickViewProduct) return null;
+    if (!quickViewProduct) {
+      return null;
+    }
 
-    const handleClose = () => setQuickViewProduct(null);
+    const handleClose = () => {
+      setQuickViewProduct(null);
+    };
+
+    const handleQuickViewWishlist = () => {
+      if (quickViewProduct._id) {
+        try {
+          const wasInWishlist = isInWishlist(quickViewProduct._id);
+          const wishlistProduct = {
+            id: quickViewProduct._id.toString(),
+            name: quickViewProduct.name,
+            price: quickViewProduct.price,
+            image: quickViewProduct.images && quickViewProduct.images.length > 0 ? quickViewProduct.images[0] : '/images/default-scent.png',
+            description: quickViewProduct.description || '',
+            category: quickViewProduct.category || '',
+            brand: quickViewProduct.brand || '',
+            selectedSize: null
+          };
+          
+          toggleWishlist(wishlistProduct);
+          addNotification(
+            wasInWishlist ? 'Removed from wishlist' : 'Added to wishlist!',
+            'success',
+            quickViewProduct.name,
+            'wishlist'
+          );
+        } catch (error) {
+          console.error('Wishlist toggle error:', error);
+          addNotification('Failed to update wishlist', 'error');
+        }
+      } else {
+        addNotification('Unable to update wishlist', 'error');
+      }
+    };
+
+    const handleQuickViewAddToCart = async () => {
+      if (!quickViewProduct._id) {
+        addNotification('Product not available', 'error');
+        return;
+      }
+
+      const cartItem = {
+        id: quickViewProduct._id.toString(),
+        name: quickViewProduct.name,
+        price: Number(quickViewProduct.price),
+        image: quickViewProduct.images && quickViewProduct.images.length > 0 ? quickViewProduct.images[0] : '/images/default-scent.png',
+        quantity: 1,
+        selectedSize: quickViewProduct.sizes && quickViewProduct.sizes.length > 0 ? quickViewProduct.sizes[0].size : null,
+        personalization: null,
+        brand: quickViewProduct.brand || '',
+        sku: quickViewProduct.sku || ''
+      };
+
+      try {
+        const success = await addToCart(cartItem);
+        if (success) {
+          addNotification(null, 'success', quickViewProduct.name, 'cart');
+          handleClose();
+        } else {
+          addNotification('Failed to add item to cart', 'error');
+        }
+      } catch (error) {
+        console.error('Quick View Add to cart error:', error);
+        addNotification('Something went wrong. Please try again.', 'error');
+      }
+    };
+
+    const productInQuickViewCart = isInCart(quickViewProduct._id?.toString(), quickViewProduct.sizes && quickViewProduct.sizes.length > 0 ? quickViewProduct.sizes[0].size : null);
 
     return (
       <AnimatePresence>
@@ -432,6 +504,7 @@ const PerfectGiftsPremiumCollection = () => {
               <button
                 onClick={handleClose}
                 className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-2xl"
+                aria-label="Close quick view"
               >
                 ×
               </button>
@@ -464,6 +537,69 @@ const PerfectGiftsPremiumCollection = () => {
                 <p className="text-2xl font-bold text-amber-600 dark:text-yellow-400">
                   ${quickViewProduct.price ? quickViewProduct.price.toFixed(2) : '0.00'}
                 </p>
+                
+                {/* Scent Details */}
+                <div className="flex flex-wrap gap-2 text-xs">
+                  {quickViewProduct.scentFamily && (
+                    <span className="bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2 py-1 rounded-full capitalize">
+                      {quickViewProduct.scentFamily}
+                    </span>
+                  )}
+                  {quickViewProduct.intensity && (
+                    <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full capitalize">
+                      {quickViewProduct.intensity}
+                    </span>
+                  )}
+                  {quickViewProduct.concentration && (
+                    <span className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-1 rounded-full capitalize">
+                      {quickViewProduct.concentration}
+                    </span>
+                  )}
+                </div>
+                
+                <div className="flex gap-4">
+                  {productInQuickViewCart ? (
+                    <button
+                      onClick={() => {
+                        setIsCartOpen(true);
+                        handleClose();
+                      }}
+                      className="flex-1 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-700 hover:via-teal-700 hover:to-cyan-700 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center space-x-2 border border-emerald-400/30 shadow-emerald-500/20"
+                    >
+                      <ShoppingCart size={20} />
+                      <span>View in Cart</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleQuickViewAddToCart}
+                      className="flex-1 bg-gradient-to-r from-amber-600 to-yellow-600 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center space-x-2"
+                    >
+                      <ShoppingBag size={20} />
+                      <span>Add to Cart</span>
+                    </button>
+                  )}
+                  <button
+                    onClick={handleQuickViewWishlist}
+                    className="px-4 py-3 border-2 border-amber-600 text-amber-600 rounded-xl hover:bg-amber-600 hover:text-white transition-all duration-300"
+                    aria-label="Add to wishlist"
+                  >
+                    <Heart size={20} className={isInWishlist(quickViewProduct._id) ? 'fill-red-600 text-red-600' : ''} />
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (quickViewProduct._id) {
+                        navigate(`/scent/${quickViewProduct._id}`);
+                        handleClose();
+                      } else {
+                        addNotification('Product details not available', 'error');
+                      }
+                    }}
+                    className="px-4 py-3 border-2 border-gray-300 text-gray-600 rounded-xl hover:bg-gray-300 hover:text-gray-800 transition-all duration-300"
+                    aria-label="View full details"
+                  >
+                    <Eye size={20} />
+                  </button>
+                </div>
               </div>
             </div>
           </motion.div>
@@ -474,27 +610,123 @@ const PerfectGiftsPremiumCollection = () => {
 
   // Notification System
   const NotificationSystem = () => (
-    <div className="fixed top-4 right-4 z-50 space-y-2">
+    <div className="fixed z-[9999] space-y-3" style={{ top: '40px', right: '20px' }}>
       <AnimatePresence>
         {notifications.map((notification) => (
           <motion.div
             key={notification.id}
-            initial={{ opacity: 0, x: 100, scale: 0.8 }}
+            initial={{ opacity: 0, x: 400, scale: 0.8 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: 100, scale: 0.8 }}
-            className={`p-4 rounded-2xl shadow-lg backdrop-blur-sm border max-w-sm ${
-              notification.type === 'success' 
-                ? 'bg-green-500/90 text-white border-green-400' 
-                : 'bg-red-500/90 text-white border-red-400'
-            }`}
+            exit={{ opacity: 0, x: 400, scale: 0.8 }}
+            transition={{ duration: 0.3 }}
+            style={{
+              position: 'relative',
+              width: '400px',
+              height: '100px',
+              backgroundColor: '#EDE4CF',
+              overflow: 'hidden',
+              boxShadow: '4px 6px 16px 0px rgba(0,0,0,0.1), 18px 24px 30px 0px rgba(0,0,0,0.09), 40px 53px 40px 0px rgba(0,0,0,0.05), 71px 95px 47px 0px rgba(0,0,0,0.01), 110px 149px 52px 0px rgba(0,0,0,0)',
+              borderRadius: '4px'
+            }}
           >
-            <div className="flex items-center space-x-3">
-              {notification.type === 'success' ? (
-                <CheckCircle size={20} />
+            {/* Left Vertical Bar */}
+            <div
+              style={{
+                position: 'absolute',
+                left: '16px',
+                top: '0',
+                width: '12px',
+                height: '100%',
+                backgroundColor: '#AC9157'
+              }}
+            />
+            {/* Icon - Show correct icon based on actionType */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '30px',
+                left: '36px',
+                width: '40px',
+                height: '40px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              {notification.type === 'error' ? (
+                <AlertCircle size={40} style={{ color: '#AC9157' }} strokeWidth={1.5} />
+              ) : notification.actionType === 'wishlist' ? (
+                <Heart size={40} style={{ color: '#AC9157' }} strokeWidth={1.5} />
+              ) : notification.actionType === 'cart' ? (
+                <ShoppingCart size={40} style={{ color: '#AC9157' }} strokeWidth={1.5} />
               ) : (
-                <AlertCircle size={20} />
+                <CheckCircle size={40} style={{ color: '#AC9157' }} strokeWidth={1.5} />
               )}
-              <span className="font-medium">{notification.message}</span>
+            </div>
+            {/* Close Icon */}
+            <button
+              onClick={() => {
+                setNotifications(prev => prev.filter(n => n.id !== notification.id));
+              }}
+              style={{
+                position: 'absolute',
+                top: '8px',
+                right: '8px',
+                width: '24px',
+                height: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0
+              }}
+              aria-label="Close notification"
+            >
+              <X size={24} style={{ color: '#242122' }} strokeWidth={2} />
+            </button>
+            {/* Title Text - Show correct title based on actionType */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '22px',
+                left: '96px',
+                fontFamily: 'Playfair Display, serif',
+                fontWeight: 700,
+                fontSize: '22px',
+                lineHeight: '26px',
+                color: '#242122',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {notification.type === 'error'
+                ? 'Error'
+                : notification.actionType === 'wishlist'
+                  ? (notification.message && notification.message.includes('Removed') ? 'Removed from Wishlist' : 'Added to Wishlist')
+                  : notification.actionType === 'cart'
+                    ? 'Added to Cart'
+                    : 'Success'
+              }
+            </div>
+            {/* Product Name or Message */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '56px',
+                left: '96px',
+                width: '271px',
+                fontFamily: 'Manrope, sans-serif',
+                fontWeight: 400,
+                fontSize: '16px',
+                lineHeight: '22px',
+                color: '#5B5C5B',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {notification.productName || notification.message}
             </div>
           </motion.div>
         ))}
@@ -507,6 +739,8 @@ const PerfectGiftsPremiumCollection = () => {
       <Header />
       <NotificationSystem />
       <QuickViewModal />
+      {/* CART SIDEBAR */}
+      <ProductCartSection isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
       
       <main className="flex-1">
         {/* Hero Section */}
@@ -573,10 +807,21 @@ const PerfectGiftsPremiumCollection = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                   {scents.map((scent) => {
                     if (!scent || !scent._id) {
+                      console.warn('Invalid scent:', scent);
                       return null;
                     }
                     return (
-                      <ScentCard key={scent._id} scent={scent} />
+                      <ScentCard 
+                        key={scent._id} 
+                        scent={scent}
+                        addToCart={addToCart}
+                        isInCart={isInCart}
+                        toggleWishlist={toggleWishlist}
+                        isInWishlist={isInWishlist}
+                        navigate={navigate}
+                        addNotification={addNotification}
+                        setIsCartOpen={setIsCartOpen}
+                      />
                     );
                   })}
                 </div>

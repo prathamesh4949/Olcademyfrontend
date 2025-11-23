@@ -367,14 +367,23 @@ const Header = () => {
                           zIndex: 10003,
                         }}
                       >
-                        <Link
+                        {/* <Link
                           to="/orders"
                           className="block py-2 hover:opacity-70 transition duration-200"
                           onClick={() => setIsUserDropdownOpen(false)}
                           style={{ fontSize: '16px', fontWeight: '400', color: '#341405' }}
                         >
                           My Orders
-                        </Link>
+                        </Link> */}
+
+                                               <Link
+                        to="/userProfile"
+                        className="block py-2 hover:opacity-70 transition duration-200"
+                        onClick={() => setIsUserDropdownOpen(false)}
+                        style={{ fontSize: '16px', fontWeight: '400', color: '#341405' }}
+                      >
+                        My Profile
+                      </Link>
                         <button
                           onClick={() => {
                             logout();

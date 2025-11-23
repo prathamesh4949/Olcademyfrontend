@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from '../components/common/Header';
 import Footer from '../components/common/Footer';
+import ProductCartSection from '../pages/ProductCartSection';
 import { useCart } from '../CartContext';
 import { useWishlist } from '../WishlistContext';
 import ScentService from '../services/scentService';
@@ -16,7 +17,8 @@ import {
   Sunrise,
   Award,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  X
 } from 'lucide-react';
 import { FiHeart } from 'react-icons/fi';
 
@@ -37,12 +39,15 @@ const OrangeMarmaladeCollection = () => {
   const [totalPages, setTotalPages] = useState(1);
   const itemsPerPage = 12;
 
+  // ADD THIS STATE FOR CART SIDEBAR
+  const [isCartOpen, setIsCartOpen] = useState(false);
+
   // Add notification helper
-  const addNotification = useCallback((message, type = 'success') => {
+  const addNotification = useCallback((message, type = 'success', productName = null, actionType = 'general') => {
     const id = Date.now();
-    setNotifications(prev => [...prev, { id, message, type }]);
+    setNotifications((prev) => [...prev, { id, message, type, productName, actionType }]);
     setTimeout(() => {
-      setNotifications(prev => prev.filter(n => n.id !== id));
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
     }, 3000);
   }, []);
 
@@ -83,258 +88,278 @@ const OrangeMarmaladeCollection = () => {
     fetchOrangeMarmaladeScents();
   }, [fetchOrangeMarmaladeScents]);
 
-  // Scent Card Component
-  const ScentCard = memo(({ scent }) => {
-    const [isHovered, setIsHovered] = useState(false);
-    const [imageError, setImageError] = useState({ primary: false, hover: false });
-    const [isAddingToCart, setIsAddingToCart] = useState(false);
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
-    if (!scent) return null;
+  // Handle Quick View
+  const handleQuickView = (scent, e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    console.log('Quick View clicked for scent:', scent._id, scent.name);
+    if (scent && scent._id) {
+      setQuickViewProduct(scent);
+    } else {
+      console.error('Invalid scent for Quick View:', scent);
+      addNotification('Unable to show quick view', 'error');
+    }
+  };
 
-    const scentInCart = isInCart(
-      scent._id?.toString(),
-      scent.sizes && scent.sizes.length > 0 ? scent.sizes[0].size : null
-    );
+const ScentCard = memo(({ scent, addToCart, isInCart, toggleWishlist, isInWishlist, navigate, addNotification, setIsCartOpen }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const [imageError, setImageError] = useState({ primary: false, hover: false });
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
 
-    const handleAddToCart = async (e) => {
-      e.stopPropagation();
-      setIsAddingToCart(true);
+  if (!scent) return null;
 
-      const cartItem = {
+  const scentInCart = isInCart(
+    scent._id?.toString(),
+    scent.sizes && scent.sizes.length > 0 ? scent.sizes[0].size : null
+  );
+
+  const handleAddToCart = async (e) => {
+    e.stopPropagation();
+    setIsAddingToCart(true);
+
+    const cartItem = {
+      id: scent._id.toString(),
+      name: scent.name,
+      price: Number(scent.price),
+      image:
+        scent.images && scent.images.length > 0
+          ? scent.images[0]
+          : "/images/default-scent.png",
+      quantity: 1,
+      selectedSize:
+        scent.sizes && scent.sizes.length > 0 ? scent.sizes[0].size : null,
+      personalization: null,
+    };
+
+    try {
+      const success = await addToCart(cartItem);
+      if (success) {
+        addNotification(null, 'success', scent.name, 'cart');
+      } else {
+        addNotification('Failed to add item to cart', 'error');
+      }
+    } catch (error) {
+      console.error('Add to cart error:', error);
+      addNotification('Something went wrong. Please try again.', 'error');
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
+
+  const handleWishlistToggle = (e) => {
+    e.stopPropagation();
+    if (!scent._id) {
+      addNotification('Unable to add to wishlist', 'error');
+      return;
+    }
+
+    try {
+      const wasInWishlist = isInWishlist(scent._id);
+
+      const wishlistItem = {
         id: scent._id.toString(),
         name: scent.name,
-        price: Number(scent.price),
+        price: scent.price,
         image:
           scent.images && scent.images.length > 0
             ? scent.images[0]
             : "/images/default-scent.png",
-        quantity: 1,
-        selectedSize:
-          scent.sizes && scent.sizes.length > 0 ? scent.sizes[0].size : null,
-        personalization: null,
+        description: scent.description || "",
+        category: scent.category || "",
+        selectedSize: null,
       };
 
-      try {
-        const success = await addToCart(cartItem);
-        if (success) {
-          addNotification(`Added ${scent.name} to cart!`, "success");
-        } else {
-          addNotification("Failed to add item to cart", "error");
-        }
-      } catch (error) {
-        console.error("Add to cart error:", error);
-        addNotification("Something went wrong. Please try again.", "error");
-      } finally {
-        setIsAddingToCart(false);
-      }
-    };
+      toggleWishlist(wishlistItem);
+      addNotification(
+        wasInWishlist ? 'Removed from wishlist' : 'Added to wishlist!',
+        'success',
+        scent.name,
+        'wishlist'
+      );
+    } catch (error) {
+      console.error('Wishlist toggle error:', error);
+      addNotification('Failed to update wishlist', 'error');
+    }
+  };
 
-    const handleWishlistToggle = (e) => {
-      e.stopPropagation();
-      if (!scent._id) {
-        addNotification("Unable to add to wishlist", "error");
-        return;
-      }
+  const handleCardClick = () => {
+    if (!scent._id) {
+      addNotification('Scent not available', 'error');
+      return;
+    }
+    navigate(`/scent/${scent._id.toString()}`);
+  };
 
-      try {
-        const wasInWishlist = isInWishlist(scent._id);
+  const getScentImage = () => {
+    if (isHovered && scent.hoverImage && !imageError.hover) {
+      return scent.hoverImage;
+    }
+    if (
+      scent.images &&
+      Array.isArray(scent.images) &&
+      scent.images.length > 0 &&
+      !imageError.primary
+    ) {
+      return scent.images[0];
+    }
+    return "/images/default-scent.png";
+  };
 
-        const wishlistItem = {
-          id: scent._id.toString(),
-          name: scent.name,
-          price: scent.price,
-          image:
-            scent.images && scent.images.length > 0
-              ? scent.images[0]
-              : "/images/default-scent.png",
-          description: scent.description || "",
-          category: scent.category || "",
-          selectedSize: null,
-        };
+  const handleImageError = (e, type = "primary") => {
+    setImageError((prev) => ({ ...prev, [type]: true }));
+    e.target.src = "/images/default-scent.png";
+  };
 
-        toggleWishlist(wishlistItem);
-        addNotification(
-          wasInWishlist ? "Removed from wishlist" : "Added to wishlist!",
-          "success"
-        );
-      } catch (error) {
-        console.error("Wishlist toggle error:", error);
-        addNotification("Failed to update wishlist", "error");
-      }
-    };
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -8, boxShadow: "0 10px 30px rgba(0,0,0,0.15)" }}
+      transition={{ duration: 0.3 }}
+      className="bg-white dark:bg-gray-800 overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300 w-full max-w-[331px]"
+      style={{ height: "auto", minHeight: "528px" }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={handleCardClick}
+    >
+      {/* Image Container */}
+      <div className="relative bg-white dark:bg-gray-700 flex items-center justify-center overflow-hidden w-full aspect-[331/273] p-3">
+        <motion.img
+          src={getScentImage()}
+          alt={scent.name || "Scent"}
+          className="object-contain w-full h-full max-w-[248px] max-h-[248px]"
+          onError={(e) => handleImageError(e, isHovered ? "hover" : "primary")}
+          animate={{ scale: isHovered ? 1.08 : 1 }}
+          transition={{ duration: 0.4 }}
+          loading="lazy"
+        />
 
-    const handleCardClick = () => {
-      if (!scent._id) {
-        addNotification("Scent not available", "error");
-        return;
-      }
-      navigate(`/scent/${scent._id.toString()}`);
-    };
-
-    const getScentImage = () => {
-      if (isHovered && scent.hoverImage && !imageError.hover) {
-        return scent.hoverImage;
-      }
-      if (
-        scent.images &&
-        Array.isArray(scent.images) &&
-        scent.images.length > 0 &&
-        !imageError.primary
-      ) {
-        return scent.images[0];
-      }
-      return "/images/default-scent.png";
-    };
-
-    const handleImageError = (e, type = "primary") => {
-      setImageError((prev) => ({ ...prev, [type]: true }));
-      e.target.src = "/images/default-scent.png";
-    };
-
-    return (
-      <motion.div
-        layout
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        whileHover={{ y: -8, boxShadow: "0 10px 30px rgba(0,0,0,0.15)" }}
-        transition={{ duration: 0.3 }}
-        className="bg-white dark:bg-gray-800 overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300 w-full max-w-[331px]"
-        style={{ height: "auto", minHeight: "528px" }}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        onClick={handleCardClick}
-      >
-        {/* Image Container */}
-        <div className="relative bg-white dark:bg-gray-700 flex items-center justify-center overflow-hidden w-full aspect-[331/273] p-3">
-          <motion.img
-            src={getScentImage()}
-            alt={scent.name || "Scent"}
-            className="object-contain w-full h-full max-w-[248px] max-h-[248px]"
-            onError={(e) => handleImageError(e, isHovered ? "hover" : "primary")}
-            animate={{ scale: isHovered ? 1.08 : 1 }}
-            transition={{ duration: 0.4 }}
-            loading="lazy"
+        {/* Wishlist Button */}
+        <motion.button
+          onClick={handleWishlistToggle}
+          whileHover={{ scale: 1.15 }}
+          whileTap={{ scale: 0.9 }}
+          className="absolute top-2.5 right-2.5 bg-white dark:bg-gray-800 rounded-full p-1.5 shadow-lg hover:shadow-xl transition-all duration-200 z-10 w-[27px] h-[27px] flex items-center justify-center"
+          aria-label={
+            isInWishlist(scent._id) ? "Remove from wishlist" : "Add to wishlist"
+          }
+        >
+          <FiHeart
+            size={14}
+            className={`transition-all duration-200 ${
+              isInWishlist(scent._id)
+                ? "fill-red-600 text-red-600"
+                : "text-gray-700 dark:text-gray-300"
+            }`}
           />
+        </motion.button>
+      </div>
 
-          {/* Wishlist Button */}
-          <motion.button
-            onClick={handleWishlistToggle}
-            whileHover={{ scale: 1.15 }}
-            whileTap={{ scale: 0.9 }}
-            className="absolute top-2.5 right-2.5 bg-white dark:bg-gray-800 rounded-full p-1.5 shadow-lg hover:shadow-xl transition-all duration-200 z-10 w-[27px] h-[27px] flex items-center justify-center"
-            aria-label={
-              isInWishlist(scent._id) ? "Remove from wishlist" : "Add to wishlist"
-            }
-          >
-            <FiHeart
-              size={14}
-              className={`transition-all duration-200 ${
-                isInWishlist(scent._id)
-                  ? "fill-red-600 text-red-600"
-                  : "text-gray-700 dark:text-gray-300"
-              }`}
-            />
-          </motion.button>
+      {/* Info Section */}
+      <div className="px-3.5 py-3.5 flex flex-col gap-3.5">
+        {/* Name */}
+        <h3
+          className="font-bold uppercase text-center line-clamp-1 text-lg sm:text-xl md:text-2xl"
+          style={{
+            fontFamily: "Playfair Display, serif",
+            letterSpacing: "0.05em",
+            color: "#5A2408",
+            minHeight: "28px",
+          }}
+        >
+          {scent.name || ""}
+        </h3>
+
+        {/* Rating */}
+        <div
+          className="flex items-center justify-center gap-1"
+          style={{ minHeight: "18px" }}
+        >
+          {scent.rating ? (
+            [...Array(5)].map((_, index) => (
+              <Star
+                key={index}
+                size={14}
+                style={{
+                  color: "#5A2408",
+                  fill:
+                    index < Math.floor(scent.rating) ? "#5A2408" : "transparent",
+                }}
+                className={`${
+                  index < Math.floor(scent.rating) ? "" : "opacity-30"
+                }`}
+              />
+            ))
+          ) : (
+            <div className="h-3.5"></div>
+          )}
         </div>
 
-        {/* Info Section */}
-        <div className="px-3.5 py-3.5 flex flex-col gap-3.5">
-          {/* Name */}
-          <h3
-            className="font-bold uppercase text-center line-clamp-1 text-lg sm:text-xl md:text-2xl"
-            style={{
-              fontFamily: "Playfair Display, serif",
-              letterSpacing: "0.05em",
-              color: "#5A2408",
-              minHeight: "28px",
-            }}
-          >
-            {scent.name || ""}
-          </h3>
+        {/* Description */}
+        <p
+          className="text-center line-clamp-2 text-sm sm:text-base"
+          style={{
+            fontFamily: "Manrope, sans-serif",
+            fontWeight: "500",
+            letterSpacing: "0.02em",
+            color: "#7E513A",
+            minHeight: "40px",
+          }}
+        >
+          {scent.description || ""}
+        </p>
 
-          {/* Rating */}
-          <div
-            className="flex items-center justify-center gap-1"
-            style={{ minHeight: "18px" }}
-          >
-            {scent.rating ? (
-              [...Array(5)].map((_, index) => (
-                <Star
-                  key={index}
-                  size={14}
-                  style={{
-                    color: "#5A2408",
-                    fill:
-                      index < Math.floor(scent.rating) ? "#5A2408" : "transparent",
-                  }}
-                  className={`${
-                    index < Math.floor(scent.rating) ? "" : "opacity-30"
-                  }`}
-                />
-              ))
-            ) : (
-              <div className="h-3.5"></div>
-            )}
-          </div>
+        {/* Price */}
+        <p
+          className="font-bold text-center text-lg sm:text-xl"
+          style={{
+            fontFamily: "Manrope, sans-serif",
+            letterSpacing: "0.02em",
+            color: "#431A06",
+            minHeight: "24px",
+          }}
+        >
+          ${typeof scent.price === "number" ? scent.price.toFixed(2) : "0.00"}
+        </p>
 
-          {/* Description */}
-          <p
-            className="text-center line-clamp-2 text-sm sm:text-base"
-            style={{
-              fontFamily: "Manrope, sans-serif",
-              fontWeight: "500",
-              letterSpacing: "0.02em",
-              color: "#7E513A",
-              minHeight: "40px",
-            }}
-          >
-            {scent.description || ""}
-          </p>
+        {/* Add to Cart Button */}
+        <motion.button
+          onClick={
+            scentInCart
+              ? (e) => {
+                  e.stopPropagation();
+                  setIsCartOpen(true);
+                }
+              : handleAddToCart
+          }
+          disabled={isAddingToCart}
+          whileHover={{ scale: 1.02, opacity: 0.9 }}
+          whileTap={{ scale: 0.98 }}
+          className="flex items-center justify-center gap-2 sm:gap-2.5 text-white font-bold uppercase transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed w-full h-[54px] sm:h-[60px] text-sm sm:text-base md:text-lg -mx-3.5 px-3.5"
+          style={{
+            backgroundColor: scentInCart ? "#431A06" : "#431A06",
+            fontFamily: "Manrope, sans-serif",
+            letterSpacing: "0.05em",
+            width: "calc(100% + 28px)",
+          }}
+        >
+          <ShoppingCart size={20} className="sm:w-[24px] sm:h-[24px]" />
+          <span>
+            {isAddingToCart ? "Adding..." : scentInCart ? "View Cart" : "Add to Cart"}
+          </span>
+        </motion.button>
+      </div>
+    </motion.div>
+  );
+});
 
-          {/* Price */}
-          <p
-            className="font-bold text-center text-lg sm:text-xl"
-            style={{
-              fontFamily: "Manrope, sans-serif",
-              letterSpacing: "0.02em",
-              color: "#431A06",
-              minHeight: "24px",
-            }}
-          >
-            ${typeof scent.price === "number" ? scent.price.toFixed(2) : "0.00"}
-          </p>
 
-          {/* Add to Cart Button */}
-          <motion.button
-            onClick={
-              scentInCart
-                ? (e) => {
-                    e.stopPropagation();
-                    navigate("/product-cart");
-                  }
-                : handleAddToCart
-            }
-            disabled={isAddingToCart}
-            whileHover={{ scale: 1.02, opacity: 0.9 }}
-            whileTap={{ scale: 0.98 }}
-            className="flex items-center justify-center gap-2 sm:gap-2.5 text-white font-bold uppercase transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed w-full h-[54px] sm:h-[60px] text-sm sm:text-base md:text-lg -mx-3.5 px-3.5"
-            style={{
-              backgroundColor: scentInCart ? "#431A06" : "#431A06",
-              fontFamily: "Manrope, sans-serif",
-              letterSpacing: "0.05em",
-              width: "calc(100% + 28px)",
-            }}
-          >
-            <ShoppingCart size={20} className="sm:w-[24px] sm:h-[24px]" />
-            <span>
-              {isAddingToCart ? "Adding..." : scentInCart ? "View Cart" : "Add to Cart"}
-            </span>
-          </motion.button>
-        </div>
-      </motion.div>
-    );
-  });
-  
   ScentCard.displayName = 'ScentCard';
 
   // Quick View Modal
@@ -350,6 +375,7 @@ const OrangeMarmaladeCollection = () => {
     const handleQuickViewWishlist = () => {
       if (quickViewProduct._id) {
         try {
+          const wasInWishlist = isInWishlist(quickViewProduct._id);
           const wishlistProduct = {
             id: quickViewProduct._id.toString(),
             name: quickViewProduct.name,
@@ -363,8 +389,10 @@ const OrangeMarmaladeCollection = () => {
           
           toggleWishlist(wishlistProduct);
           addNotification(
-            isInWishlist(quickViewProduct._id) ? 'Removed from wishlist' : 'Added to wishlist!',
-            'success'
+            wasInWishlist ? 'Removed from wishlist' : 'Added to wishlist!',
+            'success',
+            quickViewProduct.name,
+            'wishlist'
           );
         } catch (error) {
           console.error('Wishlist toggle error:', error);
@@ -396,7 +424,7 @@ const OrangeMarmaladeCollection = () => {
       try {
         const success = await addToCart(cartItem);
         if (success) {
-          addNotification(`Added ${quickViewProduct.name} to cart!`, 'success');
+          addNotification(null, 'success', quickViewProduct.name, 'cart');
           handleClose();
         } else {
           addNotification('Failed to add item to cart', 'error');
@@ -489,7 +517,7 @@ const OrangeMarmaladeCollection = () => {
                   {productInQuickViewCart ? (
                     <button
                       onClick={() => {
-                        navigate('/product-cart');
+                        setIsCartOpen(true);
                         handleClose();
                       }}
                       className="flex-1 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-700 hover:via-teal-700 hover:to-cyan-700 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center space-x-2 border border-emerald-400/30 shadow-emerald-500/20"
@@ -538,27 +566,123 @@ const OrangeMarmaladeCollection = () => {
 
   // Notification System
   const NotificationSystem = () => (
-    <div className="fixed top-4 right-4 z-50 space-y-2">
+    <div className="fixed z-[9999] space-y-3" style={{ top: '40px', right: '20px' }}>
       <AnimatePresence>
         {notifications.map((notification) => (
           <motion.div
             key={notification.id}
-            initial={{ opacity: 0, x: 100, scale: 0.8 }}
+            initial={{ opacity: 0, x: 400, scale: 0.8 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: 100, scale: 0.8 }}
-            className={`p-4 rounded-2xl shadow-lg backdrop-blur-sm border max-w-sm ${
-              notification.type === 'success' 
-                ? 'bg-green-500/90 text-white border-green-400' 
-                : 'bg-red-500/90 text-white border-red-400'
-            }`}
+            exit={{ opacity: 0, x: 400, scale: 0.8 }}
+            transition={{ duration: 0.3 }}
+            style={{
+              position: 'relative',
+              width: '400px',
+              height: '100px',
+              backgroundColor: '#EDE4CF',
+              overflow: 'hidden',
+              boxShadow: '4px 6px 16px 0px rgba(0,0,0,0.1), 18px 24px 30px 0px rgba(0,0,0,0.09), 40px 53px 40px 0px rgba(0,0,0,0.05), 71px 95px 47px 0px rgba(0,0,0,0.01), 110px 149px 52px 0px rgba(0,0,0,0)',
+              borderRadius: '4px'
+            }}
           >
-            <div className="flex items-center space-x-3">
-              {notification.type === 'success' ? (
-                <CheckCircle size={20} />
+            {/* Left Vertical Bar */}
+            <div
+              style={{
+                position: 'absolute',
+                left: '16px',
+                top: '0',
+                width: '12px',
+                height: '100%',
+                backgroundColor: '#AC9157'
+              }}
+            />
+            {/* Icon - Show correct icon based on actionType */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '30px',
+                left: '36px',
+                width: '40px',
+                height: '40px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              {notification.type === 'error' ? (
+                <AlertCircle size={40} style={{ color: '#AC9157' }} strokeWidth={1.5} />
+              ) : notification.actionType === 'wishlist' ? (
+                <Heart size={40} style={{ color: '#AC9157' }} strokeWidth={1.5} />
+              ) : notification.actionType === 'cart' ? (
+                <ShoppingCart size={40} style={{ color: '#AC9157' }} strokeWidth={1.5} />
               ) : (
-                <AlertCircle size={20} />
+                <CheckCircle size={40} style={{ color: '#AC9157' }} strokeWidth={1.5} />
               )}
-              <span className="font-medium">{notification.message}</span>
+            </div>
+            {/* Close Icon */}
+            <button
+              onClick={() => {
+                setNotifications(prev => prev.filter(n => n.id !== notification.id));
+              }}
+              style={{
+                position: 'absolute',
+                top: '8px',
+                right: '8px',
+                width: '24px',
+                height: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0
+              }}
+              aria-label="Close notification"
+            >
+              <X size={24} style={{ color: '#242122' }} strokeWidth={2} />
+            </button>
+            {/* Title Text - Show correct title based on actionType */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '22px',
+                left: '96px',
+                fontFamily: 'Playfair Display, serif',
+                fontWeight: 700,
+                fontSize: '22px',
+                lineHeight: '26px',
+                color: '#242122',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {notification.type === 'error'
+                ? 'Error'
+                : notification.actionType === 'wishlist'
+                  ? (notification.message && notification.message.includes('Removed') ? 'Removed from Wishlist' : 'Added to Wishlist')
+                  : notification.actionType === 'cart'
+                    ? 'Added to Cart'
+                    : 'Success'
+              }
+            </div>
+            {/* Product Name or Message */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '56px',
+                left: '96px',
+                width: '271px',
+                fontFamily: 'Manrope, sans-serif',
+                fontWeight: 400,
+                fontSize: '16px',
+                lineHeight: '22px',
+                color: '#5B5C5B',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {notification.productName || notification.message}
             </div>
           </motion.div>
         ))}
@@ -571,6 +695,8 @@ const OrangeMarmaladeCollection = () => {
       <Header />
       <NotificationSystem />
       <QuickViewModal />
+      {/* CART SIDEBAR */}
+      <ProductCartSection isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
       
       <main className="flex-1">
         {/* Hero Section - Updated with gift.png banner */}
@@ -710,7 +836,17 @@ const OrangeMarmaladeCollection = () => {
                       return null;
                     }
                     return (
-                      <ScentCard key={scent._id} scent={scent} />
+                      <ScentCard 
+                        key={scent._id} 
+                        scent={scent}
+                        addToCart={addToCart}
+                        isInCart={isInCart}
+                        toggleWishlist={toggleWishlist}
+                        isInWishlist={isInWishlist}
+                        navigate={navigate}
+                        addNotification={addNotification}
+                        setIsCartOpen={setIsCartOpen}
+                      />
                     );
                   })}
                 </div>

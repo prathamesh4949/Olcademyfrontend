@@ -39,6 +39,7 @@ import AdminRoute from './components/common/AdminRoute';
 import Orders from './components/Orders';
 import SearchResults from './pages/SearchResults';
 import AboutPage from './components/common/AboutPage';
+import UserProfile from './components/UserProfile';
 
 const AppRoutes = ({ darkMode, setDarkMode }) => {
   return (
@@ -123,6 +124,8 @@ const AppRoutes = ({ darkMode, setDarkMode }) => {
                   </ProtectedRoute>
                 } 
               />
+
+               <Route path='/userProfile' element={<UserProfile/>}/>
               <Route 
                 path="/orders" 
                 element={

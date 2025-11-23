@@ -1,12 +1,11 @@
-
-
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import Header from '../components/common/Header';
 import Footer from '../components/common/Footer';
 import { useCart } from '../CartContext';
 import { useWishlist } from '../WishlistContext';
-import { Star, Heart } from 'lucide-react';
+import { Star, Heart, ShoppingCart, AlertCircle, CheckCircle, X } from 'lucide-react';
 import ProductService from '../services/productService';
 import ScentService from '../services/scentService';
 import ProductCartSection from '../pages/ProductCartSection'; // Import cart sidebar component
@@ -35,6 +34,17 @@ export default function ProductDetailPage() {
   const [justAdded, setJustAdded] = useState(false);
   const [selectedImage, setSelectedImage] = useState('');
   const [isCartOpen, setIsCartOpen] = useState(false); // State to control cart sidebar visibility
+  // State management for notifications
+  const [notifications, setNotifications] = useState([]);
+
+  // Add notification helper
+  const addNotification = useCallback((message, type = 'success', productName = null, actionType = 'general') => {
+    const id = Date.now();
+    setNotifications((prev) => [...prev, { id, message, type, productName, actionType }]);
+    setTimeout(() => {
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+    }, 3000);
+  }, []);
 
   // Fetch product details on id/path change
   useEffect(() => {
@@ -94,7 +104,7 @@ export default function ProductDetailPage() {
   }, [cartItems, product?._id, selectedSize, justAdded]);
 
   // Add product to cart
-  const handleAdd = () => {
+  const handleAdd = async () => {
     const normalizedProduct = {
       id: product._id,
       name: product.name,
@@ -106,8 +116,18 @@ export default function ProductDetailPage() {
       sku: product.sku || '',
     };
 
-    addToCart(normalizedProduct);
-    setJustAdded(true);
+    try {
+      const success = await addToCart(normalizedProduct);
+      if (success) {
+        addNotification(null, 'success', product.name, 'cart');
+        setJustAdded(true);
+      } else {
+        addNotification('Failed to add item to cart', 'error');
+      }
+    } catch (error) {
+      console.error('Add to cart error:', error);
+      addNotification('Something went wrong. Please try again.', 'error');
+    }
   };
 
   // Handle click on Already in Cart - open cart sidebar
@@ -117,7 +137,153 @@ export default function ProductDetailPage() {
 
   const handleNoop = () => {};
 
+  const handleWishlistToggle = (relatedItem) => {
+    if (!relatedItem._id) {
+      addNotification('Unable to update wishlist', 'error');
+      return;
+    }
+    try {
+      const wasInWishlist = isInWishlist(relatedItem._id);
+      toggleWishlist(relatedItem);
+      addNotification(
+        wasInWishlist ? 'Removed from wishlist' : 'Added to wishlist!',
+        'success',
+        relatedItem.name,
+        'wishlist'
+      );
+    } catch (error) {
+      console.error('Wishlist toggle error:', error);
+      addNotification('Failed to update wishlist', 'error');
+    }
+  };
+
   if (!product) return null;
+
+  // Notification System
+  const NotificationSystem = () => (
+    <div className="fixed z-[10000] space-y-3" style={{ top: '40px', right: '20px' }}>
+      <AnimatePresence>
+        {notifications.map((notification) => (
+          <motion.div
+            key={notification.id}
+            initial={{ opacity: 0, x: 400, scale: 0.8 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 400, scale: 0.8 }}
+            transition={{ duration: 0.3 }}
+            style={{
+              position: 'relative',
+              width: '400px',
+              height: '100px',
+              backgroundColor: '#EDE4CF',
+              overflow: 'hidden',
+              boxShadow: '4px 6px 16px 0px rgba(0,0,0,0.1), 18px 24px 30px 0px rgba(0,0,0,0.09), 40px 53px 40px 0px rgba(0,0,0,0.05), 71px 95px 47px 0px rgba(0,0,0,0.01), 110px 149px 52px 0px rgba(0,0,0,0)',
+              borderRadius: '4px'
+            }}
+          >
+            {/* Left Vertical Bar */}
+            <div
+              style={{
+                position: 'absolute',
+                left: '16px',
+                top: '0',
+                width: '12px',
+                height: '100%',
+                backgroundColor: '#AC9157'
+              }}
+            />
+            {/* Icon - Show correct icon based on actionType */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '30px',
+                left: '36px',
+                width: '40px',
+                height: '40px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              {notification.type === 'error' ? (
+                <AlertCircle size={40} style={{ color: '#AC9157' }} strokeWidth={1.5} />
+              ) : notification.actionType === 'wishlist' ? (
+                <Heart size={40} style={{ color: '#AC9157' }} strokeWidth={1.5} />
+              ) : notification.actionType === 'cart' ? (
+                <ShoppingCart size={40} style={{ color: '#AC9157' }} strokeWidth={1.5} />
+              ) : (
+                <CheckCircle size={40} style={{ color: '#AC9157' }} strokeWidth={1.5} />
+              )}
+            </div>
+            {/* Close Icon */}
+            <button
+              onClick={() => {
+                setNotifications(prev => prev.filter(n => n.id !== notification.id));
+              }}
+              style={{
+                position: 'absolute',
+                top: '8px',
+                right: '8px',
+                width: '24px',
+                height: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0
+              }}
+              aria-label="Close notification"
+            >
+              <X size={24} style={{ color: '#242122' }} strokeWidth={2} />
+            </button>
+            {/* Title Text - Show correct title based on actionType */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '22px',
+                left: '96px',
+                fontFamily: 'Playfair Display, serif',
+                fontWeight: 700,
+                fontSize: '22px',
+                lineHeight: '26px',
+                color: '#242122',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {notification.type === 'error'
+                ? 'Error'
+                : notification.actionType === 'wishlist'
+                  ? (notification.message && notification.message.includes('Removed') ? 'Removed from Wishlist' : 'Added to Wishlist')
+                  : notification.actionType === 'cart'
+                    ? 'Added to Cart'
+                    : 'Success'
+              }
+            </div>
+            {/* Product Name or Message */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '56px',
+                left: '96px',
+                width: '271px',
+                fontFamily: 'Manrope, sans-serif',
+                fontWeight: 400,
+                fontSize: '16px',
+                lineHeight: '22px',
+                color: '#5B5C5B',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {notification.productName || notification.message}
+            </div>
+          </motion.div>
+        ))}
+      </AnimatePresence>
+    </div>
+  );
 
   return (
     <div
@@ -125,6 +291,7 @@ export default function ProductDetailPage() {
       style={{ background: '#F8F7F5', color: '#3F2E1F' }}
     >
       <Header />
+      <NotificationSystem />
       <main className="max-w-[1200px] ml-5 pt-12 pb-24 px-4 w-full">
         {/* Product detail layout: left image, right details */}
         <div className="flex flex-col md:flex-row gap-12">
@@ -453,7 +620,7 @@ export default function ProductDetailPage() {
             >
               <button
                 className="absolute right-4 top-4"
-                onClick={() => toggleWishlist(related)}
+                onClick={() => handleWishlistToggle(related)}
               >
                 <Heart
                   size={22}

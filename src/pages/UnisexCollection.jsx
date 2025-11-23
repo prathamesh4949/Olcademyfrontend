@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/common/Header';
@@ -8,7 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { fadeIn } from '../variants';
 import { useCart } from '@/CartContext';
 import { useWishlist } from '@/WishlistContext';
-import { Star, ShoppingCart, CheckCircle, AlertCircle } from 'lucide-react';
+import { Star, ShoppingCart, CheckCircle, AlertCircle, Heart, X } from 'lucide-react';
 import { FiHeart } from 'react-icons/fi';
 import ProductService from '../services/productService';
 
@@ -17,43 +18,43 @@ const UnisexCollection = () => {
   const [darkMode, setDarkMode] = useState(false);
   const { addToCart, isInCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
-  
+
   // State for products from backend
   const [collections, setCollections] = useState({
     just_arrived: [],
     best_sellers: [],
     huntsman_savile_row: []
   });
-  
+
   // State for banners from backend
   const [banners, setBanners] = useState({
     hero: null,
     product_highlight: [],
     collection_highlight: []
   });
-  
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   // State for "View All" expanded sections
   const [expandedSections, setExpandedSections] = useState({
     just_arrived: false,
     best_sellers: false,
     huntsman_savile_row: false
   });
-  
-  // Enhanced state management
-  const [cartNotifications, setCartNotifications] = useState([]);
 
   // ADD THIS STATE FOR CART SIDEBAR
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  // Enhanced notification system
-  const addNotification = useCallback((message, type = 'success') => {
+  // Unified notifications state for notification system (updated)
+  const [notifications, setNotifications] = useState([]);
+
+  // Updated notification helper to match WomensCollection exactly
+  const addNotification = useCallback((message, type = 'success', productName = null, actionType = 'general') => {
     const id = Date.now();
-    setCartNotifications(prev => [...prev, { id, message, type }]);
+    setNotifications(prev => [...prev, { id, message, type, productName, actionType }]);
     setTimeout(() => {
-      setCartNotifications(prev => prev.filter(n => n.id !== id));
+      setNotifications(prev => prev.filter(n => n.id !== id));
     }, 3000);
   }, []);
 
@@ -74,13 +75,13 @@ const UnisexCollection = () => {
       try {
         setLoading(true);
         setError(null);
-        
+
         // Fetch both products and banners in parallel
         const [productsResponse, bannersResponse] = await Promise.all([
           ProductService.getUnisexCollections().catch(err => ({ success: false, error: err.message })),
           ProductService.getUnisexBanners().catch(err => ({ success: false, error: err.message }))
         ]);
-        
+
         // Handle products
         if (productsResponse.success && productsResponse.data) {
           setCollections({
@@ -103,7 +104,7 @@ const UnisexCollection = () => {
             product_highlight: [],
             collection_highlight: []
           };
-          
+
           (bannersResponse.data || []).forEach(banner => {
             if (banner.type === 'hero') {
               bannersByType.hero = banner;
@@ -113,10 +114,10 @@ const UnisexCollection = () => {
               bannersByType.collection_highlight.push(banner);
             }
           });
-          
+
           setBanners(bannersByType);
         }
-        
+
       } catch (err) {
         console.error('Error fetching unisex data:', err);
         setError(err.message);
@@ -157,7 +158,7 @@ const UnisexCollection = () => {
     }));
   }, []);
 
-  // UPDATED Product Card Component - Opens Cart Sidebar
+  // UPDATED Product Card Component - Implements Notification System
   const ProductCard = memo(({ product }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [imageError, setImageError] = useState({ primary: false, hover: false });
@@ -170,7 +171,7 @@ const UnisexCollection = () => {
     const handleAddToCart = async (e) => {
       e.stopPropagation();
       setIsAddingToCart(true);
-      
+
       const cartItem = {
         id: product._id.toString(),
         name: product.name,
@@ -184,13 +185,14 @@ const UnisexCollection = () => {
       try {
         const success = await addToCart(cartItem);
         if (success) {
-          addNotification(`Added ${product.name} to cart!`, 'success');
+          // Pass product name and actionType 'cart'
+          addNotification(`Added to cart!`, 'success', product.name, 'cart');
         } else {
-          addNotification('Failed to add item to cart', 'error');
+          addNotification('Failed to add item to cart', 'error', null, 'cart');
         }
       } catch (error) {
         console.error('Add to cart error:', error);
-        addNotification('Something went wrong. Please try again.', 'error');
+        addNotification('Something went wrong. Please try again.', 'error', null, 'cart');
       } finally {
         setIsAddingToCart(false);
       }
@@ -199,13 +201,13 @@ const UnisexCollection = () => {
     const handleWishlistToggle = (e) => {
       e.stopPropagation();
       if (!product._id) {
-        addNotification('Unable to add to wishlist', 'error');
+        addNotification('Unable to add to wishlist', 'error', null, 'wishlist');
         return;
       }
 
       try {
         const wasInWishlist = isInWishlist(product._id);
-        
+
         const wishlistProduct = {
           id: product._id.toString(),
           name: product.name,
@@ -215,21 +217,24 @@ const UnisexCollection = () => {
           category: product.category || '',
           selectedSize: null
         };
-        
+
         toggleWishlist(wishlistProduct);
+
         addNotification(
           wasInWishlist ? 'Removed from wishlist' : 'Added to wishlist!',
-          'success'
+          'success',
+          product.name,
+          'wishlist'
         );
       } catch (error) {
         console.error('Wishlist toggle error:', error);
-        addNotification('Failed to update wishlist', 'error');
+        addNotification('Failed to update wishlist', 'error', null, 'wishlist');
       }
     };
 
     const handleCardClick = () => {
       if (!product._id) {
-        addNotification('Product not available', 'error');
+        addNotification('Product not available', 'error', null, 'general');
         return;
       }
       navigate(`/product/${product._id.toString()}`);
@@ -263,7 +268,6 @@ const UnisexCollection = () => {
         onMouseLeave={() => setIsHovered(false)}
         onClick={handleCardClick}
       >
-        {/* Image Container with Wishlist Icon - RESPONSIVE */}
         <div className="relative bg-white dark:bg-gray-700 flex items-center justify-center overflow-hidden w-full aspect-[331/273] p-3">
           <motion.img
             src={getProductImage()}
@@ -274,8 +278,6 @@ const UnisexCollection = () => {
             transition={{ duration: 0.4 }}
             loading="lazy"
           />
-          
-          {/* Wishlist Heart Icon */}
           <motion.button
             onClick={handleWishlistToggle}
             whileHover={{ scale: 1.15 }}
@@ -289,11 +291,8 @@ const UnisexCollection = () => {
             />
           </motion.button>
         </div>
-
-        {/* Product Info Container - RESPONSIVE */}
         <div className="px-3.5 py-3.5 flex flex-col gap-3.5">
-          {/* Product Name */}
-          <h3 
+          <h3
             className="font-bold uppercase text-center line-clamp-1 text-lg sm:text-xl md:text-2xl"
             style={{
               fontFamily: 'Playfair Display, serif',
@@ -303,27 +302,21 @@ const UnisexCollection = () => {
           >
             {product.name || 'Product'}
           </h3>
-
-          {/* Rating */}
           <div className="flex items-center justify-center gap-1">
             {product.rating ? (
-              <>
-                {[...Array(5)].map((_, index) => (
-                  <Star
-                    key={index}
-                    size={14}
-                    style={{ color: '#5A2408', fill: index < Math.floor(product.rating) ? '#5A2408' : 'transparent' }}
-                    className={`${index < Math.floor(product.rating) ? '' : 'opacity-30'}`}
-                  />
-                ))}
-              </>
+              [...Array(5)].map((_, index) => (
+                <Star
+                  key={index}
+                  size={14}
+                  style={{ color: '#5A2408', fill: index < Math.floor(product.rating) ? '#5A2408' : 'transparent' }}
+                  className={`${index < Math.floor(product.rating) ? '' : 'opacity-30'}`}
+                />
+              ))
             ) : (
               <div className="h-3.5"></div>
             )}
           </div>
-
-          {/* Description */}
-          <p 
+          <p
             className="text-center line-clamp-2 text-sm sm:text-base"
             style={{
               fontFamily: 'Manrope, sans-serif',
@@ -334,9 +327,7 @@ const UnisexCollection = () => {
           >
             {product.description || 'Premium fragrance'}
           </p>
-
-          {/* Price */}
-          <p 
+          <p
             className="font-bold text-center text-lg sm:text-xl"
             style={{
               fontFamily: 'Manrope, sans-serif',
@@ -346,12 +337,10 @@ const UnisexCollection = () => {
           >
             ${typeof product.price === 'number' ? product.price.toFixed(2) : '0.00'}
           </p>
-
-          {/* UPDATED Add to Cart Button - Opens Cart Sidebar when product is in cart */}
           <motion.button
-            onClick={productInCart ? (e) => { 
-              e.stopPropagation(); 
-              setIsCartOpen(true); // CHANGED: Opens cart sidebar instead of navigating
+            onClick={productInCart ? (e) => {
+              e.stopPropagation();
+              setIsCartOpen(true);
             } : handleAddToCart}
             disabled={isAddingToCart}
             whileHover={{ scale: 1.02, opacity: 0.9 }}
@@ -379,8 +368,8 @@ const UnisexCollection = () => {
   // Collection Section Component
   const CollectionSection = memo(({ title, products = [], sectionKey }) => {
     const isExpanded = expandedSections[sectionKey];
-    const displayProducts = useMemo(() => 
-      isExpanded ? products : products.slice(0, 4),
+    const displayProducts = useMemo(
+      () => (isExpanded ? products : products.slice(0, 4)),
       [isExpanded, products]
     );
     const hasMoreProducts = products.length > 4;
@@ -388,8 +377,7 @@ const UnisexCollection = () => {
     return (
       <section className="py-10 sm:py-14 lg:py-16 px-4 sm:px-6 bg-[#F8F6F3] dark:bg-[#0d0603]">
         <div className="max-w-[1555px] mx-auto">
-          {/* Section Title - RESPONSIVE */}
-          <motion.h3 
+          <motion.h3
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -401,29 +389,24 @@ const UnisexCollection = () => {
           >
             {title}
           </motion.h3>
-          
           {loading ? (
             <div className="flex justify-center items-center h-64">
-              <div className="animate-spin rounded-full h-16 w-16 sm:h-20 sm:w-20 lg:h-28 lg:w-28 border-b-2 border-[#79300f]"></div>
+              <div className="animate-spin rounded-full h-16 w-16 sm:h-20 sm:w-20 lg:h-28 lg:w-28 border-b-2 border-[#79300f]" />
             </div>
           ) : products && products.length > 0 ? (
             <>
-              {/* Products Grid - RESPONSIVE */}
-              <motion.div 
+              <motion.div
                 layout
                 className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-7 lg:gap-10 mb-7 sm:mb-10 justify-items-center"
               >
                 <AnimatePresence mode="popLayout">
-                  {displayProducts.map((product) => {
-                    if (!product || !product._id) return null;
-                    return (
+                  {displayProducts.map((product) =>
+                    product && product._id ? (
                       <ProductCard key={product._id} product={product} />
-                    );
-                  })}
+                    ) : null
+                  )}
                 </AnimatePresence>
               </motion.div>
-
-              {/* View All Button - RESPONSIVE */}
               {hasMoreProducts && (
                 <div className="flex justify-center mt-7 sm:mt-10 lg:mt-14">
                   <motion.button
@@ -431,18 +414,11 @@ const UnisexCollection = () => {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.98 }}
                     className="border-2 transition-all duration-300 rounded-lg w-full max-w-[311px] h-[54px] sm:h-[60px] px-5 flex items-center justify-center"
-                    style={{
-                      borderColor: '#431A06',
-                      backgroundColor: 'transparent',
-                      color: '#431A06'
-                    }}
+                    style={{ borderColor: '#431A06', backgroundColor: 'transparent', color: '#431A06' }}
                   >
                     <span
                       className="text-base sm:text-lg font-bold uppercase"
-                      style={{
-                        fontFamily: 'Manrope, sans-serif',
-                        letterSpacing: '0.05em'
-                      }}
+                      style={{ fontFamily: 'Manrope, sans-serif', letterSpacing: '0.05em' }}
                     >
                       {isExpanded ? 'Show Less' : 'View all Fragrances'}
                     </span>
@@ -480,31 +456,18 @@ const UnisexCollection = () => {
 
     if (type === 'hero') {
       return (
-        <motion.section
-          variants={fadeIn("up", 0.2)}
-          initial="hidden"
-          whileInView="show"
-          className="relative py-0 overflow-hidden"
-        >
+        <motion.section variants={fadeIn('up', 0.2)} initial="hidden" whileInView="show" className="relative py-0 overflow-hidden">
           <div className="relative h-[270px] sm:h-[360px] lg:h-[450px] bg-gradient-to-r from-black/50 to-transparent">
-            <img 
-              src={banner.backgroundImage || '/images/baner1.jpeg'} 
-              alt={banner.altText || banner.title} 
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent"></div>
+            <img src={banner.backgroundImage || '/images/baner1.jpeg'} alt={banner.altText || banner.title} className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
             <div className="absolute inset-0 flex items-center justify-start px-5 sm:px-7 lg:px-10">
               <div className="text-white max-w-2xl">
                 <h2 className="text-2xl sm:text-3xl lg:text-4xl font-dm-serif mb-3.5 sm:mb-5 leading-tight" style={{ color: banner.textColor || '#FFFFFF' }}>
                   {banner.title} <br />
-                  <span style={{ color: banner.highlightColor || '#f6d110' }}>
-                    {banner.titleHighlight}
-                  </span>
+                  <span style={{ color: banner.highlightColor || '#f6d110' }}>{banner.titleHighlight}</span>
                 </h2>
-                <p className="text-sm sm:text-base lg:text-lg mb-5 sm:mb-7 text-gray-200">
-                  {banner.description}
-                </p>
-                <Button 
+                <p className="text-sm sm:text-base lg:text-lg mb-5 sm:mb-7 text-gray-200">{banner.description}</p>
+                <Button
                   onClick={handleClick}
                   className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white px-5 sm:px-7 py-2.5 sm:py-3.5 text-sm sm:text-base font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
                 >
@@ -515,18 +478,11 @@ const UnisexCollection = () => {
           </div>
         </motion.section>
       );
-    }
-
-    if (type === 'product_highlight') {
+    } else if (type === 'product_highlight') {
       return (
-        <motion.section
-          variants={fadeIn("up", 0.2)}
-          initial="hidden"
-          whileInView="show"
-          className="bg-[#F8F6F3] dark:bg-[#0d0603] py-10 sm:py-14 lg:py-16 px-4 sm:px-6"
-        >
+        <motion.section variants={fadeIn('up', 0.2)} initial="hidden" whileInView="show" className="bg-[#F8F6F3] dark:bg-[#0d0603] py-10 sm:py-14 lg:py-16 px-4 sm:px-6">
           <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-7 sm:gap-10 lg:gap-14 items-center">
-            <motion.div 
+            <motion.div
               className="text-left order-2 md:order-1"
               initial={{ opacity: 0, x: -50 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -534,7 +490,7 @@ const UnisexCollection = () => {
               transition={{ duration: 0.6 }}
             >
               {banner.subtitle && (
-                <motion.h3 
+                <motion.h3
                   className="text-sm sm:text-base lg:text-lg text-[#79300f] dark:text-[#f6d110] font-semibold uppercase mb-2.5 sm:mb-3.5 tracking-wider"
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -544,8 +500,8 @@ const UnisexCollection = () => {
                   {banner.subtitle}
                 </motion.h3>
               )}
-              <motion.h2 
-                className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3.5 sm:mb-5 leading-[110%] text-[#271004] dark:text-[#f6d110]" 
+              <motion.h2
+                className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3.5 sm:mb-5 leading-[110%] text-[#271004] dark:text-[#f6d110]"
                 style={{ fontFamily: 'Playfair Display, serif' }}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -553,11 +509,9 @@ const UnisexCollection = () => {
                 transition={{ delay: 0.3 }}
               >
                 {banner.title} <br />
-                <span className="text-[#79300f] dark:text-[#f6d110]">
-                  {banner.titleHighlight}
-                </span>
+                <span className="text-[#79300f] dark:text-[#f6d110]">{banner.titleHighlight}</span>
               </motion.h2>
-              <motion.p 
+              <motion.p
                 className="text-base sm:text-lg mb-5 sm:mb-7 text-[#5a2408] dark:text-gray-300 leading-relaxed"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -572,7 +526,7 @@ const UnisexCollection = () => {
                 viewport={{ once: true }}
                 transition={{ delay: 0.5 }}
               >
-                <Button 
+                <Button
                   onClick={handleClick}
                   className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white px-7 sm:px-9 py-3.5 sm:py-4.5 text-base sm:text-lg font-semibold rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
                 >
@@ -581,35 +535,27 @@ const UnisexCollection = () => {
               </motion.div>
             </motion.div>
 
-            <motion.div 
+            <motion.div
               className="relative flex items-center justify-center order-1 md:order-2"
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.3 }}
             >
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                transition={{ duration: 0.4 }}
-                className="w-full max-w-[693px]"
-              >
-                <img
-                  src={banner.image || '/images/newimg1.PNG'}
-                  alt={banner.altText || banner.title}
-                  className="w-full h-auto object-contain filter drop-shadow-2xl"
-                />
+              <motion.div whileHover={{ scale: 1.05 }} transition={{ duration: 0.4 }} className="w-full max-w-[693px]">
+                <img src={banner.image || '/images/newimg1.PNG'} alt={banner.altText || banner.title} className="w-full h-auto object-contain filter drop-shadow-2xl" />
               </motion.div>
-              
+
               <motion.div
                 className="absolute -z-10 bg-gradient-to-br from-[#79300f]/5 to-[#5a2408]/5 rounded-full blur-3xl w-[80%] h-[80%]"
-                animate={{ 
+                animate={{
                   scale: [1, 1.1, 1],
                   rotate: [0, 5, 0]
                 }}
-                transition={{ 
-                  duration: 8, 
+                transition={{
+                  duration: 8,
                   repeat: Infinity,
-                  ease: "easeInOut"
+                  ease: 'easeInOut'
                 }}
               />
             </motion.div>
@@ -617,35 +563,128 @@ const UnisexCollection = () => {
         </motion.section>
       );
     }
-
     return null;
   });
 
   DynamicBanner.displayName = 'DynamicBanner';
 
-  // Notification System
+  // Notification System - updated to match WomensCollection exactly
   const NotificationSystem = memo(() => (
-    <div className="fixed top-3.5 right-3.5 z-50 space-y-2 max-w-[90vw] sm:max-w-sm">
+    <div className="fixed z-[9999] space-y-3" style={{ top: '40px', right: '20px' }}>
       <AnimatePresence>
-        {cartNotifications.map((notification) => (
+        {notifications.map((notification) => (
           <motion.div
             key={notification.id}
-            initial={{ opacity: 0, x: 100, scale: 0.8 }}
+            initial={{ opacity: 0, x: 400, scale: 0.8 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: 100, scale: 0.8 }}
-            className={`p-2.5 sm:p-3.5 rounded-2xl shadow-lg backdrop-blur-sm border ${
-              notification.type === 'success' 
-                ? 'bg-green-500/90 text-white border-green-400' 
-                : 'bg-red-500/90 text-white border-red-400'
-            }`}
+            exit={{ opacity: 0, x: 400, scale: 0.8 }}
+            transition={{ duration: 0.3 }}
+            style={{
+              position: 'relative',
+              width: '400px',
+              height: '100px',
+              backgroundColor: '#EDE4CF',
+              overflow: 'hidden',
+              boxShadow: '4px 6px 16px 0px rgba(0,0,0,0.1), 18px 24px 30px 0px rgba(0,0,0,0.09), 40px 53px 40px 0px rgba(0,0,0,0.05), 71px 95px 47px 0px rgba(0,0,0,0.01), 110px 149px 52px 0px rgba(0,0,0,0)',
+              borderRadius: '4px'
+            }}
           >
-            <div className="flex items-center space-x-2 sm:space-x-2.5">
-              {notification.type === 'success' ? (
-                <CheckCircle size={16} className="sm:w-[18px] sm:h-[18px] flex-shrink-0" />
+            <div
+              style={{
+                position: 'absolute',
+                left: '16px',
+                top: '0',
+                width: '12px',
+                height: '100%',
+                backgroundColor: '#AC9157'
+              }}
+            />
+
+            <div
+              style={{
+                position: 'absolute',
+                top: '30px',
+                left: '36px',
+                width: '40px',
+                height: '40px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              {notification.type === 'error' ? (
+                <AlertCircle size={40} style={{ color: '#AC9157' }} strokeWidth={1.5} />
+              ) : notification.actionType === 'wishlist' ? (
+                <Heart size={40} style={{ color: '#AC9157' }} strokeWidth={1.5} />
+              ) : notification.actionType === 'cart' ? (
+                <ShoppingCart size={40} style={{ color: '#AC9157' }} strokeWidth={1.5} />
               ) : (
-                <AlertCircle size={16} className="sm:w-[18px] sm:h-[18px] flex-shrink-0" />
+                <CheckCircle size={40} style={{ color: '#AC9157' }} strokeWidth={1.5} />
               )}
-              <span className="font-medium text-sm sm:text-base">{notification.message}</span>
+            </div>
+
+            <button
+              onClick={() => setNotifications(prev => prev.filter(n => n.id !== notification.id))}
+              style={{
+                position: 'absolute',
+                top: '8px',
+                right: '8px',
+                width: '24px',
+                height: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0
+              }}
+              aria-label="Close notification"
+            >
+              <X size={24} style={{ color: '#242122' }} strokeWidth={2} />
+            </button>
+
+            <div
+              style={{
+                position: 'absolute',
+                top: '22px',
+                left: '96px',
+                fontFamily: 'Playfair Display, serif',
+                fontWeight: 700,
+                fontSize: '22px',
+                lineHeight: '26px',
+                color: '#242122',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {notification.type === 'error'
+                ? 'Error'
+                : notification.actionType === 'wishlist'
+                ? notification.message.includes('Removed')
+                  ? 'Removed from Wishlist'
+                  : 'Added to Wishlist'
+                : notification.actionType === 'cart'
+                ? 'Added to Cart'
+                : 'Success'}
+            </div>
+
+            <div
+              style={{
+                position: 'absolute',
+                top: '56px',
+                left: '96px',
+                width: '271px',
+                fontFamily: 'Manrope, sans-serif',
+                fontWeight: 400,
+                fontSize: '16px',
+                lineHeight: '22px',
+                color: '#5B5C5B',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {notification.productName || notification.message}
             </div>
           </motion.div>
         ))}
@@ -655,7 +694,7 @@ const UnisexCollection = () => {
 
   NotificationSystem.displayName = 'NotificationSystem';
 
-  // Error State
+  // Error State UI (unchanged)
   if (error) {
     return (
       <div className="min-h-screen bg-[#F2F2F2] text-[#79300f] dark:bg-[#0d0603] dark:text-[#f6d110]">
@@ -665,16 +704,10 @@ const UnisexCollection = () => {
             <h2 className="text-xl sm:text-2xl font-bold mb-3.5">Failed to load content</h2>
             <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400 mb-3.5">{error}</p>
             <div className="flex flex-col sm:flex-row gap-3.5 justify-center">
-              <Button 
-                onClick={() => window.location.reload()}
-                className="bg-[#79300f] text-white px-5 py-2 rounded-lg hover:bg-[#5a2408] transition-colors"
-              >
+              <Button onClick={() => window.location.reload()} className="bg-[#79300f] text-white px-5 py-2 rounded-lg hover:bg-[#5a2408] transition-colors">
                 Retry
               </Button>
-              <Button 
-                onClick={() => navigate('/')}
-                className="bg-gray-500 text-white px-5 py-2 rounded-lg hover:bg-gray-600 transition-colors"
-              >
+              <Button onClick={() => navigate('/')} className="bg-gray-500 text-white px-5 py-2 rounded-lg hover:bg-gray-600 transition-colors">
                 Go Home
               </Button>
             </div>
@@ -689,10 +722,8 @@ const UnisexCollection = () => {
     <div className="min-h-screen bg-[#F8F6F3] text-[#79300f] dark:bg-[#0d0603] dark:text-[#f6d110]">
       <Header darkMode={darkMode} setDarkMode={setDarkMode} />
       <NotificationSystem />
-      
-      {/* CART SIDEBAR - ADD THIS */}
       <ProductCartSection isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
-      
+
       <main>
         {/* Hero Section */}
         <motion.section
@@ -702,8 +733,8 @@ const UnisexCollection = () => {
           viewport={{ once: false, amount: 0.4 }}
           className="text-center px-4 sm:px-6 py-10 sm:py-14 lg:py-16 bg-white dark:from-[#0d0603] dark:to-[#1a1410]"
         >
-          <motion.h1 
-            variants={fadeIn('up', 0.3)} 
+          <motion.h1
+            variants={fadeIn('up', 0.3)}
             className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3.5 sm:mb-5 leading-[120%] text-[#271004] dark:text-[#f6d110]"
             style={{ fontFamily: 'Playfair Display, serif' }}
           >
@@ -719,16 +750,10 @@ const UnisexCollection = () => {
         </motion.section>
 
         {/* Dynamic Hero Banner */}
-        {banners.hero && (
-          <DynamicBanner banner={banners.hero} type="hero" />
-        )}
+        {banners.hero && <DynamicBanner banner={banners.hero} type="hero" />}
 
         {/* Just Arrived */}
-        <CollectionSection 
-          title="Just Arrived" 
-          products={collections.just_arrived} 
-          sectionKey="just_arrived"
-        />
+        <CollectionSection title="Just Arrived" products={collections.just_arrived} sectionKey="just_arrived" />
 
         {/* Dynamic Product Highlight Banners */}
         {banners.product_highlight.map((banner, index) => (
@@ -736,11 +761,7 @@ const UnisexCollection = () => {
         ))}
 
         {/* Best Sellers */}
-        <CollectionSection 
-          title="Best Sellers" 
-          products={collections.best_sellers} 
-          sectionKey="best_sellers"
-        />
+        <CollectionSection title="Best Sellers" products={collections.best_sellers} sectionKey="best_sellers" />
 
         {/* Dynamic Collection Highlight Banners */}
         {banners.collection_highlight.map((banner, index) => (
@@ -748,13 +769,9 @@ const UnisexCollection = () => {
         ))}
 
         {/* Huntsman Savile Row */}
-        <CollectionSection 
-          title="Huntsman Savile Row" 
-          products={collections.huntsman_savile_row} 
-          sectionKey="huntsman_savile_row"
-        />
+        <CollectionSection title="Huntsman Savile Row" products={collections.huntsman_savile_row} sectionKey="huntsman_savile_row" />
       </main>
-      
+
       <Footer />
     </div>
   );

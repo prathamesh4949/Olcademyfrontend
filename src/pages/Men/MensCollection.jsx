@@ -3,12 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../../components/common/Header';
 import Footer from '@/components/common/Footer';
 import Button from '../../components/ui/Button';
-import ProductCartSection from '../../pages/ProductCartSection'; // ADD THIS IMPORT
+import ProductCartSection from '../../pages/ProductCartSection';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fadeIn } from '../../variants';
 import { useCart } from '@/CartContext';
 import { useWishlist } from '@/WishlistContext';
-import { Star, ShoppingCart, CheckCircle, AlertCircle } from 'lucide-react';
+import { Star, ShoppingCart, CheckCircle, AlertCircle, Heart, X } from 'lucide-react';
 import { FiHeart } from 'react-icons/fi';
 import ProductService from '../../services/productService';
 
@@ -18,7 +18,6 @@ const MensCollection = () => {
   const { addToCart, isInCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   
-  // ADD THIS STATE FOR CART SIDEBAR
   const [isCartOpen, setIsCartOpen] = useState(false);
   
   // State for products from backend
@@ -45,15 +44,15 @@ const MensCollection = () => {
     huntsman_savile_row: false
   });
   
-  // Enhanced state management
-  const [cartNotifications, setCartNotifications] = useState([]);
+  // UPDATED: Enhanced notification system matching HomePage
+  const [notifications, setNotifications] = useState([]);
 
-  // Enhanced notification system
-  const addNotification = useCallback((message, type = 'success') => {
+  // UPDATED: Enhanced notification helper with proper action type parameter (matching HomePage)
+  const addNotification = useCallback((message, type = 'success', productName = null, actionType = 'cart') => {
     const id = Date.now();
-    setCartNotifications(prev => [...prev, { id, message, type }]);
+    setNotifications((prev) => [...prev, { id, message, type, productName, actionType }]);
     setTimeout(() => {
-      setCartNotifications(prev => prev.filter(n => n.id !== id));
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
     }, 3000);
   }, []);
 
@@ -68,20 +67,18 @@ const MensCollection = () => {
     document.documentElement.classList.toggle('dark', darkMode);
   }, [darkMode]);
 
-  // Fetch products and banners from backend - OPTIMIZED
+  // Fetch products and banners from backend
   useEffect(() => {
     const fetchMensData = async () => {
       try {
         setLoading(true);
         setError(null);
         
-        // Fetch both products and banners in parallel
         const [productsResponse, bannersResponse] = await Promise.all([
           ProductService.getMensCollections().catch(err => ({ success: false, error: err.message })),
           ProductService.getMensBanners().catch(err => ({ success: false, error: err.message }))
         ]);
         
-        // Handle products
         if (productsResponse.success && productsResponse.data) {
           setCollections({
             just_arrived: productsResponse.data.just_arrived || [],
@@ -96,7 +93,6 @@ const MensCollection = () => {
           });
         }
 
-        // Handle banners
         if (bannersResponse.success && bannersResponse.data) {
           const bannersByType = {
             hero: null,
@@ -138,7 +134,7 @@ const MensCollection = () => {
     fetchMensData();
   }, []);
 
-  // Handle banner click tracking - MEMOIZED
+  // Handle banner click tracking
   const handleBannerClick = useCallback(async (banner) => {
     if (banner && banner._id) {
       try {
@@ -149,7 +145,7 @@ const MensCollection = () => {
     }
   }, []);
 
-  // Toggle section expansion - MEMOIZED
+  // Toggle section expansion
   const toggleSection = useCallback((sectionKey) => {
     setExpandedSections(prev => ({
       ...prev,
@@ -157,7 +153,7 @@ const MensCollection = () => {
     }));
   }, []);
 
-  // Product Card Component - UPDATED WITH CART SIDEBAR FUNCTIONALITY
+  // UPDATED: Product Card Component with proper notification calls
   const ProductCard = memo(({ product }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [imageError, setImageError] = useState({ primary: false, hover: false });
@@ -184,13 +180,14 @@ const MensCollection = () => {
       try {
         const success = await addToCart(cartItem);
         if (success) {
-          addNotification(`Added ${product.name} to cart!`, 'success');
+          // UPDATED: Pass 'cart' as actionType with product name
+          addNotification(`Added to cart!, 'success', product.name, 'cart'`);
         } else {
-          addNotification('Failed to add item to cart', 'error');
+          addNotification('Failed to add item to cart', 'error', null, 'cart');
         }
       } catch (error) {
         console.error('Add to cart error:', error);
-        addNotification('Something went wrong. Please try again.', 'error');
+        addNotification('Something went wrong. Please try again.', 'error', null, 'cart');
       } finally {
         setIsAddingToCart(false);
       }
@@ -199,7 +196,7 @@ const MensCollection = () => {
     const handleWishlistToggle = (e) => {
       e.stopPropagation();
       if (!product._id) {
-        addNotification('Unable to add to wishlist', 'error');
+        addNotification('Unable to add to wishlist', 'error', null, 'wishlist');
         return;
       }
 
@@ -217,19 +214,22 @@ const MensCollection = () => {
         };
         
         toggleWishlist(wishlistProduct);
+        // UPDATED: Pass 'wishlist' as actionType with product name
         addNotification(
           wasInWishlist ? 'Removed from wishlist' : 'Added to wishlist!',
-          'success'
+          'success',
+          product.name,
+          'wishlist'
         );
       } catch (error) {
         console.error('Wishlist toggle error:', error);
-        addNotification('Failed to update wishlist', 'error');
+        addNotification('Failed to update wishlist', 'error', null, 'wishlist');
       }
     };
 
     const handleCardClick = () => {
       if (!product._id) {
-        addNotification('Product not available', 'error');
+        addNotification('Product not available', 'error', null, 'general');
         return;
       }
       navigate(`/product/${product._id.toString()}`);
@@ -263,7 +263,6 @@ const MensCollection = () => {
         onMouseLeave={() => setIsHovered(false)}
         onClick={handleCardClick}
       >
-        {/* Image Container with Wishlist Icon - RESPONSIVE */}
         <div className="relative bg-white dark:bg-gray-700 flex items-center justify-center overflow-hidden w-full aspect-[331/273] p-3">
           <motion.img
             src={getProductImage()}
@@ -275,7 +274,6 @@ const MensCollection = () => {
             loading="lazy"
           />
           
-          {/* Wishlist Heart Icon */}
           <motion.button
             onClick={handleWishlistToggle}
             whileHover={{ scale: 1.15 }}
@@ -290,9 +288,7 @@ const MensCollection = () => {
           </motion.button>
         </div>
 
-        {/* Product Info Container - RESPONSIVE */}
         <div className="px-3.5 py-3.5 flex flex-col gap-3.5">
-          {/* Product Name */}
           <h3 
             className="font-bold uppercase text-center line-clamp-1 text-lg sm:text-xl md:text-2xl"
             style={{
@@ -304,7 +300,6 @@ const MensCollection = () => {
             {product.name || 'Product'}
           </h3>
 
-          {/* Rating */}
           <div className="flex items-center justify-center gap-1">
             {product.rating ? (
               <>
@@ -322,7 +317,6 @@ const MensCollection = () => {
             )}
           </div>
 
-          {/* Description */}
           <p 
             className="text-center line-clamp-2 text-sm sm:text-base"
             style={{
@@ -335,7 +329,6 @@ const MensCollection = () => {
             {product.description || 'Premium fragrance'}
           </p>
 
-          {/* Price */}
           <p 
             className="font-bold text-center text-lg sm:text-xl"
             style={{
@@ -347,11 +340,10 @@ const MensCollection = () => {
             ${typeof product.price === 'number' ? product.price.toFixed(2) : '0.00'}
           </p>
 
-          {/* UPDATED Add to Cart Button - Opens Cart Sidebar when product is in cart */}
           <motion.button
             onClick={productInCart ? (e) => { 
               e.stopPropagation(); 
-              setIsCartOpen(true); // CHANGED: Opens cart sidebar instead of navigating
+              setIsCartOpen(true);
             } : handleAddToCart}
             disabled={isAddingToCart}
             whileHover={{ scale: 1.02, opacity: 0.9 }}
@@ -376,7 +368,7 @@ const MensCollection = () => {
 
   ProductCard.displayName = 'ProductCard';
 
-  // Collection Section Component - OPTIMIZED
+  // Collection Section Component
   const CollectionSection = memo(({ title, products = [], sectionKey }) => {
     const isExpanded = expandedSections[sectionKey];
     const displayProducts = useMemo(() => 
@@ -388,7 +380,6 @@ const MensCollection = () => {
     return (
       <section className="py-10 sm:py-14 lg:py-16 px-4 sm:px-6 bg-[#F8F6F3] dark:bg-[#0d0603]">
         <div className="max-w-[1555px] mx-auto">
-          {/* Section Title - RESPONSIVE */}
           <motion.h3 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -408,7 +399,6 @@ const MensCollection = () => {
             </div>
           ) : products && products.length > 0 ? (
             <>
-              {/* Products Grid - RESPONSIVE */}
               <motion.div 
                 layout
                 className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-7 lg:gap-10 mb-7 sm:mb-10 justify-items-center"
@@ -423,7 +413,6 @@ const MensCollection = () => {
                 </AnimatePresence>
               </motion.div>
 
-              {/* View All Button - RESPONSIVE - EXACT STYLING MATCH */}
               {hasMoreProducts && (
                 <div className="flex justify-center mt-7 sm:mt-10 lg:mt-14">
                   <motion.button
@@ -467,7 +456,7 @@ const MensCollection = () => {
 
   CollectionSection.displayName = 'CollectionSection';
 
-  // Dynamic Banner Component - OPTIMIZED & RESPONSIVE
+  // Dynamic Banner Component
   const DynamicBanner = memo(({ banner, type = 'hero' }) => {
     if (!banner) return null;
 
@@ -600,7 +589,6 @@ const MensCollection = () => {
                 />
               </motion.div>
               
-              {/* Decorative element behind image */}
               <motion.div
                 className="absolute -z-10 bg-gradient-to-br from-[#79300f]/5 to-[#5a2408]/5 rounded-full blur-3xl w-[80%] h-[80%]"
                 animate={{ 
@@ -624,39 +612,137 @@ const MensCollection = () => {
 
   DynamicBanner.displayName = 'DynamicBanner';
 
-  // Notification System - RESPONSIVE
-  const NotificationSystem = memo(() => (
-    <div className="fixed top-3.5 right-3.5 z-50 space-y-2 max-w-[90vw] sm:max-w-sm">
+  // UPDATED: Custom Notification System (exact match with HomePage)
+  const NotificationSystem = () => (
+    <div className="fixed z-[9999] space-y-3" style={{ top: '40px', right: '20px' }}>
       <AnimatePresence>
-        {cartNotifications.map((notification) => (
+        {notifications.map((notification) => (
           <motion.div
             key={notification.id}
-            initial={{ opacity: 0, x: 100, scale: 0.8 }}
+            initial={{ opacity: 0, x: 400, scale: 0.8 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: 100, scale: 0.8 }}
-            className={`p-2.5 sm:p-3.5 rounded-2xl shadow-lg backdrop-blur-sm border ${
-              notification.type === 'success' 
-                ? 'bg-green-500/90 text-white border-green-400' 
-                : 'bg-red-500/90 text-white border-red-400'
-            }`}
+            exit={{ opacity: 0, x: 400, scale: 0.8 }}
+            transition={{ duration: 0.3 }}
+            style={{
+              position: 'relative',
+              width: '400px',
+              height: '100px',
+              backgroundColor: '#EDE4CF',
+              overflow: 'hidden',
+              boxShadow: '4px 6px 16px 0px rgba(0,0,0,0.1), 18px 24px 30px 0px rgba(0,0,0,0.09), 40px 53px 40px 0px rgba(0,0,0,0.05), 71px 95px 47px 0px rgba(0,0,0,0.01), 110px 149px 52px 0px rgba(0,0,0,0)',
+              borderRadius: '4px'
+            }}
           >
-            <div className="flex items-center space-x-2 sm:space-x-2.5">
-              {notification.type === 'success' ? (
-                <CheckCircle size={16} className="sm:w-[18px] sm:h-[18px] flex-shrink-0" />
+            {/* Left Vertical Bar */}
+            <div 
+              style={{
+                position: 'absolute',
+                left: '16px',
+                top: '0',
+                width: '12px',
+                height: '100%',
+                backgroundColor: '#AC9157'
+              }}
+            />
+
+            {/* Icon - Show correct icon based on actionType */}
+            <div 
+              style={{
+                position: 'absolute',
+                top: '30px',
+                left: '36px',
+                width: '40px',
+                height: '40px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              {notification.type === 'error' ? (
+                <AlertCircle size={40} style={{ color: '#AC9157' }} strokeWidth={1.5} />
+              ) : notification.actionType === 'wishlist' ? (
+                <Heart size={40} style={{ color: '#AC9157' }} strokeWidth={1.5} />
+              ) : notification.actionType === 'cart' ? (
+                <ShoppingCart size={40} style={{ color: '#AC9157' }} strokeWidth={1.5} />
               ) : (
-                <AlertCircle size={16} className="sm:w-[18px] sm:h-[18px] flex-shrink-0" />
+                <CheckCircle size={40} style={{ color: '#AC9157' }} strokeWidth={1.5} />
               )}
-              <span className="font-medium text-sm sm:text-base">{notification.message}</span>
+            </div>
+
+            {/* Close Icon */}
+            <button
+              onClick={() => {
+                setNotifications(prev => prev.filter(n => n.id !== notification.id));
+              }}
+              style={{
+                position: 'absolute',
+                top: '8px',
+                right: '8px',
+                width: '24px',
+                height: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0
+              }}
+              aria-label="Close notification"
+            >
+              <X size={24} style={{ color: '#242122' }} strokeWidth={2} />
+            </button>
+
+            {/* Title Text - Show correct title based on actionType */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '22px',
+                left: '96px',
+                fontFamily: 'Playfair Display, serif',
+                fontWeight: 700,
+                fontSize: '22px',
+                lineHeight: '26px',
+                color: '#242122',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {notification.type === 'error' 
+                ? 'Error' 
+                : notification.actionType === 'wishlist' 
+                  ? (notification.message.includes('Removed') ? 'Removed from Wishlist' : 'Added to Wishlist')
+                  : notification.actionType === 'cart'
+                    ? 'Added to Cart'
+                    : 'Success'
+              }
+            </div>
+
+            {/* Product Name or Message */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '56px',
+                left: '96px',
+                width: '271px',
+                fontFamily: 'Manrope, sans-serif',
+                fontWeight: 400,
+                fontSize: '16px',
+                lineHeight: '22px',
+                color: '#5B5C5B',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {notification.productName || notification.message}
             </div>
           </motion.div>
         ))}
       </AnimatePresence>
     </div>
-  ));
+  );
 
-  NotificationSystem.displayName = 'NotificationSystem';
-
-  // Error State - RESPONSIVE
+  // Error State
   if (error) {
     return (
       <div className="min-h-screen bg-[#F2F2F2] text-[#79300f] dark:bg-[#0d0603] dark:text-[#f6d110]">
@@ -691,11 +777,10 @@ const MensCollection = () => {
       <Header darkMode={darkMode} setDarkMode={setDarkMode} />
       <NotificationSystem />
       
-      {/* CART SIDEBAR - ADD THIS */}
       <ProductCartSection isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
       
       <main>
-        {/* Hero Section - RESPONSIVE (90% scale) */}
+        {/* Hero Section */}
         <motion.section
           variants={fadeIn('up', 0.2)}
           initial="hidden"
@@ -761,5 +846,4 @@ const MensCollection = () => {
   );
 };
 
-export default MensCollection;
-      
+export default MensCollection;

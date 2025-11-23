@@ -1,4 +1,4 @@
-import React, { useState, useEffect, memo, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/common/Header';
 import Footer from '@/components/common/Footer';
@@ -18,7 +18,8 @@ import {
   AlertCircle,
   RefreshCw,
   ShoppingCart,
-  Eye
+  Eye,
+  X
 } from 'lucide-react';
 import { FiHeart } from 'react-icons/fi';
 import ProductService from '@/services/productService';
@@ -51,7 +52,6 @@ const GiftCollection = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [retryCount, setRetryCount] = useState(0);
-  const [cartNotifications, setCartNotifications] = useState([]);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
 
   // ADD THIS STATE FOR CART SIDEBAR
@@ -69,6 +69,17 @@ const GiftCollection = () => {
     wedding_gift: false
   });
 
+  // UPDATED: Enhanced notification system matching HomePage
+  const [notifications, setNotifications] = useState([]);
+  // UPDATED: Enhanced notification helper with proper action type parameter (matching HomePage)
+  const addNotification = useCallback((message, type = 'success', productName = null, actionType = 'cart') => {
+    const id = Date.now();
+    setNotifications((prev) => [...prev, { id, message, type, productName, actionType }]);
+    setTimeout(() => {
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+    }, 3000);
+  }, []);
+
   // Load theme preference
   useEffect(() => {
     const stored = localStorage.getItem('darkMode');
@@ -80,16 +91,19 @@ const GiftCollection = () => {
     document.documentElement.classList.toggle('dark', darkMode);
   }, [darkMode]);
 
-  // Enhanced notification system
-  const addNotification = useCallback((message, type = 'success') => {
-    const id = Date.now();
-    setCartNotifications(prev => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setCartNotifications(prev => prev.filter(n => n.id !== id));
-    }, 3000);
-  }, []);
+  // FIXED: Hardcode collection keys to avoid dependency on state
+  const collectionKeys = [
+    'for_her',
+    'for_him',
+    'by_price_under_50',
+    'by_price_under_100',
+    'by_price_under_200',
+    'home_gift',
+    'birthday_gift',
+    'wedding_gift'
+  ];
 
-  // Enhanced fetch function with retry logic
+  // Enhanced fetch function with retry logic - FIXED: Removed collections from deps
   const fetchGiftData = useCallback(async (isRetry = false) => {
     try {
       setLoading(true);
@@ -108,9 +122,9 @@ const GiftCollection = () => {
         })
       ]);
 
-      // Handle products with better error checking
+      // Handle products with better error checking - FIXED: Use hardcoded keys
       if (productsResponse.success && productsResponse.data) {
-        const safeCollections = Object.keys(collections).reduce((acc, key) => {
+        const safeCollections = collectionKeys.reduce((acc, key) => {
           acc[key] = Array.isArray(productsResponse.data[key]) ? productsResponse.data[key] : [];
           return acc;
         }, {});
@@ -145,17 +159,17 @@ const GiftCollection = () => {
       setError(err.message || 'Failed to load gift collections');
       
       if (!isRetry) {
-        addNotification('Failed to load some content. Please try refreshing the page.', 'error');
+        addNotification('Failed to load some content. Please try refreshing the page.', 'error', null, 'general');
       }
     } finally {
       setLoading(false);
     }
-  }, [collections, addNotification]);
+  }, [addNotification]); // FIXED: Removed collections from deps
 
-  // Initial data fetch
+  // Initial data fetch - FIXED: Empty deps to prevent loop
   useEffect(() => {
     fetchGiftData();
-  }, []);
+  }, []); // FIXED: Empty deps since fetchGiftData is now stable
 
   // Retry mechanism
   const handleRetry = useCallback(() => {
@@ -184,7 +198,7 @@ const GiftCollection = () => {
     }));
   }, []);
 
-  // UPDATED Product Card Component - Opens Cart Sidebar
+  // UPDATED Product Card Component with proper notification calls
   const ProductCard = memo(({ product }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [imageError, setImageError] = useState({ primary: false, hover: false });
@@ -211,13 +225,14 @@ const GiftCollection = () => {
       try {
         const success = await addToCart(cartItem);
         if (success) {
-          addNotification(`Added ${product.name} to cart!`, 'success');
+          // UPDATED: Pass 'cart' as actionType with product name
+          addNotification('Added to cart!', 'success', product.name, 'cart');
         } else {
-          addNotification('Failed to add item to cart', 'error');
+          addNotification('Failed to add item to cart', 'error', null, 'cart');
         }
       } catch (error) {
         console.error('Add to cart error:', error);
-        addNotification('Something went wrong. Please try again.', 'error');
+        addNotification('Something went wrong. Please try again.', 'error', null, 'cart');
       } finally {
         setIsAddingToCart(false);
       }
@@ -226,7 +241,7 @@ const GiftCollection = () => {
     const handleWishlistToggle = (e) => {
       e.stopPropagation();
       if (!product._id) {
-        addNotification('Unable to add to wishlist', 'error');
+        addNotification('Unable to add to wishlist', 'error', null, 'wishlist');
         return;
       }
 
@@ -244,19 +259,22 @@ const GiftCollection = () => {
         };
         
         toggleWishlist(wishlistProduct);
+        // UPDATED: Pass 'wishlist' as actionType with product name
         addNotification(
           wasInWishlist ? 'Removed from wishlist' : 'Added to wishlist!',
-          'success'
+          'success',
+          product.name,
+          'wishlist'
         );
       } catch (error) {
         console.error('Wishlist toggle error:', error);
-        addNotification('Failed to update wishlist', 'error');
+        addNotification('Failed to update wishlist', 'error', null, 'wishlist');
       }
     };
 
     const handleCardClick = () => {
       if (!product._id) {
-        addNotification('Product not available', 'error');
+        addNotification('Product not available', 'error', null, 'general');
         return;
       }
       navigate(`/product/${product._id.toString()}`);
@@ -407,7 +425,10 @@ const GiftCollection = () => {
   const CollectionSection = memo(({ title, collectionKey, visibleCount = 4 }) => {
     const products = collections[collectionKey] || [];
     const isExpanded = expandedSections[collectionKey];
-    const displayProducts = isExpanded ? products : products.slice(0, 4);
+    const displayProducts = useMemo(() =>
+      isExpanded ? products : products.slice(0, 4),
+      [isExpanded, products]
+    );
     const hasMoreProducts = products.length > 4;
 
     return (
@@ -793,23 +814,27 @@ const GiftCollection = () => {
             selectedSize: null
           };
           
+          const wasInWishlist = isInWishlist(quickViewProduct._id);
           toggleWishlist(wishlistProduct);
+          // UPDATED: Pass 'wishlist' as actionType with product name
           addNotification(
-            isInWishlist(quickViewProduct._id) ? 'Removed from wishlist' : 'Added to wishlist!',
-            'success'
+            wasInWishlist ? 'Removed from wishlist' : 'Added to wishlist!',
+            'success',
+            quickViewProduct.name,
+            'wishlist'
           );
         } catch (error) {
           console.error('Wishlist toggle error:', error);
-          addNotification('Failed to update wishlist', 'error');
+          addNotification('Failed to update wishlist', 'error', null, 'wishlist');
         }
       } else {
-        addNotification('Unable to update wishlist', 'error');
+        addNotification('Unable to update wishlist', 'error', null, 'wishlist');
       }
     };
 
     const handleQuickViewAddToCart = async () => {
       if (!quickViewProduct._id) {
-        addNotification('Product not available', 'error');
+        addNotification('Product not available', 'error', null, 'cart');
         return;
       }
 
@@ -826,14 +851,15 @@ const GiftCollection = () => {
       try {
         const success = await addToCart(cartItem);
         if (success) {
-          addNotification(`Added ${quickViewProduct.name} to cart!`, 'success');
+          // UPDATED: Pass 'cart' as actionType with product name
+          addNotification('Added to cart!', 'success', quickViewProduct.name, 'cart');
           handleClose();
         } else {
-          addNotification('Failed to add item to cart', 'error');
+          addNotification('Failed to add item to cart', 'error', null, 'cart');
         }
       } catch (error) {
         console.error('❌ Quick View Add to cart error:', error);
-        addNotification('Something went wrong. Please try again.', 'error');
+        addNotification('Something went wrong. Please try again.', 'error', null, 'cart');
       }
     };
 
@@ -938,29 +964,125 @@ const GiftCollection = () => {
     );
   };
 
-  // Notification System
+  // UPDATED: Custom Notification System (exact match with HomePage)
   const NotificationSystem = () => (
-    <div className="fixed top-4 right-4 z-50 space-y-2">
+    <div className="fixed z-[9999] space-y-3" style={{ top: '40px', right: '20px' }}>
       <AnimatePresence>
-        {cartNotifications.map((notification) => (
+        {notifications.map((notification) => (
           <motion.div
             key={notification.id}
-            initial={{ opacity: 0, x: 100, scale: 0.8 }}
+            initial={{ opacity: 0, x: 400, scale: 0.8 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: 100, scale: 0.8 }}
-            className={`p-4 rounded-2xl shadow-lg backdrop-blur-sm border max-w-sm ${
-              notification.type === 'success' 
-                ? 'bg-green-500/90 text-white border-green-400' 
-                : 'bg-red-500/90 text-white border-red-400'
-            }`}
+            exit={{ opacity: 0, x: 400, scale: 0.8 }}
+            transition={{ duration: 0.3 }}
+            style={{
+              position: 'relative',
+              width: '400px',
+              height: '100px',
+              backgroundColor: '#EDE4CF',
+              overflow: 'hidden',
+              boxShadow: '4px 6px 16px 0px rgba(0,0,0,0.1), 18px 24px 30px 0px rgba(0,0,0,0.09), 40px 53px 40px 0px rgba(0,0,0,0.05), 71px 95px 47px 0px rgba(0,0,0,0.01), 110px 149px 52px 0px rgba(0,0,0,0)',
+              borderRadius: '4px'
+            }}
           >
-            <div className="flex items-center space-x-3">
-              {notification.type === 'success' ? (
-                <CheckCircle size={20} />
+            {/* Left Vertical Bar */}
+            <div
+              style={{
+                position: 'absolute',
+                left: '16px',
+                top: '0',
+                width: '12px',
+                height: '100%',
+                backgroundColor: '#AC9157'
+              }}
+            />
+            {/* Icon - Show correct icon based on actionType */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '30px',
+                left: '36px',
+                width: '40px',
+                height: '40px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              {notification.type === 'error' ? (
+                <AlertCircle size={40} style={{ color: '#AC9157' }} strokeWidth={1.5} />
+              ) : notification.actionType === 'wishlist' ? (
+                <Heart size={40} style={{ color: '#AC9157' }} strokeWidth={1.5} />
+              ) : notification.actionType === 'cart' ? (
+                <ShoppingCart size={40} style={{ color: '#AC9157' }} strokeWidth={1.5} />
               ) : (
-                <AlertCircle size={20} />
+                <CheckCircle size={40} style={{ color: '#AC9157' }} strokeWidth={1.5} />
               )}
-              <span className="font-medium">{notification.message}</span>
+            </div>
+            {/* Close Icon */}
+            <button
+              onClick={() => {
+                setNotifications(prev => prev.filter(n => n.id !== notification.id));
+              }}
+              style={{
+                position: 'absolute',
+                top: '8px',
+                right: '8px',
+                width: '24px',
+                height: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0
+              }}
+              aria-label="Close notification"
+            >
+              <X size={24} style={{ color: '#242122' }} strokeWidth={2} />
+            </button>
+            {/* Title Text - Show correct title based on actionType */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '22px',
+                left: '96px',
+                fontFamily: 'Playfair Display, serif',
+                fontWeight: 700,
+                fontSize: '22px',
+                lineHeight: '26px',
+                color: '#242122',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {notification.type === 'error'
+                ? 'Error'
+                : notification.actionType === 'wishlist'
+                  ? (notification.message.includes('Removed') ? 'Removed from Wishlist' : 'Added to Wishlist')
+                  : notification.actionType === 'cart'
+                    ? 'Added to Cart'
+                    : 'Success'
+              }
+            </div>
+            {/* Product Name or Message */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '56px',
+                left: '96px',
+                width: '271px',
+                fontFamily: 'Manrope, sans-serif',
+                fontWeight: 400,
+                fontSize: '16px',
+                lineHeight: '22px',
+                color: '#5B5C5B',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {notification.productName || notification.message}
             </div>
           </motion.div>
         ))}

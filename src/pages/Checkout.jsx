@@ -5,6 +5,8 @@ import Footer from '../components/common/Footer';
 import { useCart } from '../CartContext';
 import { API_BASE_URL } from '../api/constant';
 import { AuthContext } from '../context/AuthContext';
+import { motion, AnimatePresence } from 'framer-motion';
+import { CheckCircle, AlertCircle, X, Heart, ShoppingCart } from 'lucide-react';
 
 const Checkout = () => {
   const [darkMode, setDarkMode] = useState(false);
@@ -40,6 +42,17 @@ const Checkout = () => {
   });
 
   const [shippingOption, setShippingOption] = useState('standard');
+
+  // UPDATED: Enhanced notification system
+  const [notifications, setNotifications] = useState([]);
+  // UPDATED: Enhanced notification helper with proper action type parameter
+  const addNotification = useCallback((message, type = 'success', productName = null, actionType = 'general') => {
+    const id = Date.now();
+    setNotifications((prev) => [...prev, { id, message, type, productName, actionType }]);
+    setTimeout(() => {
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+    }, 3000);
+  }, []);
 
   const shippingOptions = [
     { id: 'standard', name: 'Standard Shipping', price: 5.99, days: '5-7 business days' },
@@ -233,6 +246,8 @@ const Checkout = () => {
             localStorage.setItem('lastOrderNumber', orderNum);
             setOrderNumber(orderNum);
             setCurrentStep(4);
+            // UPDATED: Add success notification
+            addNotification('Order Placed Successfully!', 'success', null, 'general');
             setTimeout(() => {
               navigate('/');
             }, 5000);
@@ -265,6 +280,8 @@ const Checkout = () => {
           localStorage.setItem('lastOrderNumber', mockOrderNumber);
           setOrderNumber(mockOrderNumber);
           setCurrentStep(4);
+          // UPDATED: Add success notification for mock
+          addNotification('Order Placed Successfully!', 'success', null, 'general');
           setTimeout(() => {
             navigate('/');
           }, 5000);
@@ -294,6 +311,8 @@ const Checkout = () => {
       }
     } catch (error) {
       console.error('❌ Error placing order:', error);
+      // UPDATED: Add error notification
+      addNotification(`There was an error placing your order: ${error.message}`, 'error', null, 'general');
       if (error.name === 'TypeError' && error.message.includes('fetch')) {
         alert(`Network error: Unable to connect to server at ${API_BASE_URL}. Please check if the backend is running and try again.`);
       } else {
@@ -827,6 +846,132 @@ const Checkout = () => {
     </div>
   );
 
+  // UPDATED: Custom Notification System (moved inside Checkout to access notifications and setNotifications)
+  const NotificationSystem = () => (
+    <div className="fixed z-[9999] space-y-3" style={{ top: '40px', right: '20px' }}>
+      <AnimatePresence>
+        {notifications.map((notification) => (
+          <motion.div
+            key={notification.id}
+            initial={{ opacity: 0, x: 400, scale: 0.8 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 400, scale: 0.8 }}
+            transition={{ duration: 0.3 }}
+            style={{
+              position: 'relative',
+              width: '400px',
+              height: '100px',
+              backgroundColor: '#EDE4CF',
+              overflow: 'hidden',
+              boxShadow: '4px 6px 16px 0px rgba(0,0,0,0.1), 18px 24px 30px 0px rgba(0,0,0,0.09), 40px 53px 40px 0px rgba(0,0,0,0.05), 71px 95px 47px 0px rgba(0,0,0,0.01), 110px 149px 52px 0px rgba(0,0,0,0)',
+              borderRadius: '4px'
+            }}
+          >
+            {/* Left Vertical Bar */}
+            <div
+              style={{
+                position: 'absolute',
+                left: '16px',
+                top: '0',
+                width: '12px',
+                height: '100%',
+                backgroundColor: '#AC9157'
+              }}
+            />
+            {/* Icon - Show correct icon based on actionType */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '30px',
+                left: '36px',
+                width: '40px',
+                height: '40px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              {notification.type === 'error' ? (
+                <AlertCircle size={40} style={{ color: '#AC9157' }} strokeWidth={1.5} />
+              ) : notification.actionType === 'wishlist' ? (
+                <Heart size={40} style={{ color: '#AC9157' }} strokeWidth={1.5} />
+              ) : notification.actionType === 'cart' ? (
+                <ShoppingCart size={40} style={{ color: '#AC9157' }} strokeWidth={1.5} />
+              ) : (
+                <CheckCircle size={40} style={{ color: '#AC9157' }} strokeWidth={1.5} />
+              )}
+            </div>
+            {/* Close Icon */}
+            <button
+              onClick={() => {
+                setNotifications(prev => prev.filter(n => n.id !== notification.id));
+              }}
+              style={{
+                position: 'absolute',
+                top: '8px',
+                right: '8px',
+                width: '24px',
+                height: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0
+              }}
+              aria-label="Close notification"
+            >
+              <X size={24} style={{ color: '#242122' }} strokeWidth={2} />
+            </button>
+            {/* Title Text - Show correct title based on actionType */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '22px',
+                left: '96px',
+                fontFamily: 'Playfair Display, serif',
+                fontWeight: 700,
+                fontSize: '22px',
+                lineHeight: '26px',
+                color: '#242122',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {notification.type === 'error'
+                ? 'Error'
+                : notification.actionType === 'wishlist'
+                  ? (notification.message.includes('Removed') ? 'Removed from Wishlist' : 'Added to Wishlist')
+                  : notification.actionType === 'cart'
+                    ? 'Added to Cart'
+                    : 'Success'
+              }
+            </div>
+            {/* Product Name or Message */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '56px',
+                left: '96px',
+                width: '271px',
+                fontFamily: 'Manrope, sans-serif',
+                fontWeight: 400,
+                fontSize: '16px',
+                lineHeight: '22px',
+                color: '#5B5C5B',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {notification.productName || notification.message}
+            </div>
+          </motion.div>
+        ))}
+      </AnimatePresence>
+    </div>
+  );
+
   if (cartItems.length === 0 && currentStep !== 4) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -861,6 +1006,8 @@ const Checkout = () => {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#f9fafb' }}>
       <Header darkMode={darkMode} setDarkMode={setDarkMode} />
+      {/* UPDATED: Add Notification System */}
+      <NotificationSystem />
       <div style={{ flex: 1, maxWidth: '1200px', margin: '0 auto', padding: '2rem', width: '100%' }}>
         <div style={{ marginBottom: '2rem' }}>
           <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', textAlign: 'center', color: '#431A06', marginBottom: '1rem' }}>Checkout</h1>
@@ -997,6 +1144,7 @@ const Checkout = () => {
         )}
       </div>
       <Footer />
+      {/* UPDATED: Custom Notification System */}
       <style>{`
         @keyframes spin {
           to { transform: rotate(360deg); }

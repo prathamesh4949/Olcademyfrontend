@@ -1,12 +1,13 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import Header from '@/components/common/Header';
 import Footer from '@/components/common/Footer';
+import ProductCartSection from '@/pages/ProductCartSection';
 import { useWishlist } from '@/WishlistContext';
 import { useCart } from '@/CartContext';
 import { FiHeart, FiX } from 'react-icons/fi';
-import { motion } from 'framer-motion';
-import toast, { Toaster } from 'react-hot-toast';
+import { ShoppingCart, AlertCircle, CheckCircle } from 'lucide-react';
 
 const SORT_OPTIONS = [
   { value: '', label: 'Sort by' },
@@ -23,9 +24,21 @@ const Wishlist = () => {
   const [sortBy, setSortBy] = useState('');
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+  // State management for notifications and cart sidebar
+  const [notifications, setNotifications] = useState([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   const { wishlistItems, removeFromWishlist, isInitialized, refreshWishlist } = useWishlist();
   const { isInCart, addToCart } = useCart();
+
+  // Add notification helper
+  const addNotification = useCallback((message, type = 'success', productName = null, actionType = 'general') => {
+    const id = Date.now();
+    setNotifications((prev) => [...prev, { id, message, type, productName, actionType }]);
+    setTimeout(() => {
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+    }, 3000);
+  }, []);
 
   useEffect(() => {
     const stored = localStorage.getItem('darkMode');
@@ -70,19 +83,29 @@ const Wishlist = () => {
     }
   };
 
-  const handleAddToCart = async (item) => {
-    if (isInCart(item.id, item.selectedSize)) return;
+  const handleAddToCart = async (item, e) => {
+    if (e) e.stopPropagation();
+    if (isInCart(item.id, item.selectedSize)) {
+      setIsCartOpen(true);
+      return;
+    }
     try {
-      await addToCart(item);
-      toast.success(`${item.name} added to cart`, { id: `cart-${item.id}` });
-    } catch (err) {
-      toast.error(`Failed to add ${item.name} to cart`, { id: `cart-error-${item.id}` });
+      const success = await addToCart(item);
+      if (success) {
+        addNotification(null, 'success', item.name, 'cart');
+      } else {
+        addNotification('Failed to add item to cart', 'error');
+      }
+    } catch (error) {
+      console.error('Add to cart error:', error);
+      addNotification('Something went wrong. Please try again.', 'error');
     }
   };
 
-  const handleRemoveFromWishlist = (item) => {
+  const handleRemoveFromWishlist = (item, e) => {
+    if (e) e.stopPropagation();
     removeFromWishlist(item.id);
-    toast(`${item.name} removed from wishlist`, { id: `wishlist-${item.id}` });
+    addNotification('Removed from wishlist', 'success', item.name, 'wishlist');
   };
 
   const handleContinueShopping = () => navigate('/');
@@ -117,6 +140,132 @@ const Wishlist = () => {
     );
   }
 
+  // Notification System
+  const NotificationSystem = () => (
+    <div className="fixed z-[10000] space-y-3" style={{ top: '40px', right: '20px' }}>
+      <AnimatePresence>
+        {notifications.map((notification) => (
+          <motion.div
+            key={notification.id}
+            initial={{ opacity: 0, x: 400, scale: 0.8 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 400, scale: 0.8 }}
+            transition={{ duration: 0.3 }}
+            style={{
+              position: 'relative',
+              width: '400px',
+              height: '100px',
+              backgroundColor: '#EDE4CF',
+              overflow: 'hidden',
+              boxShadow: '4px 6px 16px 0px rgba(0,0,0,0.1), 18px 24px 30px 0px rgba(0,0,0,0.09), 40px 53px 40px 0px rgba(0,0,0,0.05), 71px 95px 47px 0px rgba(0,0,0,0.01), 110px 149px 52px 0px rgba(0,0,0,0)',
+              borderRadius: '4px'
+            }}
+          >
+            {/* Left Vertical Bar */}
+            <div
+              style={{
+                position: 'absolute',
+                left: '16px',
+                top: '0',
+                width: '12px',
+                height: '100%',
+                backgroundColor: '#AC9157'
+              }}
+            />
+            {/* Icon - Show correct icon based on actionType */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '30px',
+                left: '36px',
+                width: '40px',
+                height: '40px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              {notification.type === 'error' ? (
+                <AlertCircle size={40} style={{ color: '#AC9157' }} strokeWidth={1.5} />
+              ) : notification.actionType === 'wishlist' ? (
+                <FiHeart size={40} style={{ color: '#AC9157' }} />
+              ) : notification.actionType === 'cart' ? (
+                <ShoppingCart size={40} style={{ color: '#AC9157' }} strokeWidth={1.5} />
+              ) : (
+                <CheckCircle size={40} style={{ color: '#AC9157' }} strokeWidth={1.5} />
+              )}
+            </div>
+            {/* Close Icon */}
+            <button
+              onClick={() => {
+                setNotifications(prev => prev.filter(n => n.id !== notification.id));
+              }}
+              style={{
+                position: 'absolute',
+                top: '8px',
+                right: '8px',
+                width: '24px',
+                height: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0
+              }}
+              aria-label="Close notification"
+            >
+              <FiX size={24} style={{ color: '#242122' }} />
+            </button>
+            {/* Title Text - Show correct title based on actionType */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '22px',
+                left: '96px',
+                fontFamily: 'Playfair Display, serif',
+                fontWeight: 700,
+                fontSize: '22px',
+                lineHeight: '26px',
+                color: '#242122',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {notification.type === 'error'
+                ? 'Error'
+                : notification.actionType === 'wishlist'
+                  ? 'Removed from Wishlist'
+                  : notification.actionType === 'cart'
+                    ? 'Added to Cart'
+                    : 'Success'
+              }
+            </div>
+            {/* Product Name or Message */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '56px',
+                left: '96px',
+                width: '271px',
+                fontFamily: 'Manrope, sans-serif',
+                fontWeight: 400,
+                fontSize: '16px',
+                lineHeight: '22px',
+                color: '#5B5C5B',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {notification.productName || notification.message}
+            </div>
+          </motion.div>
+        ))}
+      </AnimatePresence>
+    </div>
+  );
+
   return (
     <motion.div
       className="bg-[#FAF6F2] font-sans min-h-screen flex flex-col"
@@ -124,7 +273,9 @@ const Wishlist = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: 'easeOut' }}
     >
-      <Toaster position="top-center" reverseOrder={false} />
+      <NotificationSystem />
+      {/* CART SIDEBAR */}
+      <ProductCartSection isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
 
       <Header darkMode={darkMode} setDarkMode={setDarkMode} />
 
@@ -218,7 +369,7 @@ const Wishlist = () => {
                 whileHover={{ scale: 1.02 }}
               >
                 <button
-                  onClick={() => handleRemoveFromWishlist(item)}
+                  onClick={(e) => handleRemoveFromWishlist(item, e)}
                   className="absolute top-4 right-5 text-[#5A2408] hover:text-[#B04C3C] bg-transparent focus:outline-none"
                   title="Remove from wishlist"
                 >
@@ -265,18 +416,16 @@ const Wishlist = () => {
                 </div>
 
                 <button
-                  onClick={() => handleAddToCart(item)}
-                  disabled={isInCart(item.id, item.selectedSize)}
-                  className={`w-full h-[48px] bg-[#431A06] hover:bg-[#3B1505] uppercase text-white text-[14px] font-semibold font-manrope rounded-b-lg transition
-                    ${
-                      isInCart(item.id, item.selectedSize)
-                        ? 'opacity-60 cursor-not-allowed'
-                        : ''
-                    }`}
+                  onClick={(e) => handleAddToCart(item, e)}
+                  disabled={false}
+                  className={`w-full h-[48px] bg-[#431A06] hover:bg-[#3B1505] uppercase text-white text-[14px] font-semibold font-manrope rounded-b-lg transition flex items-center justify-center gap-2`}
                 >
-                  {isInCart(item.id, item.selectedSize)
-                    ? 'Already In Cart'
-                    : 'Add to Cart'}
+                  <ShoppingCart size={18} />
+                  <span>
+                    {isInCart(item.id, item.selectedSize)
+                      ? 'View Cart'
+                      : 'Add to Cart'}
+                  </span>
                 </button>
               </motion.div>
             ))}
@@ -290,4 +439,3 @@ const Wishlist = () => {
 };
 
 export default Wishlist;
-
