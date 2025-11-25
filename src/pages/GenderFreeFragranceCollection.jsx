@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from '../components/common/Header';
 import Footer from '../components/common/Footer';
-import ProductCartSection from '../pages/ProductCartSection';
 import { useCart } from '../CartContext';
 import { useWishlist } from '../WishlistContext';
 import ScentService from '../services/scentService';
+import ProductCartSection from '../pages/ProductCartSection'; 
+
 import { 
   ShoppingBag, 
   ShoppingCart, 
@@ -17,8 +18,7 @@ import {
   Users,
   Sparkles,
   CheckCircle,
-  AlertCircle,
-  X
+  AlertCircle
 } from 'lucide-react';
 import { FiHeart } from 'react-icons/fi';
 
@@ -26,74 +26,59 @@ const GenderFreeFragranceCollection = () => {
   const navigate = useNavigate();
   const { addToCart, isInCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
-  // State management
+
   const [scents, setScents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
-  // Pagination
+
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const itemsPerPage = 12;
-  // ADD THIS STATE FOR CART SIDEBAR
+
+  // Cart sidebar state (NEW) — when true, opens right-side cart
   const [isCartOpen, setIsCartOpen] = useState(false);
-  // Add notification helper
-  const addNotification = useCallback((message, type = 'success', productName = null, actionType = 'general') => {
+
+  const addNotification = useCallback((message, type = 'success') => {
     const id = Date.now();
-    setNotifications((prev) => [...prev, { id, message, type, productName, actionType }]);
+    setNotifications(prev => [...prev, { id, message, type }]);
     setTimeout(() => {
-      setNotifications((prev) => prev.filter((n) => n.id !== id));
+      setNotifications(prev => prev.filter(n => n.id !== id));
     }, 3000);
   }, []);
-  // Fetch gender-free scents (using gender-free collection)
+
   const fetchGenderFreeScents = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-
-      const params = {
-        page: currentPage,
-        limit: itemsPerPage,
-        isActive: true
-      };
-
+      const params = { page: currentPage, limit: itemsPerPage, isActive: true };
       const response = await ScentService.getGenderFreeScents(params);
-      
       if (response.success) {
         setScents(response.data || []);
-        if (response.pagination) {
-          setTotalPages(response.pagination.totalPages);
-        }
+        if (response.pagination) setTotalPages(response.pagination.totalPages);
       } else {
         setError(response.message || 'Failed to fetch gender-free scents');
         setScents([]);
       }
     } catch (err) {
-      console.error('Error fetching gender-free scents:', err);
       setError('Failed to load gender-free scents');
       setScents([]);
     } finally {
       setLoading(false);
     }
   }, [currentPage]);
-  // Load scents on mount
+
   useEffect(() => {
     fetchGenderFreeScents();
   }, [fetchGenderFreeScents]);
-  // Scroll to top when component mounts
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-  // Handle add to cart
-  const handleAddToCart = async (scent, e) => {
-    e.stopPropagation();
 
+  const handleAddToCartBase = async (scent, e) => {
+    if (e && e.stopPropagation) e.stopPropagation();
     if (!scent._id) {
       addNotification('Product information is incomplete', 'error');
       return;
     }
-
     const cartItem = {
       id: scent._id.toString(),
       name: scent.name,
@@ -105,30 +90,22 @@ const GenderFreeFragranceCollection = () => {
       brand: scent.brand || '',
       sku: scent.sku || ''
     };
-
     try {
       const success = await addToCart(cartItem);
-      if (success) {
-        addNotification(null, 'success', scent.name, 'cart');
-      } else {
-        addNotification('Failed to add item to cart', 'error');
-      }
-    } catch (error) {
-      console.error('Add to cart error:', error);
+      addNotification(success ? `Added ${scent.name} to cart!` : 'Failed to add item to cart', success ? 'success' : 'error');
+    } catch {
       addNotification('Something went wrong. Please try again.', 'error');
     }
   };
-  // Handle wishlist toggle
-  const handleWishlistToggle = (scent, e) => {
-    e.stopPropagation();
-   
+
+  const handleWishlistToggleBase = (scent, e) => {
+    if (e && e.stopPropagation) e.stopPropagation();
     if (!scent._id) {
       addNotification('Unable to add to wishlist', 'error');
       return;
     }
     try {
       const wasInWishlist = isInWishlist(scent._id);
-     
       const wishlistProduct = {
         id: scent._id.toString(),
         name: scent.name,
@@ -139,347 +116,179 @@ const GenderFreeFragranceCollection = () => {
         brand: scent.brand || '',
         selectedSize: null
       };
-     
       toggleWishlist(wishlistProduct);
       addNotification(
         wasInWishlist ? 'Removed from wishlist' : 'Added to wishlist!',
-        'success',
-        scent.name,
-        'wishlist'
+        'success'
       );
-    } catch (error) {
-      console.error('Wishlist toggle error:', error);
+    } catch {
       addNotification('Failed to update wishlist', 'error');
     }
   };
-  // Navigate to product detail
-  const handleProductClick = (scent) => {
-    if (scent._id) {
-      navigate(`/scent/${scent._id}`);
-    }
-  };
-  // Handle Quick View
+
   const handleQuickView = (scent, e) => {
-    e.stopPropagation();
-    e.preventDefault();
-    console.log('Quick View clicked for scent:', scent._id, scent.name);
+    if (e && e.stopPropagation) e.stopPropagation();
+    if (e && e.preventDefault) e.preventDefault();
     if (scent && scent._id) {
       setQuickViewProduct(scent);
     } else {
-      console.error('Invalid scent for Quick View:', scent);
       addNotification('Unable to show quick view', 'error');
     }
   };
-const ScentCard = memo(({ scent, addToCart, isInCart, toggleWishlist, isInWishlist, navigate, addNotification, setIsCartOpen }) => {
-  const [isHovered, setIsHovered] = useState(false);
-  const [imageError, setImageError] = useState({ primary: false, hover: false });
-  const [isAddingToCart, setIsAddingToCart] = useState(false);
-  const [imageLoading, setImageLoading] = useState(true);
-  if (!scent) {
-    console.warn('ScentCard: No scent data provided');
-    return (
-      <div className="w-full bg-gray-200 dark:bg-gray-700 animate-pulse rounded-2xl p-6">
-        <div className="h-[250px] bg-gray-300 dark:bg-gray-600 rounded-xl mb-4"></div>
-        <div className="space-y-3">
-          <div className="h-6 bg-gray-300 dark:bg-gray-600 rounded"></div>
-          <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-3/4"></div>
-          <div className="h-8 bg-gray-300 dark:bg-gray-600 rounded"></div>
-        </div>
+
+  // Scent Card component
+  const ScentCard = memo(({ scent }) => {
+    const selectedSize = scent.sizes?.[0]?.size ?? null;
+    const productInCart = isInCart(scent._id?.toString(), selectedSize);
+    const [isAddingToCart, setIsAddingToCart] = useState(false);
+    const [isHovered, setIsHovered] = useState(false);
+
+    if (!scent) return null;
+
+    const handleWishlistToggle = (e) => handleWishlistToggleBase(scent, e);
+
+    const handleAddToCart = async (e) => {
+      setIsAddingToCart(true);
+      await handleAddToCartBase(scent, e);
+      setIsAddingToCart(false);
+    };
+
+    const handleProductClick = () => {
+      if (scent._id) {
+        navigate(`/scent/${scent._id}`);
+      }
+    };
+
+    const getStars = (rating = 0) => (
+      <div className="flex items-center justify-center gap-1 mb-1">
+        {[...Array(5)].map((_, idx) =>
+          <Star
+            key={idx}
+            size={16}
+            style={{ color: idx < Math.floor(rating) ? "#5A2408" : "#cfc6be", opacity: idx < Math.floor(rating) ? 1 : 0.3 }}
+            fill={idx < Math.floor(rating) ? "#5A2408" : "transparent"}
+          />
+        )}
       </div>
     );
-  }
-  const scentInCart = isInCart(
-    scent._id?.toString(),
-    scent.sizes && scent.sizes.length > 0 ? scent.sizes[0].size : null
-  );
-  const handleAddToCart = async (e) => {
-    e.stopPropagation();
-    setIsAddingToCart(true);
-    const cartItem = {
-      id: scent._id.toString(),
-      name: scent.name,
-      price: Number(scent.price),
-      image:
-        scent.images && scent.images.length > 0
-          ? scent.images[0]
-          : "/images/default-scent.png",
-      quantity: 1,
-      selectedSize:
-        scent.sizes && scent.sizes.length > 0 ? scent.sizes[0].size : null,
-      personalization: null,
-    };
-    try {
-      const success = await addToCart(cartItem);
-      if (success) {
-        addNotification(null, 'success', scent.name, 'cart');
-      } else {
-        addNotification('Failed to add item to cart', 'error');
-      }
-    } catch (error) {
-      console.error('Add to cart error:', error);
-      addNotification('Something went wrong. Please try again.', 'error');
-    } finally {
-      setIsAddingToCart(false);
-    }
-  };
-  const handleWishlistToggle = (e) => {
-    e.stopPropagation();
-    if (!scent._id) {
-      addNotification('Unable to add to wishlist', 'error');
-      return;
-    }
-    try {
-      const wasInWishlist = isInWishlist(scent._id);
-      const wishlistItem = {
-        id: scent._id.toString(),
-        name: scent.name,
-        price: scent.price,
-        image:
-          scent.images && scent.images.length > 0
-            ? scent.images[0]
-            : "/images/default-scent.png",
-        description: scent.description || "",
-        category: scent.category || "",
-        selectedSize: null,
-      };
-      toggleWishlist(wishlistItem);
-      addNotification(
-        wasInWishlist ? 'Removed from wishlist' : 'Added to wishlist!',
-        'success',
-        scent.name,
-        'wishlist'
-      );
-    } catch (error) {
-      console.error('Wishlist toggle error:', error);
-      addNotification('Failed to update wishlist', 'error');
-    }
-  };
-  const handleCardClick = () => {
-    if (!scent._id) {
-      addNotification('Scent not available', 'error');
-      return;
-    }
-    navigate(`/scent/${scent._id.toString()}`);
-  };
-  const getProductImage = () => {
-    if (isHovered && scent.hoverImage && !imageError.hover) {
-      return scent.hoverImage;
-    }
-    if (
-      scent.images &&
-      Array.isArray(scent.images) &&
-      scent.images.length > 0 &&
-      !imageError.primary
-    ) {
-      return scent.images[0];
-    }
-    return "/images/default-scent.png";
-  };
-  const handleImageError = (e, type = "primary") => {
-    console.warn(`ScentCard (${scent._id}): Image error for ${type} image`, e.target.src);
-    setImageError((prev) => ({ ...prev, [type]: true }));
-    setImageLoading(false);
-    e.target.src = "/images/default-scent.png";
-  };
-  const handleImageLoad = () => {
-    setImageLoading(false);
-  };
-  return (
-    <motion.div
-      layout
-      whileHover={{ scale: 1.02, y: -5 }}
-      transition={{ duration: 0.3, type: "spring", stiffness: 300 }}
-      className="bg-gradient-to-br from-[#F5E9DC] to-[#E7DDC6] dark:from-gray-800 dark:to-gray-700 p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 text-left relative border border-[#D4C5A9] dark:border-gray-600 group cursor-pointer backdrop-blur-sm flex flex-col"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onClick={handleCardClick}
-    >
-      {/* Wishlist Button */}
-      <motion.button
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        onClick={handleWishlistToggle}
-        className="absolute top-4 right-4 text-[#79300f] hover:text-red-600 dark:text-[#f6d110] dark:hover:text-red-400 z-10 bg-white/90 dark:bg-black/90 backdrop-blur-sm rounded-full p-2 shadow-md transition-all duration-200"
-        aria-label={isInWishlist(scent._id) ? 'Remove from wishlist' : 'Add to wishlist'}
-      >
-        <FiHeart size={18} className={isInWishlist(scent._id) ? 'fill-red-600 text-red-600' : ''} />
-      </motion.button>
 
-      {/* Quick View Button */}
-      <AnimatePresence>
-        {isHovered && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={(e) => handleQuickView(scent, e)}
-            className="absolute top-4 right-16 bg-white/90 dark:bg-black/90 backdrop-blur-sm rounded-full p-2 shadow-md transition-all duration-200 z-10"
-            aria-label="Quick view"
+    return (
+      <motion.div
+        layout
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        whileHover={{ y: -8 }}
+        transition={{ duration: 0.3 }}
+        className="bg-white dark:bg-gray-800 overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300 w-full max-w-[331px] min-h-[528px] flex flex-col justify-between border-none"
+        style={{ borderRadius: '0px' }}
+        onClick={handleProductClick}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        <div>
+          <div
+            className="relative bg-white dark:bg-gray-700 flex items-center justify-center overflow-hidden w-full aspect-[331/273] p-3"
+            style={{ borderRadius: '0px' }}
           >
-            <Eye size={18} className="text-[#79300f] dark:text-[#f6d110]" />
-          </motion.button>
-        )}
-      </AnimatePresence>
+            <img
+              src={scent.images?.[0] || "/images/default-scent.png"}
+              alt={scent.name}
+              className="object-contain w-full h-full max-w-[248px] max-h-[248px]"
+              style={{ borderRadius: '0px' }}
+            />
 
-      {/* Collection Badge */}
-      <div className="absolute top-4 left-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md z-10 flex items-center space-x-1">
-        <Users size={12} />
-        <span>GENDER-FREE</span>
-      </div>
+            <div className="absolute top-2.5 right-2.5 flex items-center gap-2 z-10">
+              <AnimatePresence>
+                {isHovered && (
+                  <motion.button
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={(e) => handleQuickView(scent, e)}
+                    className="bg-white/90 dark:bg-black/90 backdrop-blur-sm rounded-full p-1.5 shadow-md transition-all duration-200"
+                    aria-label="Quick view"
+                  >
+                    <Eye size={14} className="text-[#431A06]" />
+                  </motion.button>
+                )}
+              </AnimatePresence>
 
-      {/* In Cart Badge */}
-      {scentInCart && (
-        <div className="absolute top-12 left-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md z-10 border border-emerald-400">
-          ✓ IN CART
-        </div>
-      )}
-
-      {/* Image Container */}
-      <div className="bg-white/50 dark:bg-black/20 backdrop-blur-sm rounded-xl p-4 mb-4 shadow-inner relative overflow-hidden">
-        {imageLoading && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#79300f]"></div>
-          </div>
-        )}
-        <img 
-          src={getProductImage()}
-          alt={scent.name || 'Scent'} 
-          className={`h-[250px] w-full object-contain transition-all duration-500 group-hover:scale-105 ${imageLoading ? 'opacity-0' : 'opacity-100'}`} 
-          onError={(e) => handleImageError(e, isHovered ? 'hover' : 'primary')}
-          onLoad={handleImageLoad}
-          loading="lazy"
-        />
-        
-        {/* Overlay on hover */}
-        <AnimatePresence>
-          {isHovered && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent rounded-xl flex items-end justify-center pb-4"
-            >
-              <span className="text-white text-sm font-medium bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm">
-                Click to view details
-              </span>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Product Info */}
-      <div className="space-y-3 flex-1">
-        <div className="flex items-start justify-between">
-          <h3 className="text-xl font-alata text-[#5a2408] dark:text-gray-200 font-bold leading-tight">
-            {scent.name || 'Unnamed Scent'}
-          </h3>
-          {scent.rating > 0 && (
-            <div className="flex items-center space-x-1">
-              <Star size={14} className="text-yellow-500 fill-current" />
-              <span className="text-sm text-gray-600 dark:text-gray-400">
-                {scent.rating.toFixed(1)}
-              </span>
+              <motion.button
+                onClick={handleWishlistToggle}
+                whileHover={{ scale: 1.15 }}
+                className="bg-white dark:bg-gray-800 rounded-full p-1.5 shadow-lg"
+                aria-label={isInWishlist(scent._id) ? 'Remove from wishlist' : 'Add to wishlist'}
+              >
+                <Heart
+                  size={14}
+                  className={isInWishlist(scent._id) ? 'fill-red-600 text-red-600' : 'text-gray-700'}
+                />
+              </motion.button>
             </div>
-          )}
-        </div>
+          </div>
 
-        {/* Brand */}
-        {scent.brand && (
-          <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
-            by {scent.brand}
-          </p>
-        )}
-        
-        {scent.description && (
-          <p className="text-sm text-[#8b4513] dark:text-gray-400 leading-relaxed line-clamp-2">
-            {scent.description}
-          </p>
-        )}
-
-        {/* Scent Details */}
-        <div className="flex flex-wrap gap-2 text-xs">
-          {scent.scentFamily && (
-            <span className="bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2 py-1 rounded-full capitalize">
-              {scent.scentFamily}
-            </span>
-          )}
-          {scent.intensity && (
-            <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full capitalize">
-              {scent.intensity}
-            </span>
-          )}
-          {scent.concentration && (
-            <span className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-1 rounded-full capitalize">
-              {scent.concentration}
-            </span>
-          )}
-        </div>
-        
-        <div className="flex items-center justify-between pt-2">
-          <div className="flex flex-col">
-            <p className="text-xl font-bold text-[#79300f] dark:text-[#f6d110]">
-              ${typeof scent.price === 'number' ? scent.price.toFixed(2) : '0.00'}
+          <div className="px-3.5 pt-3.5 pb-1 flex flex-col gap-3">
+            <h3
+              className="font-bold uppercase text-center text-lg"
+              style={{ fontFamily: 'Playfair Display, serif', color: '#5A2408' }}
+            >
+              {scent.name}
+            </h3>
+            {getStars(scent.rating)}
+            <p className="text-center line-clamp-2 text-sm" style={{ color: '#7E513A' }}>
+              {scent.description}
             </p>
-            {scent.originalPrice && scent.originalPrice > scent.price && (
-              <p className="text-sm text-gray-500 dark:text-gray-400 line-through">
-                ${scent.originalPrice.toFixed(2)}
-              </p>
-            )}
-          </div>
-          <div className="bg-purple-500/10 dark:bg-purple-400/10 px-2 py-1 rounded-full">
-            <span className="text-xs text-purple-700 dark:text-purple-400 font-medium">UNISEX</span>
+            <p className="font-bold text-center text-lg" style={{ color: '#431A06' }}>
+              ${Number(scent.price).toFixed(2)}
+            </p>
           </div>
         </div>
-      </div>
 
-      {/* Action Button */}
-      <motion.button
-        onClick={
-          scentInCart
-            ? (e) => {
-                e.stopPropagation();
+        <div className="w-full flex flex-col items-center" style={{ paddingBottom: '1.5rem' }}>
+          <motion.button
+            onClick={(e) => {
+              if (e && e.stopPropagation) e.stopPropagation();
+
+              // If product is already in cart -> open right-side cart sidebar
+              if (productInCart) {
                 setIsCartOpen(true);
+                return;
               }
-            : handleAddToCart
-        }
-        disabled={isAddingToCart}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        className={`w-full font-semibold py-3 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 mt-4 ${
-          scentInCart 
-            ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-700 hover:via-teal-700 hover:to-cyan-700 text-white border border-emerald-400/30 shadow-emerald-500/20'
-            : 'bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white'
-        }`}
-      >
-        {isAddingToCart ? (
-          <RefreshCw size={18} className="animate-spin" />
-        ) : scentInCart ? (
-          <ShoppingCart size={18} />
-        ) : (
-          <ShoppingBag size={18} />
-        )}
-        <span>
-          {isAddingToCart ? 'Adding...' : scentInCart ? 'View Cart' : 'Add to Cart'}
-        </span>
-      </motion.button>
-    </motion.div>
-  );
-});
-  ScentCard.displayName = 'ScentCard';
-  // Quick View Modal
+
+              // Otherwise add to cart
+              handleAddToCart(e);
+            }}
+            whileHover={{ scale: 1.02 }}
+            className="flex items-center justify-center gap-2 text-white font-bold uppercase w-full h-[54px] rounded-none"
+            style={{
+              backgroundColor: "#431A06",
+              fontFamily: "Manrope, sans-serif",
+              letterSpacing: "0.05em",
+              marginBottom: 0,
+              borderRadius: "0px"
+            }}
+          >
+            {isAddingToCart ? <RefreshCw size={20} className="animate-spin" /> : <ShoppingCart size={20} />}
+            <span>{isAddingToCart ? "Adding..." : productInCart ? "View Cart" : "Add to Cart"}</span>
+          </motion.button>
+        </div>
+      </motion.div>
+    );
+  });
+
+  // QuickView modal component
   const QuickViewModal = () => {
-    if (!quickViewProduct) {
-      return null;
-    }
+    if (!quickViewProduct) return null;
+
     const handleClose = () => {
       setQuickViewProduct(null);
     };
+
     const handleQuickViewWishlist = () => {
       if (quickViewProduct._id) {
         try {
-          const wasInWishlist = isInWishlist(quickViewProduct._id);
           const wishlistProduct = {
             id: quickViewProduct._id.toString(),
             name: quickViewProduct.name,
@@ -490,22 +299,19 @@ const ScentCard = memo(({ scent, addToCart, isInCart, toggleWishlist, isInWishli
             brand: quickViewProduct.brand || '',
             selectedSize: null
           };
-         
           toggleWishlist(wishlistProduct);
           addNotification(
-            wasInWishlist ? 'Removed from wishlist' : 'Added to wishlist!',
-            'success',
-            quickViewProduct.name,
-            'wishlist'
+            isInWishlist(quickViewProduct._id) ? 'Removed from wishlist' : 'Added to wishlist!',
+            'success'
           );
-        } catch (error) {
-          console.error('Wishlist toggle error:', error);
+        } catch {
           addNotification('Failed to update wishlist', 'error');
         }
       } else {
         addNotification('Unable to update wishlist', 'error');
       }
     };
+
     const handleQuickViewAddToCart = async () => {
       if (!quickViewProduct._id) {
         addNotification('Product not available', 'error');
@@ -525,17 +331,21 @@ const ScentCard = memo(({ scent, addToCart, isInCart, toggleWishlist, isInWishli
       try {
         const success = await addToCart(cartItem);
         if (success) {
-          addNotification(null, 'success', quickViewProduct.name, 'cart');
+          addNotification(`Added ${quickViewProduct.name} to cart!`, 'success');
           handleClose();
         } else {
           addNotification('Failed to add item to cart', 'error');
         }
-      } catch (error) {
-        console.error('Quick View Add to cart error:', error);
+      } catch {
         addNotification('Something went wrong. Please try again.', 'error');
       }
     };
-    const productInQuickViewCart = isInCart(quickViewProduct._id?.toString(), quickViewProduct.sizes && quickViewProduct.sizes.length > 0 ? quickViewProduct.sizes[0].size : null);
+
+    const productInQuickViewCart = isInCart(
+      quickViewProduct._id?.toString(),
+      quickViewProduct.sizes && quickViewProduct.sizes.length > 0 ? quickViewProduct.sizes[0].size : null
+    );
+
     return (
       <AnimatePresence>
         <motion.div
@@ -553,7 +363,7 @@ const ScentCard = memo(({ scent, addToCart, isInCart, toggleWishlist, isInWishli
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold text-[#79300f] dark:text-[#f6d110]">
+              <h3 className="text-2xl font-bold text-[#431A06] dark:text-[#f6d110]">
                 Quick View
               </h3>
               <button
@@ -564,7 +374,6 @@ const ScentCard = memo(({ scent, addToCart, isInCart, toggleWishlist, isInWishli
                 ×
               </button>
             </div>
-           
             <div className="grid md:grid-cols-2 gap-8">
               <div>
                 <img
@@ -576,7 +385,6 @@ const ScentCard = memo(({ scent, addToCart, isInCart, toggleWishlist, isInWishli
                   }}
                 />
               </div>
-             
               <div className="space-y-4">
                 <h4 className="text-xl font-bold text-gray-900 dark:text-gray-100">
                   {quickViewProduct.name || 'Unnamed Scent'}
@@ -589,11 +397,9 @@ const ScentCard = memo(({ scent, addToCart, isInCart, toggleWishlist, isInWishli
                 <p className="text-gray-600 dark:text-gray-400">
                   {quickViewProduct.description || 'No description available'}
                 </p>
-                <p className="text-2xl font-bold text-[#79300f] dark:text-[#f6d110]">
+                <p className="text-2xl font-bold text-[#431A06] dark:text-[#f6d110]">
                   ${quickViewProduct.price ? quickViewProduct.price.toFixed(2) : '0.00'}
                 </p>
-               
-                {/* Scent Details */}
                 <div className="flex flex-wrap gap-2 text-xs">
                   {quickViewProduct.scentFamily && (
                     <span className="bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2 py-1 rounded-full capitalize">
@@ -611,11 +417,11 @@ const ScentCard = memo(({ scent, addToCart, isInCart, toggleWishlist, isInWishli
                     </span>
                   )}
                 </div>
-               
                 <div className="flex gap-4">
                   {productInQuickViewCart ? (
                     <button
                       onClick={() => {
+                        // open cart sidebar instead of navigation
                         setIsCartOpen(true);
                         handleClose();
                       }}
@@ -627,7 +433,7 @@ const ScentCard = memo(({ scent, addToCart, isInCart, toggleWishlist, isInWishli
                   ) : (
                     <button
                       onClick={handleQuickViewAddToCart}
-                      className="flex-1 bg-gradient-to-r from-[#79300f] to-[#5a2408] text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center space-x-2"
+                      className="flex-1 bg-gradient-to-r from-[#431A06] to-[#5A2408] text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center space-x-2"
                     >
                       <ShoppingBag size={20} />
                       <span>Add to Cart</span>
@@ -635,7 +441,7 @@ const ScentCard = memo(({ scent, addToCart, isInCart, toggleWishlist, isInWishli
                   )}
                   <button
                     onClick={handleQuickViewWishlist}
-                    className="px-4 py-3 border-2 border-[#79300f] text-[#79300f] rounded-xl hover:bg-[#79300f] hover:text-white transition-all duration-300"
+                    className="px-4 py-3 border-2 border-[#431A06] text-[#431A06] rounded-xl hover:bg-[#431A06] hover:text-white transition-all duration-300"
                     aria-label="Add to wishlist"
                   >
                     <Heart size={20} className={isInWishlist(quickViewProduct._id) ? 'fill-red-600 text-red-600' : ''} />
@@ -662,141 +468,45 @@ const ScentCard = memo(({ scent, addToCart, isInCart, toggleWishlist, isInWishli
       </AnimatePresence>
     );
   };
-  // Notification System
+
   const NotificationSystem = () => (
-    <div className="fixed z-[9999] space-y-3" style={{ top: '40px', right: '20px' }}>
+    <div className="fixed top-4 right-4 z-50 space-y-2">
       <AnimatePresence>
         {notifications.map((notification) => (
           <motion.div
             key={notification.id}
-            initial={{ opacity: 0, x: 400, scale: 0.8 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: 400, scale: 0.8 }}
-            transition={{ duration: 0.3 }}
-            style={{
-              position: 'relative',
-              width: '400px',
-              height: '100px',
-              backgroundColor: '#EDE4CF',
-              overflow: 'hidden',
-              boxShadow: '4px 6px 16px 0px rgba(0,0,0,0.1), 18px 24px 30px 0px rgba(0,0,0,0.09), 40px 53px 40px 0px rgba(0,0,0,0.05), 71px 95px 47px 0px rgba(0,0,0,0.01), 110px 149px 52px 0px rgba(0,0,0,0)',
-              borderRadius: '4px'
-            }}
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 100 }}
+            className={`p-4 rounded-2xl shadow-lg backdrop-blur-sm max-w-sm ${
+              notification.type === 'success'
+                ? 'bg-green-500 text-white'
+                : 'bg-red-500 text-white'
+            }`}
           >
-            {/* Left Vertical Bar */}
-            <div
-              style={{
-                position: 'absolute',
-                left: '16px',
-                top: '0',
-                width: '12px',
-                height: '100%',
-                backgroundColor: '#AC9157'
-              }}
-            />
-            {/* Icon - Show correct icon based on actionType */}
-            <div
-              style={{
-                position: 'absolute',
-                top: '30px',
-                left: '36px',
-                width: '40px',
-                height: '40px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              {notification.type === 'error' ? (
-                <AlertCircle size={40} style={{ color: '#AC9157' }} strokeWidth={1.5} />
-              ) : notification.actionType === 'wishlist' ? (
-                <Heart size={40} style={{ color: '#AC9157' }} strokeWidth={1.5} />
-              ) : notification.actionType === 'cart' ? (
-                <ShoppingCart size={40} style={{ color: '#AC9157' }} strokeWidth={1.5} />
-              ) : (
-                <CheckCircle size={40} style={{ color: '#AC9157' }} strokeWidth={1.5} />
-              )}
-            </div>
-            {/* Close Icon */}
-            <button
-              onClick={() => {
-                setNotifications(prev => prev.filter(n => n.id !== notification.id));
-              }}
-              style={{
-                position: 'absolute',
-                top: '8px',
-                right: '8px',
-                width: '24px',
-                height: '24px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                padding: 0
-              }}
-              aria-label="Close notification"
-            >
-              <X size={24} style={{ color: '#242122' }} strokeWidth={2} />
-            </button>
-            {/* Title Text - Show correct title based on actionType */}
-            <div
-              style={{
-                position: 'absolute',
-                top: '22px',
-                left: '96px',
-                fontFamily: 'Playfair Display, serif',
-                fontWeight: 700,
-                fontSize: '22px',
-                lineHeight: '26px',
-                color: '#242122',
-                whiteSpace: 'nowrap'
-              }}
-            >
-              {notification.type === 'error'
-                ? 'Error'
-                : notification.actionType === 'wishlist'
-                  ? (notification.message && notification.message.includes('Removed') ? 'Removed from Wishlist' : 'Added to Wishlist')
-                  : notification.actionType === 'cart'
-                    ? 'Added to Cart'
-                    : 'Success'
-              }
-            </div>
-            {/* Product Name or Message */}
-            <div
-              style={{
-                position: 'absolute',
-                top: '56px',
-                left: '96px',
-                width: '271px',
-                fontFamily: 'Manrope, sans-serif',
-                fontWeight: 400,
-                fontSize: '16px',
-                lineHeight: '22px',
-                color: '#5B5C5B',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap'
-              }}
-            >
-              {notification.productName || notification.message}
+            <div className="flex items-center space-x-3">
+              {notification.type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
+              <span className="font-medium">{notification.message}</span>
             </div>
           </motion.div>
         ))}
       </AnimatePresence>
     </div>
   );
+
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F5F0] dark:bg-gray-900">
+    <div className="min-h-screen flex flex-col bg-[#F8F5F0]">
       <Header />
       <NotificationSystem />
+
+      {/* Quick view modal */}
       <QuickViewModal />
-      {/* CART SIDEBAR */}
+
+      {/* CART SIDEBAR: opens from right side — same behavior as Mens/Womens */}
       <ProductCartSection isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
-     
+
       <main className="flex-1">
-        {/* Hero Section - Updated with don1.png banner */}
+        {/* Hero Section */}
         <section className="relative overflow-hidden w-full bg-gradient-to-br from-purple-100 via-pink-100 to-rose-100 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800">
           <div className="relative w-full h-[500px] md:h-[600px] lg:h-[700px] flex items-center justify-center">
             <img
@@ -812,11 +522,7 @@ const ScentCard = memo(({ scent, addToCart, isInCart, toggleWishlist, isInWishli
                 e.target.parentElement.innerHTML = '<div class="flex items-center justify-center w-full h-full bg-gradient-to-br from-purple-100 to-pink-100"><div class="text-center"><div class="mx-auto mb-4 text-purple-600"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/></svg></div><h2 class="text-4xl font-bold text-purple-900">Gender-Free Fragrance Collection</h2></div></div>';
               }}
             />
-            
-            {/* Overlay with gradient */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-black/20 pointer-events-none"></div>
-            
-            {/* Gender-Free Fragrance Text Overlay - Center */}
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center px-6">
                 <motion.div
@@ -827,7 +533,6 @@ const ScentCard = memo(({ scent, addToCart, isInCart, toggleWishlist, isInWishli
                 >
                   <Users className="w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 mx-auto text-purple-400 drop-shadow-[0_0_15px_rgba(168,85,247,0.8)]" />
                 </motion.div>
-                
                 <motion.h1
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -843,7 +548,6 @@ const ScentCard = memo(({ scent, addToCart, isInCart, toggleWishlist, isInWishli
                 >
                   Gender-Free Fragrance
                 </motion.h1>
-                
                 <motion.div
                   initial={{ opacity: 0, scaleX: 0 }}
                   animate={{ opacity: 1, scaleX: 1 }}
@@ -853,7 +557,6 @@ const ScentCard = memo(({ scent, addToCart, isInCart, toggleWishlist, isInWishli
                     boxShadow: "0 0 20px rgba(168, 85, 247, 0.8)"
                   }}
                 ></motion.div>
-                
                 <motion.p
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -868,7 +571,6 @@ const ScentCard = memo(({ scent, addToCart, isInCart, toggleWishlist, isInWishli
                 >
                   Beyond Boundaries, Beyond Labels
                 </motion.p>
-                
                 <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -887,7 +589,6 @@ const ScentCard = memo(({ scent, addToCart, isInCart, toggleWishlist, isInWishli
           </div>
         </section>
 
-        {/* Products Grid */}
         <section className="py-12 px-6">
           <div className="max-w-7xl mx-auto">
             {loading ? (
@@ -925,30 +626,11 @@ const ScentCard = memo(({ scent, addToCart, isInCart, toggleWishlist, isInWishli
                     Showing {scents.length} of {totalPages * itemsPerPage} gender-free scents
                   </p>
                 </div>
-
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                  {scents.map((scent) => {
-                    if (!scent || !scent._id) {
-                      console.warn('Invalid scent:', scent);
-                      return null;
-                    }
-                    return (
-                      <ScentCard
-                        key={scent._id}
-                        scent={scent}
-                        addToCart={addToCart}
-                        isInCart={isInCart}
-                        toggleWishlist={toggleWishlist}
-                        isInWishlist={isInWishlist}
-                        navigate={navigate}
-                        addNotification={addNotification}
-                        setIsCartOpen={setIsCartOpen}
-                      />
-                    );
-                  })}
+                  {scents.map((scent) => (
+                    <ScentCard key={scent._id} scent={scent} />
+                  ))}
                 </div>
-
-                {/* Pagination */}
                 {totalPages > 1 && (
                   <div className="flex justify-center items-center space-x-4 mt-12">
                     <button
@@ -958,8 +640,6 @@ const ScentCard = memo(({ scent, addToCart, isInCart, toggleWishlist, isInWishli
                     >
                       Previous
                     </button>
-                   
-                    {/* Page numbers */}
                     <div className="flex space-x-2">
                       {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                         let pageNum;
@@ -972,7 +652,6 @@ const ScentCard = memo(({ scent, addToCart, isInCart, toggleWishlist, isInWishli
                         } else {
                           pageNum = currentPage - 2 + i;
                         }
-
                         return (
                           <button
                             key={pageNum}
@@ -988,7 +667,6 @@ const ScentCard = memo(({ scent, addToCart, isInCart, toggleWishlist, isInWishli
                         );
                       })}
                     </div>
-
                     <button
                       onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                       disabled={currentPage === totalPages}
@@ -1003,7 +681,6 @@ const ScentCard = memo(({ scent, addToCart, isInCart, toggleWishlist, isInWishli
           </div>
         </section>
       </main>
-     
       <Footer />
     </div>
   );
