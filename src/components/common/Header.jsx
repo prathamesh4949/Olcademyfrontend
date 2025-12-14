@@ -9,26 +9,11 @@ import ProductCartSection from '@/pages/ProductCartSection';
 import { AuthContext } from '../../context/AuthContext';
 
 const navItems = [
-  {
-    label: 'HOME',
-    path: '/',
-  },
-  {
-    label: "MEN'S SCENTS",
-    path: '/mens-collection',
-  },
-  {
-    label: "WOMEN'S SCENTS",
-    path: '/womens-collection',
-  },
-  {
-    label: 'UNISEX SCENTS',
-    path: '/unisex-collection',
-  },
-  {
-    label: 'GIFTS',
-    path: '/gift-collection',
-  },
+  { label: 'HOME', path: '/' },
+  { label: "MEN'S SCENTS", path: '/mens-collection' },
+  { label: "WOMEN'S SCENTS", path: '/womens-collection' },
+  { label: 'UNISEX SCENTS', path: '/unisex-collection' },
+  { label: 'GIFTS', path: '/gift-collection' }
 ];
 
 const Header = () => {
@@ -44,37 +29,33 @@ const Header = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
 
   const INITIAL_HEIGHT = 197;
-  const STICKY_HEIGHT = 160;
+  const STICKY_HEIGHT = 120;
   const SCROLL_THRESHOLD = 50;
-
-  const openCart = () => setIsCartOpen(true);
-  const closeCart = () => setIsCartOpen(false);
 
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
   const location = useLocation();
 
+  const openCart = () => setIsCartOpen(true);
+  const closeCart = () => setIsCartOpen(false);
+
   useEffect(() => {
     const handleScroll = () => {
-      const currentScrollPos = window.pageYOffset || document.documentElement.scrollTop;
-      setIsScrolled(currentScrollPos > SCROLL_THRESHOLD);
+      const top = window.pageYOffset || document.documentElement.scrollTop;
+      setIsScrolled(top > SCROLL_THRESHOLD);
     };
-
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   useEffect(() => {
     if (menuOpen || searchOpen) {
       document.body.style.overflow = 'hidden';
-      document.body.style.paddingRight = '0px'; // Prevent layout shift
+      document.body.style.paddingRight = '0px';
     } else {
       document.body.style.overflow = '';
       document.body.style.paddingRight = '';
     }
-    
     return () => {
       document.body.style.overflow = '';
       document.body.style.paddingRight = '';
@@ -82,14 +63,12 @@ const Header = () => {
   }, [menuOpen, searchOpen]);
 
   const toggleMenu = () => setMenuOpen(!menuOpen);
-  
+
   const toggleSearch = () => {
     setSearchOpen(!searchOpen);
-    if (searchOpen) {
-      setSearchQuery('');
-    }
+    if (searchOpen) setSearchQuery('');
   };
-  
+
   const toggleUserDropdown = () => setIsUserDropdownOpen(!isUserDropdownOpen);
 
   const handleSearchSubmit = (e) => {
@@ -101,197 +80,111 @@ const Header = () => {
     }
   };
 
-  const handleSearchChange = (e) => setSearchQuery(e.target.value);
-
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && searchOpen) {
-        setSearchOpen(false);
-        setSearchQuery('');
-      }
-    };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [searchOpen]);
-
   const isActiveNavItem = (path) => location.pathname === path;
 
   const currentHeight = isScrolled ? STICKY_HEIGHT : INITIAL_HEIGHT;
-  const logoTop = isScrolled ? '50px' : '20px';
+
+  const logoTop = isScrolled ? '28px' : '20px';
   const logoLeft = isScrolled ? '52px' : '50%';
   const logoTransform = isScrolled ? 'translateX(0%)' : 'translateX(-50%)';
-  const iconSearchLayerTop = isScrolled ? '63px' : '86px';
-  const navLayerTop = isScrolled ? '50px' : '116px';
+
+  const navLayerTop = isScrolled ? '22px' : '116px';
+  const iconLayerTop = isScrolled ? '26px' : '86px';
+
+  const navFontSize = isScrolled ? '18px' : '26px';
+  const navPadding = isScrolled ? '6px 16px' : '12px 32px';
+  const navMinWidth = isScrolled ? '95px' : '142px';
+
   const spacerHeight = INITIAL_HEIGHT;
 
   return (
     <>
       <style>{`
-        /* Hide scrollbar globally */
-        html::-webkit-scrollbar {
-          display: none;
-        }
-        
-        html {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-          overflow-x: hidden;
-          overflow-y: scroll;
-        }
-        
-        body {
-          margin: 0;
-          padding: 0;
-          overflow-x: hidden;
-          width: 100%;
-          max-width: 100vw;
-        }
-        
-        #root {
-          overflow-x: hidden;
-          width: 100%;
-          max-width: 100vw;
-        }
+        html::-webkit-scrollbar { display: none; }
+        html { -ms-overflow-style: none; scrollbar-width: none; overflow-y: scroll; overflow-x: hidden; }
+        body, #root { margin: 0; padding: 0; overflow-x: hidden; width: 100%; max-width: 100vw; }
       `}</style>
 
       <motion.header
         animate={{
           height: currentHeight,
-          borderBottomWidth: isScrolled ? '0px' : '1px',
-          backgroundColor: isScrolled ? '#FFFFFF' : '#F9F7F6',
+          backgroundColor: isScrolled ? '#ffffff' : '#F9F7F6',
+          borderBottomWidth: isScrolled ? '0px' : '1px'
         }}
-        transition={{
-          duration: 0.3,
-          ease: [0.25, 0.46, 0.45, 0.94],
-        }}
+        transition={{ duration: 0.3 }}
         className="fixed top-0 left-0 right-0 z-[9999]"
         style={{
           width: '100%',
-          maxWidth: '100vw',
-          height: `${INITIAL_HEIGHT}px`,
-          backgroundColor: '#F9F7F6',
+          height: INITIAL_HEIGHT,
           border: '1px solid #B59B8E',
+          backgroundColor: '#F9F7F6',
           backdropFilter: 'blur(8px)',
-          WebkitBackdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)'
         }}
       >
         <div className="relative w-full h-full max-w-[1728px] mx-auto px-[52px]">
-          {/* Logo Layer */}
+
           <div
-            className="absolute flex items-center transition-all duration-300 ease-out"
+            className="absolute flex items-center transition-all duration-300"
             style={{
               width: '80px',
               height: '60px',
               top: logoTop,
-              left: isScrolled ? '52px' : '50%',
+              left: logoLeft,
               transform: logoTransform,
-              justifyContent: isScrolled ? 'flex-start' : 'center',
-              zIndex: 10001,
+              zIndex: 10001
             }}
           >
-            <Link to="/" className="flex items-center justify-center">
+            <Link to="/">
               <motion.img
                 src="/images/Logo.png"
                 alt="Logo"
-                animate={{
-                  scale: isScrolled ? 0.75 : 1,
-                }}
-                transition={{ duration: 0.3 }}
-                style={{
-                  width: '120px',
-                  height: '60px',
-                  objectFit: 'contain',
-                }}
+                animate={{ scale: isScrolled ? 0.78 : 1 }}
+                transition={{ duration: 0.25 }}
+                style={{ width: '120px', height: '60px', objectFit: 'contain' }}
               />
             </Link>
           </div>
 
-          {/* Search Icon Adjacent to Logo (when scrolled) */}
-          <AnimatePresence>
-            {isScrolled && (
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
-                className="absolute flex items-center"
-                style={{
-                  top: '63px',
-                  left: '162px',
-                  zIndex: 10001,
-                }}
-              >
-                <button
-                  onClick={toggleSearch}
-                  className="flex items-center transition duration-200 hover:opacity-70"
-                  style={{
-                    width: '34px',
-                    height: '34px',
-                    color: '#341405',
-                  }}
-                  aria-label="Toggle Search"
-                >
-                  <FiSearch size={34} />
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Icons/Search Layer */}
           <div
-            className="absolute flex items-center transition-all duration-300 ease-out"
+            className="absolute flex items-center transition-all duration-300"
             style={{
               width: isScrolled ? 'auto' : 'calc(100% - 104px)',
-              height: '34px',
-              top: iconSearchLayerTop,
+              top: iconLayerTop,
               left: isScrolled ? 'auto' : '52px',
               right: '52px',
-              justifyContent: isScrolled ? 'flex-end' : 'space-between',
-              zIndex: 10001,
+              justifyContent: isScrolled ? 'flex-end' : 'space-between'
             }}
           >
-            {/* Left Section - Search & Menu (only visible when NOT scrolled) */}
             <div
-              className="flex items-center"
+              className="flex items-center transition-all duration-300"
               style={{
-                opacity: isScrolled ? 0 : 1,
-                pointerEvents: isScrolled ? 'none' : 'auto',
-                visibility: isScrolled ? 'hidden' : 'visible',
+                transform: isScrolled ? 'scale(0.95)' : 'scale(1)',
+                opacity: 1,
+                visibility: 'visible'
               }}
             >
               <button
                 onClick={toggleMenu}
                 className="text-2xl z-50 md:hidden focus:outline-none mr-4"
                 style={{ color: '#341405' }}
-                aria-label="Toggle Menu"
               >
                 {menuOpen ? <FiX size={34} /> : <FiMenu size={34} />}
               </button>
 
-              <button
+              {/* <button
                 onClick={toggleSearch}
-                className="flex items-center transition duration-200"
                 style={{
                   width: '34px',
                   height: '34px',
-                  color: '#341405',
+                  color: '#341405'
                 }}
-                aria-label="Toggle Search"
               >
                 <FiSearch size={34} />
-              </button>
+              </button> */}
             </div>
 
-            {/* Right Icons */}
-            <div
-              className="flex items-center"
-              style={{
-                height: '34px',
-                gap: '32px',
-                zIndex: 10001,
-              }}
-            >
-              {/* Wishlist Icon */}
+            <div className="flex items-center" style={{ gap: '28px' }}>
               <Link
                 to="/wishlist-collection"
                 style={{
@@ -299,39 +192,35 @@ const Header = () => {
                   height: '34px',
                   color: '#341405',
                   display: 'flex',
-                  alignItems: 'center',
                   justifyContent: 'center',
+                  alignItems: 'center'
                 }}
-                aria-label="Wishlist"
               >
                 <FiHeart size={34} />
               </Link>
 
-              {/* Shopping Cart Icon */}
               <button
-                type="button"
                 onClick={openCart}
                 style={{
                   width: '34px',
                   height: '34px',
                   color: '#341405',
                   display: 'flex',
-                  alignItems: 'center',
                   justifyContent: 'center',
+                  alignItems: 'center'
                 }}
-                aria-label="Open cart"
               >
                 <FiShoppingCart size={34} />
               </button>
 
-              {/* User Section */}
               {user ? (
-                <div className="relative flex items-center">
+                <div className="relative">
                   <button
                     onClick={toggleUserDropdown}
-                    className="flex items-center focus:outline-none"
-                    style={{ width: '34px', height: '34px', zIndex: 10002 }}
-                    aria-label="User Account"
+                    style={{
+                      width: '34px',
+                      height: '34px'
+                    }}
                   >
                     <div
                       className="rounded-full flex items-center justify-center"
@@ -339,58 +228,44 @@ const Header = () => {
                         width: '34px',
                         height: '34px',
                         backgroundColor: '#341405',
-                        color: '#F9F7F6',
-                        fontSize: '16px',
-                        fontWeight: '500',
-                        fontFamily: 'Manrope, sans-serif',
+                        color: '#fff'
                       }}
                     >
-                      {user.username
-                        ? user.username.charAt(0).toUpperCase()
-                        : user.email.charAt(0).toUpperCase()}
+                      {user.username ? user.username.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
                     </div>
                   </button>
+
                   <AnimatePresence>
                     {isUserDropdownOpen && (
                       <motion.div
-                        initial={{ opacity: 0, y: 10 }}
+                        initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 10 }}
+                        exit={{ opacity: 0, y: 8 }}
                         transition={{ duration: 0.2 }}
                         className="absolute top-full mt-2 right-0 shadow-lg rounded-lg"
                         style={{
                           backgroundColor: '#F9F7F6',
                           border: '1px solid #B59B8E',
-                          padding: '16px',
                           width: '200px',
-                          fontFamily: 'Manrope, sans-serif',
-                          zIndex: 10003,
+                          padding: '16px'
                         }}
                       >
-                        {/* <Link
-                          to="/orders"
-                          className="block py-2 hover:opacity-70 transition duration-200"
+                        <Link
+                          to="/userProfile"
                           onClick={() => setIsUserDropdownOpen(false)}
-                          style={{ fontSize: '16px', fontWeight: '400', color: '#341405' }}
+                          className="block py-2"
+                          style={{ color: '#341405', fontSize: '16px' }}
                         >
-                          My Orders
-                        </Link> */}
+                          My Profile
+                        </Link>
 
-                                               <Link
-                        to="/userProfile"
-                        className="block py-2 hover:opacity-70 transition duration-200"
-                        onClick={() => setIsUserDropdownOpen(false)}
-                        style={{ fontSize: '16px', fontWeight: '400', color: '#341405' }}
-                      >
-                        My Profile
-                      </Link>
                         <button
                           onClick={() => {
                             logout();
                             setIsUserDropdownOpen(false);
                           }}
-                          className="block w-full text-left py-2 hover:opacity-70 transition-colors"
-                          style={{ fontSize: '16px', fontWeight: '400', color: '#341405' }}
+                          className="block w-full text-left py-2"
+                          style={{ color: '#341405', fontSize: '16px' }}
                         >
                           Logout
                         </button>
@@ -406,10 +281,9 @@ const Header = () => {
                     height: '34px',
                     color: '#341405',
                     display: 'flex',
-                    alignItems: 'center',
                     justifyContent: 'center',
+                    alignItems: 'center'
                   }}
-                  aria-label="Sign Up"
                 >
                   <FiUser size={34} />
                 </button>
@@ -417,53 +291,50 @@ const Header = () => {
             </div>
           </div>
 
-          {/* Navigation Bar */}
           <motion.div
-            animate={{
-              top: navLayerTop,
-            }}
-            transition={{
-              duration: 0.3,
-              ease: [0.25, 0.46, 0.45, 0.94],
-            }}
+            animate={{ top: navLayerTop }}
+            transition={{ duration: 0.3 }}
             className="absolute hidden md:flex items-center"
             style={{
-              width: isScrolled ? '100%' : 'auto',
-              height: '60px',
-              left: isScrolled ? '0%' : '50%',
-              transform: isScrolled ? 'translateX(0%)' : 'translateX(-50%)',
-              gap: '0px',
+              width: '100%',
+              left: 0,
+              transform: 'translateX(0)',
               justifyContent: 'center',
-              zIndex: 10000,
+              gap: '12px',
+              height: '60px'
             }}
           >
+            <button
+              onClick={toggleSearch}
+              style={{
+                width: isScrolled ? '32px' : '40px',
+                height: isScrolled ? '32px' : '40px',
+                color: '#341405',
+                transform: isScrolled ? 'scale(0.9)' : 'scale(1)',
+                transition: 'all 0.25s ease'
+              }}
+            >
+              <FiSearch size={isScrolled ? 28 : 34} />
+            </button>
+
             {navItems.map((item) => (
               <div
                 key={item.label}
-                className="relative flex items-center justify-center"
                 style={{
-                  minWidth: '142px',
-                  height: '60px',
-                  padding: '12px 32px',
-                  borderBottom: isActiveNavItem(item.path) ? '1px solid #341405' : 'none',
-                  width: item.label === 'HOME' ? '142px' : 'auto',
+                  minWidth: navMinWidth,
+                  padding: navPadding,
+                  borderBottom: isActiveNavItem(item.path) ? '1px solid #341405' : 'none'
                 }}
               >
                 <Link
                   to={item.path}
-                  className="hover:opacity-70 transition-opacity duration-200"
+                  className="hover:opacity-70"
                   style={{
                     fontFamily: 'Manrope',
                     fontWeight: '400',
-                    fontSize: '26px',
-                    lineHeight: '100%',
-                    letterSpacing: '5%',
+                    fontSize: navFontSize,
                     textTransform: 'uppercase',
-                    color: '#341405',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    whiteSpace: 'nowrap',
+                    color: '#341405'
                   }}
                 >
                   {item.label}
@@ -473,7 +344,6 @@ const Header = () => {
           </motion.div>
         </div>
 
-        {/* Mobile Menu */}
         <AnimatePresence>
           {menuOpen && (
             <motion.div
@@ -481,23 +351,20 @@ const Header = () => {
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ duration: 0.3 }}
-              className="fixed inset-y-0 left-0 w-64 bg-[#F9F7F6] shadow-lg overflow-y-auto"
-              style={{ zIndex: 10004 }}
+              className="fixed inset-y-0 left-0 w-64 bg-[#F9F7F6] shadow-lg"
+              style={{ zIndex: 10010 }}
             >
               <div className="p-6">
-                <button
-                  onClick={toggleMenu}
-                  className="mb-6 text-[#341405]"
-                  aria-label="Close Menu"
-                >
+                <button onClick={toggleMenu} className="mb-6 text-[#341405]">
                   <FiX size={28} />
                 </button>
+
                 {navItems.map((item) => (
                   <div key={item.label} className="mb-4">
                     <Link
                       to={item.path}
                       onClick={toggleMenu}
-                      className="block py-2 text-lg font-medium text-[#341405] hover:text-[#79300f]"
+                      className="block py-2 text-lg text-[#341405]"
                     >
                       {item.label}
                     </Link>
@@ -509,7 +376,6 @@ const Header = () => {
         </AnimatePresence>
       </motion.header>
 
-      {/* Search Overlay */}
       <AnimatePresence>
         {searchOpen && (
           <motion.div
@@ -518,7 +384,7 @@ const Header = () => {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             className="fixed inset-0 bg-black/50 flex items-start justify-center pt-32"
-            style={{ zIndex: 10005, overflow: 'hidden' }}
+            style={{ zIndex: 10030 }}
             onClick={toggleSearch}
           >
             <motion.div
@@ -528,29 +394,19 @@ const Header = () => {
               transition={{ duration: 0.3 }}
               className="bg-white rounded-2xl shadow-2xl p-8 max-w-2xl w-full mx-4"
               onClick={(e) => e.stopPropagation()}
-              style={{ zIndex: 10006 }}
             >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-[#341405]">Search Perfumes</h2>
-                <button
-                  onClick={toggleSearch}
-                  className="text-[#341405] hover:text-[#79300f] transition-colors"
-                >
-                  <FiX size={24} />
-                </button>
-              </div>
               <form onSubmit={handleSearchSubmit} className="flex gap-4">
                 <input
                   type="text"
                   value={searchQuery}
-                  onChange={handleSearchChange}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search for your perfect scent..."
-                  className="flex-1 px-6 py-4 rounded-xl border-2 border-[#B59B8E] focus:border-[#79300f] focus:outline-none text-lg"
+                  className="flex-1 px-6 py-4 rounded-xl border-2 border-[#B59B8E] text-lg"
                   autoFocus
                 />
                 <button
                   type="submit"
-                  className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl"
+                  className="bg-gradient-to-r from-[#79300f] to-[#5a2408] text-white px-8 py-4 rounded-xl font-semibold shadow-lg"
                 >
                   Search
                 </button>
@@ -560,7 +416,7 @@ const Header = () => {
         )}
       </AnimatePresence>
 
-      <div style={{ height: `${spacerHeight}px` }}></div>
+      <div style={{ height: spacerHeight }} />
 
       <SignupModal
         isOpen={isSignupOpen}
