@@ -864,6 +864,10 @@ const AdminScentsSection = () => {
 
 const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, onPersonalizationChange, onArrayChange, onSizesChange, onFragranceNotesChange, onClose, loading, categories, collections, allCollections, scentFamilies, intensities, longevities, sillages, concentrations, seasons, occasions, addSize, removeSize, isEdit = false, fetchScents, getFilteredCollections }) => {
   const [activeTab, setActiveTab] = useState('basic');
+  const [deletedImageIndices, setDeletedImageIndices] = useState(new Set());
+  const [deletedHover, setDeletedHover] = useState(false);
+  const [imagePreviews, setImagePreviews] = useState([]);
+  const [hoverPreview, setHoverPreview] = useState(null);
 
   const tabs = [
     { id: 'basic', label: 'Basic Info' },
@@ -873,37 +877,41 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
     { id: 'media', label: 'Images' }
   ];
 
-  const handleDeleteImage = async (index) => {
-    if (!existingScent) return;
-    try {
-      const result = await ScentService.deleteScentImage(existingScent._id, index);
-      if (result.success) {
-        fetchScents();
-        alert('Image deleted successfully. Please reopen the modal to see changes.');
-      } else {
-        alert(result.message || 'Failed to delete image');
-      }
-    } catch (error) {
-      console.error('Error deleting image:', error);
-      alert('Failed to delete image');
+  const handleDeleteImage = (index) => {
+    setDeletedImageIndices(prev => new Set([...prev, index]));
+  };
+
+  const handleDeleteHoverImage = () => {
+    setDeletedHover(true);
+  };
+
+  const handleImageChange = (e) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      // Store the FileList object
+      onChange('images', files);
+      
+      // Create previews for new images
+      const newPreviews = Array.from(files).map(file => URL.createObjectURL(file));
+      setImagePreviews(newPreviews);
     }
   };
 
-  const handleDeleteHoverImage = async () => {
-    if (!existingScent) return;
-    try {
-      const result = await ScentService.deleteScentHoverImage(existingScent._id);
-      if (result.success) {
-        fetchScents();
-        alert('Hover image deleted successfully. Please reopen the modal to see changes.');
-      } else {
-        alert(result.message || 'Failed to delete hover image');
-      }
-    } catch (error) {
-      console.error('Error deleting hover image:', error);
-      alert('Failed to delete hover image');
+  const handleHoverImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      onChange('hoverImage', file);
+      setHoverPreview(URL.createObjectURL(file));
     }
   };
+
+  // Clean up preview URLs when component unmounts
+  useEffect(() => {
+    return () => {
+      imagePreviews.forEach(url => URL.revokeObjectURL(url));
+      if (hoverPreview) URL.revokeObjectURL(hoverPreview);
+    };
+  }, []);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -933,7 +941,30 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
           </div>
         </div>
 
-        <form onSubmit={onSubmit} className="overflow-y-auto max-h-[60vh]">
+        <form onSubmit={async (e) => {
+          e.preventDefault();
+          if (!isEdit) {
+            onSubmit(e);
+            return;
+          }
+
+          try {
+            // Delete marked images first
+            for (const index of deletedImageIndices) {
+              await ScentService.deleteScentImage(existingScent._id, index);
+            }
+
+            if (deletedHover) {
+              await ScentService.deleteScentHoverImage(existingScent._id);
+            }
+
+            onSubmit(e);
+          } catch (error) {
+            console.error('Failed to delete images:', error);
+            alert('Failed to delete images. Proceeding with update anyway.');
+            onSubmit(e);
+          }
+        }} className="overflow-y-auto max-h-[60vh]">
           <div className="p-6">
             {activeTab === 'basic' && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1361,7 +1392,7 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Scent Images</label>
                   <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-purple-500 transition-colors">
-                    <input type="file" accept="image/*" multiple onChange={(e) => onChange('images', e.target.files)} className="hidden" id="images-upload" />
+                    <input type="file" accept="image/*" multiple onChange={handleImageChange} className="hidden" id="images-upload" />
                     <label htmlFor="images-upload" className="cursor-pointer">
                       <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                       <p className="text-lg font-medium text-gray-600 mb-2">Click to upload images</p>
@@ -1375,28 +1406,46 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
                     </div>
                   )}
                 </div>
-                {isEdit && existingScent && existingScent.images && existingScent.images.length > 0 && (
+                {isEdit && scent.keepExistingImages && existingScent && existingScent.images && existingScent.images.length > 0 && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-4">Current Images</label>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {existingScent.images.map((image, index) => (
-                        <div key={index} className="relative group">
-                          <img src={image} alt={`Scent image ${index + 1}`} className="w-full h-32 object-cover rounded-lg border border-gray-200" onError={(e) => { e.target.src = '/images/default-perfume.png'; }} />
-                          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all rounded-lg flex items-center justify-center">
-                            <button type="button" onClick={() => handleDeleteImage(index)} className="opacity-0 group-hover:opacity-100 bg-red-600 text-white p-2 rounded-full hover:bg-red-700 transition-all">
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                      {existingScent.images.map((image, index) => {
+                        if (deletedImageIndices.has(index)) return null;
+                        return (
+                          <div key={index} className="relative group">
+                            <img src={image} alt={`Scent image ${index + 1}`} className="w-full h-32 object-cover rounded-lg border border-gray-200" onError={(e) => { e.target.src = '/images/default-perfume.png'; }} />
+                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all rounded-lg flex items-center justify-center">
+                              <button type="button" onClick={() => handleDeleteImage(index)} className="opacity-0 group-hover:opacity-100 bg-red-600 text-white p-2 rounded-full hover:bg-red-700 transition-all">
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
+                        );
+                      })}
+                    </div>
+                    <p className="text-sm text-purple-600 mt-2">💡 Tip: Click the trash icon to mark images for deletion</p>
+                  </div>
+                )}
+                {imagePreviews.length > 0 && (
+                  <div className="mt-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-4">
+                      {scent.keepExistingImages ? 'New Images to Add' : 'New Images (Will Replace All)'}
+                    </label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {imagePreviews.map((preview, index) => (
+                        <div key={index} className="relative group">
+                          <img src={preview} alt={`New image ${index + 1}`} className="w-full h-32 object-cover rounded-lg border border-gray-200" />
+                          <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-medium">New</div>
                         </div>
                       ))}
                     </div>
-                    <p className="text-sm text-purple-600 mt-2">💡 Tip: Upload new images to replace existing ones, or keep existing images by not selecting new ones</p>
                   </div>
                 )}
                 <div className="mt-8">
                   <label className="block text-sm font-medium text-gray-700 mb-2">Hover Image</label>
                   <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-purple-500 transition-colors">
-                    <input type="file" accept="image/*" onChange={(e) => onChange('hoverImage', e.target.files[0])} className="hidden" id="hover-image-upload" />
+                    <input type="file" accept="image/*" onChange={handleHoverImageChange} className="hidden" id="hover-image-upload" />
                     <label htmlFor="hover-image-upload" className="cursor-pointer">
                       <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                       <p className="text-lg font-medium text-gray-600 mb-2">Click to upload hover image</p>
@@ -1405,7 +1454,7 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
                   </div>
                   <p className="text-sm text-gray-500 mt-2">This image will be shown on hover in scent cards (optional)</p>
                 </div>
-                {isEdit && existingScent && existingScent.hoverImage && (
+                {isEdit && existingScent && existingScent.hoverImage && !deletedHover && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-4">Current Hover Image</label>
                     <div className="relative group w-48">
@@ -1416,7 +1465,18 @@ const ScentModal = ({ title, scent, existingScent = null, onSubmit, onChange, on
                         </button>
                       </div>
                     </div>
-                    <p className="text-sm text-purple-600 mt-2">💡 Tip: Upload a new hover image to replace the existing one</p>
+                    <p className="text-sm text-purple-600 mt-2">💡 Tip: Click the trash icon to mark for deletion</p>
+                  </div>
+                )}
+                {hoverPreview && (
+                  <div className="mt-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-4">
+                      New Hover Image {existingScent?.hoverImage && !deletedHover ? '(Will Replace)' : ''}
+                    </label>
+                    <div className="relative w-48">
+                      <img src={hoverPreview} alt="New hover image" className="w-full h-32 object-cover rounded-lg border border-gray-200" />
+                      <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-medium">New</div>
+                    </div>
                   </div>
                 )}
                 <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">

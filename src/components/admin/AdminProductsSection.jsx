@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { 
+import {
   Package2,
   Plus,
   Edit,
@@ -22,7 +22,6 @@ import {
   ToggleLeft,
   ToggleRight
 } from 'lucide-react';
-
 import ProductService from '@/services/productService';
 
 const AdminProductsSection = () => {
@@ -36,13 +35,13 @@ const AdminProductsSection = () => {
   const [viewMode, setViewMode] = useState('grid');
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState({ total: 0, totalPages: 1, current: 1 });
-  
+ 
   // Modal states
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  
+ 
   // Form states
   const [productForm, setProductForm] = useState({
     name: '',
@@ -71,11 +70,11 @@ const AdminProductsSection = () => {
     occasion: [],
     keepExistingImages: true
   });
-  
+ 
   const [message, setMessage] = useState({ type: '', text: '' });
   const [operationLoading, setOperationLoading] = useState(false);
 
-  // Categories and collections - UPDATED with home category
+  // Categories and collections
   const categories = [
     { value: 'men', label: 'Men' },
     { value: 'women', label: 'Women' },
@@ -99,7 +98,7 @@ const AdminProductsSection = () => {
   const fetchProducts = async (page = 1, resetPagination = false) => {
     try {
       setLoading(true);
-      
+     
       const params = {
         page,
         limit: 1000,
@@ -109,7 +108,7 @@ const AdminProductsSection = () => {
       };
 
       console.log('Fetching products with params:', params);
-      
+     
       const result = await ProductService.getAllProducts(params);
       console.log('Products fetch result:', {
         success: result.success,
@@ -117,7 +116,7 @@ const AdminProductsSection = () => {
         data: result.data,
         pagination: result.pagination
       });
-      
+     
       if (result.success) {
         setProducts(result.data || []);
         setPagination(result.pagination || { total: result.data?.length || 0, totalPages: 1, current: 1 });
@@ -173,7 +172,7 @@ const AdminProductsSection = () => {
   const handleSizesChange = (index, field, value) => {
     setProductForm(prev => ({
       ...prev,
-      sizes: prev.sizes.map((size, i) => 
+      sizes: prev.sizes.map((size, i) =>
         i === index ? { ...size, [field]: value } : size
       )
     }));
@@ -206,12 +205,12 @@ const AdminProductsSection = () => {
 
   // Create product
   const handleCreateProduct = async (e) => {
-    e.preventDefault();
+    e?.preventDefault();
     setOperationLoading(true);
-    
+   
     try {
       const result = await ProductService.createProduct(productForm);
-      
+     
       if (result.success) {
         setShowCreateModal(false);
         resetForm();
@@ -230,14 +229,14 @@ const AdminProductsSection = () => {
 
   // Update product
   const handleUpdateProduct = async (e) => {
-    e.preventDefault();
+    e?.preventDefault();
     if (!selectedProduct) return;
-    
+   
     setOperationLoading(true);
-    
+   
     try {
       const result = await ProductService.updateProduct(selectedProduct._id, productForm);
-      
+     
       if (result.success) {
         setShowEditModal(false);
         setSelectedProduct(null);
@@ -260,12 +259,12 @@ const AdminProductsSection = () => {
     if (!confirm(`Are you sure you want to delete "${productName}"? This action cannot be undone.`)) {
       return;
     }
-    
+   
     setOperationLoading(true);
-    
+   
     try {
       const result = await ProductService.deleteProduct(productId);
-      
+     
       if (result.success) {
         fetchProducts();
         showMessage('success', 'Product deleted successfully!');
@@ -283,10 +282,10 @@ const AdminProductsSection = () => {
   // Toggle product status
   const handleToggleStatus = async (productId) => {
     setOperationLoading(true);
-    
+   
     try {
       const result = await ProductService.toggleProductStatus(productId);
-      
+     
       if (result.success) {
         fetchProducts();
         showMessage('success', result.message);
@@ -416,14 +415,14 @@ const AdminProductsSection = () => {
             <ImageIcon className="w-16 h-16 text-gray-300" />
           )}
         </div>
-        
+       
         {/* Status Badge */}
         <div className="absolute top-2 left-2">
           <button
             onClick={() => handleToggleStatus(product._id)}
             className={`flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full transition-colors ${
-              product.isActive 
-                ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200' 
+              product.isActive
+                ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
                 : 'bg-red-100 text-red-800 hover:bg-red-200'
             }`}
           >
@@ -541,8 +540,8 @@ const AdminProductsSection = () => {
                 <button
                   onClick={() => handleToggleStatus(product._id)}
                   className={`flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-full transition-colors ${
-                    product.isActive 
-                      ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200' 
+                    product.isActive
+                      ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
                       : 'bg-red-100 text-red-800 hover:bg-red-200'
                   }`}
                 >
@@ -596,8 +595,8 @@ const AdminProductsSection = () => {
       {/* Message Display */}
       {message.text && (
         <div className={`p-4 rounded-xl flex items-center gap-3 shadow-sm ${
-          message.type === 'error' 
-            ? 'bg-red-50 text-red-700 border border-red-200' 
+          message.type === 'error'
+            ? 'bg-red-50 text-red-700 border border-red-200'
             : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
         }`}>
           {message.type === 'error' ? (
@@ -620,7 +619,7 @@ const AdminProductsSection = () => {
             <Package2 className="w-8 h-8 text-blue-500" />
           </div>
         </div>
-        
+       
         <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
@@ -630,7 +629,7 @@ const AdminProductsSection = () => {
             <CheckCircle className="w-8 h-8 text-emerald-500" />
           </div>
         </div>
-        
+       
         <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
@@ -640,7 +639,7 @@ const AdminProductsSection = () => {
             <Star className="w-8 h-8 text-amber-500" />
           </div>
         </div>
-        
+       
         <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
@@ -650,7 +649,7 @@ const AdminProductsSection = () => {
             <AlertCircle className="w-8 h-8 text-red-500" />
           </div>
         </div>
-        
+       
         <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
@@ -825,7 +824,7 @@ const AdminProductsSection = () => {
               >
                 Previous
               </button>
-              
+             
               {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
                 const page = Math.max(1, Math.min(pagination.totalPages - 4, currentPage - 2)) + i;
                 return (
@@ -845,7 +844,7 @@ const AdminProductsSection = () => {
                   </button>
                 );
               })}
-              
+             
               <button
                 onClick={() => {
                   const newPage = Math.min(currentPage + 1, pagination.totalPages);
@@ -941,21 +940,21 @@ const AdminProductsSection = () => {
 };
 
 // Product Modal Component
-const ProductModal = ({ 
-  title, 
-  product, 
+const ProductModal = ({
+  title,
+  product,
   existingProduct = null,
-  onSubmit, 
-  onChange, 
+  onSubmit,
+  onChange,
   onPersonalizationChange,
   onArrayChange,
   onSizesChange,
   onFragranceNotesChange,
-  onClose, 
-  loading, 
-  categories, 
-  collections, 
-  seasons, 
+  onClose,
+  loading,
+  categories,
+  collections,
+  seasons,
   occasions,
   addSize,
   removeSize,
@@ -963,6 +962,10 @@ const ProductModal = ({
   fetchProducts
 }) => {
   const [activeTab, setActiveTab] = useState('basic');
+  const [deletedImageIndices, setDeletedImageIndices] = useState(new Set());
+  const [deletedHover, setDeletedHover] = useState(false);
+  const [imagePreviews, setImagePreviews] = useState([]);
+  const [hoverPreview, setHoverPreview] = useState(null);
 
   const tabs = [
     { id: 'basic', label: 'Basic Info' },
@@ -972,37 +975,41 @@ const ProductModal = ({
     { id: 'media', label: 'Images' }
   ];
 
-  const handleDeleteImage = async (index) => {
-    if (!existingProduct) return;
-    try {
-      const result = await ProductService.deleteProductImage(existingProduct._id, index);
-      if (result.success) {
-        fetchProducts();
-        alert('Image deleted successfully. Please reopen the modal to see changes.');
-      } else {
-        alert(result.message || 'Failed to delete image');
-      }
-    } catch (error) {
-      console.error('Error deleting image:', error);
-      alert('Failed to delete image');
+  const handleDeleteImage = (index) => {
+    setDeletedImageIndices(prev => new Set([...prev, index]));
+  };
+
+  const handleDeleteHoverImage = () => {
+    setDeletedHover(true);
+  };
+
+  const handleImageChange = (e) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      // Store the FileList object
+      onChange('images', files);
+      
+      // Create previews for new images
+      const newPreviews = Array.from(files).map(file => URL.createObjectURL(file));
+      setImagePreviews(newPreviews);
     }
   };
 
-  const handleDeleteHoverImage = async () => {
-    if (!existingProduct) return;
-    try {
-      const result = await ProductService.deleteProductHoverImage(existingProduct._id);
-      if (result.success) {
-        fetchProducts();
-        alert('Hover image deleted successfully. Please reopen the modal to see changes.');
-      } else {
-        alert(result.message || 'Failed to delete hover image');
-      }
-    } catch (error) {
-      console.error('Error deleting hover image:', error);
-      alert('Failed to delete hover image');
+  const handleHoverImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      onChange('hoverImage', file);
+      setHoverPreview(URL.createObjectURL(file));
     }
   };
+
+  // Clean up preview URLs when component unmounts
+  useEffect(() => {
+    return () => {
+      imagePreviews.forEach(url => URL.revokeObjectURL(url));
+      if (hoverPreview) URL.revokeObjectURL(hoverPreview);
+    };
+  }, []);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -1040,7 +1047,30 @@ const ProductModal = ({
         </div>
 
         {/* Content */}
-        <form onSubmit={onSubmit} className="overflow-y-auto max-h-[60vh]">
+        <form onSubmit={async (e) => {
+          e.preventDefault();
+          if (!isEdit) {
+            onSubmit(e);
+            return;
+          }
+
+          try {
+            // Delete marked images first
+            for (const index of deletedImageIndices) {
+              await ProductService.deleteProductImage(existingProduct._id, index);
+            }
+
+            if (deletedHover) {
+              await ProductService.deleteProductHoverImage(existingProduct._id);
+            }
+
+            onSubmit(e);
+          } catch (error) {
+            console.error('Failed to delete images:', error);
+            alert('Failed to delete images. Proceeding with update anyway.');
+            onSubmit(e);
+          }
+        }} className="overflow-y-auto max-h-[60vh]">
           <div className="p-6">
             {activeTab === 'basic' && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1492,7 +1522,7 @@ const ProductModal = ({
                       type="file"
                       accept="image/*"
                       multiple
-                      onChange={(e) => onChange('images', e.target.files)}
+                      onChange={handleImageChange}
                       className="hidden"
                       id="images-upload"
                     />
@@ -1523,50 +1553,76 @@ const ProductModal = ({
                 </div>
 
                 {/* Show existing images if editing */}
-                {isEdit && existingProduct && existingProduct.images && existingProduct.images.length > 0 && (
+                {isEdit && product.keepExistingImages && existingProduct && existingProduct.images && existingProduct.images.length > 0 && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-4">
                       Current Images
                     </label>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {existingProduct.images.map((image, index) => (
+                      {existingProduct.images.map((image, index) => {
+                        if (deletedImageIndices.has(index)) return null;
+                        return (
+                          <div key={index} className="relative group">
+                            <img
+                              src={image}
+                              alt={`Product image ${index + 1}`}
+                              className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                              onError={(e) => {
+                                e.target.src = '/images/default-perfume.png';
+                              }}
+                            />
+                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all rounded-lg flex items-center justify-center">
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteImage(index)}
+                                className="opacity-0 group-hover:opacity-100 bg-red-600 text-white p-2 rounded-full hover:bg-red-700 transition-all"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <p className="text-sm text-amber-600 mt-2">
+                      💡 Tip: Click the trash icon to mark images for deletion
+                    </p>
+                  </div>
+                )}
+
+                {/* Show new image previews */}
+                {imagePreviews.length > 0 && (
+                  <div className="mt-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-4">
+                      {product.keepExistingImages ? 'New Images to Add' : 'New Images (Will Replace All)'}
+                    </label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {imagePreviews.map((preview, index) => (
                         <div key={index} className="relative group">
                           <img
-                            src={image}
-                            alt={`Product image ${index + 1}`}
+                            src={preview}
+                            alt={`New image ${index + 1}`}
                             className="w-full h-32 object-cover rounded-lg border border-gray-200"
-                            onError={(e) => {
-                              e.target.src = '/images/default-perfume.png';
-                            }}
                           />
-                          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all rounded-lg flex items-center justify-center">
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteImage(index)}
-                              className="opacity-0 group-hover:opacity-100 bg-red-600 text-white p-2 rounded-full hover:bg-red-700 transition-all"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                          <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-medium">
+                            New
                           </div>
                         </div>
                       ))}
                     </div>
-                    <p className="text-sm text-amber-600 mt-2">
-                      💡 Tip: Upload new images to replace existing ones, or keep existing images by not selecting new ones
-                    </p>
                   </div>
                 )}
 
                 {/* Hover Image Upload */}
                 <div className="mt-8">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Hover Image
+                    Hover Image (Optional)
                   </label>
                   <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-amber-500 transition-colors">
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={(e) => onChange('hoverImage', e.target.files[0])}
+                      onChange={handleHoverImageChange}
                       className="hidden"
                       id="hover-image-upload"
                     />
@@ -1576,15 +1632,15 @@ const ProductModal = ({
                         Click to upload hover image
                       </p>
                       <p className="text-sm text-gray-500">
-                        PNG, JPG, JPEG up to 5MB (Single image, different from main image)
+                        PNG, JPG, JPEG up to 5MB (Single image shown on hover)
                       </p>
                     </label>
                   </div>
-                  <p className="text-sm text-gray-500 mt-2">This image will be shown on hover in product cards (optional)</p>
+                  <p className="text-sm text-gray-500 mt-2">This image will be shown when users hover over the product card</p>
                 </div>
 
                 {/* Show existing hover image if editing */}
-                {isEdit && existingProduct && existingProduct.hoverImage && (
+                {isEdit && existingProduct && existingProduct.hoverImage && !deletedHover && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-4">
                       Current Hover Image
@@ -1609,8 +1665,27 @@ const ProductModal = ({
                       </div>
                     </div>
                     <p className="text-sm text-amber-600 mt-2">
-                      💡 Tip: Upload a new hover image to replace the existing one
+                      💡 Tip: Click the trash icon to mark for deletion
                     </p>
+                  </div>
+                )}
+
+                {/* Show new hover image preview */}
+                {hoverPreview && (
+                  <div className="mt-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-4">
+                      New Hover Image {existingProduct?.hoverImage && !deletedHover ? '(Will Replace)' : ''}
+                    </label>
+                    <div className="relative w-48">
+                      <img
+                        src={hoverPreview}
+                        alt="New hover image"
+                        className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                      />
+                      <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-medium">
+                        New
+                      </div>
+                    </div>
                   </div>
                 )}
 
@@ -1623,6 +1698,7 @@ const ProductModal = ({
                     <li>• Show product from different angles</li>
                     <li>• Use clean, professional backgrounds</li>
                     <li>• Ensure good lighting and sharp focus</li>
+                    <li>• Hover image should complement the main images</li>
                   </ul>
                 </div>
               </div>
