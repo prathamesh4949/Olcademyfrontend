@@ -91,8 +91,8 @@ const Header = () => {
   const navLayerTop = isScrolled ? '22px' : '116px';
   const iconLayerTop = isScrolled ? '26px' : '86px';
 
-  const navFontSize = isScrolled ? '18px' : '26px';
-  const navPadding = isScrolled ? '6px 16px' : '12px 32px';
+  const navFontSize = isScrolled ? '18px' : '20px';
+  const navPadding = isScrolled ? '6px 10px' : '12px 18px';
   const navMinWidth = isScrolled ? '95px' : '142px';
 
   const spacerHeight = INITIAL_HEIGHT;
@@ -103,8 +103,10 @@ const Header = () => {
         html::-webkit-scrollbar { display: none; }
         html { -ms-overflow-style: none; scrollbar-width: none; overflow-y: scroll; overflow-x: hidden; }
         body, #root { margin: 0; padding: 0; overflow-x: hidden; width: 100%; max-width: 100vw; }
-      `}</style>
-
+      `}
+      
+      </style>
+      {/* navbar */}
       <motion.header
         animate={{
           height: currentHeight,
@@ -147,21 +149,23 @@ const Header = () => {
           </div>
 
           <div
-            className="absolute flex items-center transition-all duration-300"
-            style={{
-              width: isScrolled ? 'auto' : 'calc(100% - 104px)',
-              top: iconLayerTop,
-              left: isScrolled ? 'auto' : '52px',
+           className="absolute flex items-center transition-all duration-300"
+           style={{
+            width: isScrolled ? 'auto' : 'calc(100% - 104px)',
+             top: iconLayerTop,
+             left: isScrolled ? 'auto' : '52px',
               right: '52px',
-              justifyContent: isScrolled ? 'flex-end' : 'space-between'
-            }}
-          >
+               justifyContent: isScrolled ? 'flex-end' : 'space-between',
+                 zIndex: 10002,
+                 pointerEvents: 'auto'
+               }}
+>
+
             <div
               className="flex items-center transition-all duration-300"
               style={{
                 transform: isScrolled ? 'scale(0.95)' : 'scale(1)',
-                opacity: 1,
-                visibility: 'visible'
+                marginRight: isScrolled ? '18px' : '0px' // ← ONLY CHANGE #2
               }}
             >
               <button
@@ -172,7 +176,7 @@ const Header = () => {
                 {menuOpen ? <FiX size={34} /> : <FiMenu size={34} />}
               </button>
 
-              {/* <button
+              <button
                 onClick={toggleSearch}
                 style={{
                   width: '34px',
@@ -181,7 +185,7 @@ const Header = () => {
                 }}
               >
                 <FiSearch size={34} />
-              </button> */}
+              </button>
             </div>
 
             <div className="flex items-center" style={{ gap: '28px' }}>
@@ -242,13 +246,16 @@ const Header = () => {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 8 }}
                         transition={{ duration: 0.2 }}
-                        className="absolute top-full mt-2 right-0 shadow-lg rounded-lg"
+                        className="absolute top-full mt-2 right-0 shadow-lg "
                         style={{
-                          backgroundColor: '#F9F7F6',
-                          border: '1px solid #B59B8E',
-                          width: '200px',
-                          padding: '16px'
+                         backgroundColor: '#F9F7F6',
+                         border: '1px solid #B59B8E',
+                         width: '200px',
+                         padding: '16px',
+                         zIndex: 10050,
+                         pointerEvents: 'auto'
                         }}
+
                       >
                         <Link
                           to="/userProfile"
@@ -296,15 +303,18 @@ const Header = () => {
             transition={{ duration: 0.3 }}
             className="absolute hidden md:flex items-center"
             style={{
-              width: '100%',
-              left: 0,
-              transform: 'translateX(0)',
-              justifyContent: 'center',
-              gap: '12px',
-              height: '60px'
+             width: '100%',
+             left: 0,
+             transform: 'translateX(0)',
+             justifyContent: 'center',
+             gap: '12px',
+             height: '60px',
+             pointerEvents: 'auto',
+             zIndex: 10000
             }}
+
           >
-            <button
+            {/* <button
               onClick={toggleSearch}
               style={{
                 width: isScrolled ? '32px' : '40px',
@@ -315,7 +325,7 @@ const Header = () => {
               }}
             >
               <FiSearch size={isScrolled ? 28 : 34} />
-            </button>
+            </button> */}
 
             {navItems.map((item) => (
               <div
@@ -392,7 +402,7 @@ const Header = () => {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -50, opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="bg-white rounded-2xl shadow-2xl p-8 max-w-2xl w-full mx-4"
+              className="bg-white  shadow-2xl p-8 max-w-2xl w-full mx-4"
               onClick={(e) => e.stopPropagation()}
             >
               <form onSubmit={handleSearchSubmit} className="flex gap-4">
@@ -401,12 +411,12 @@ const Header = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search for your perfect scent..."
-                  className="flex-1 px-6 py-4 rounded-xl border-2 border-[#B59B8E] text-lg"
+                  className="flex-1 px-6 py-4  border-2 border-[#B59B8E] text-lg"
                   autoFocus
                 />
                 <button
                   type="submit"
-                  className="bg-gradient-to-r from-[#79300f] to-[#5a2408] text-white px-8 py-4 rounded-xl font-semibold shadow-lg"
+                  className="bg-gradient-to-r from-[#79300f] to-[#5a2408] text-white px-8 py-4  font-semibold shadow-lg"
                 >
                   Search
                 </button>

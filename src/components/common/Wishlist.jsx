@@ -290,7 +290,7 @@ const Wishlist = () => {
             placeholder="Search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-[48px] w-full sm:w-[60%] md:w-[600px] bg-transparent border border-[#5A2408] rounded font-manrope font-medium text-[#5A2408] text-[16px] px-4 placeholder-[#5A2408] focus:outline-none"
+            className="h-[48px] w-full sm:w-[60%] md:w-[600px] bg-transparent border border-[#5A2408]  font-manrope font-medium text-[#5A2408] text-[16px] px-4 placeholder-[#5A2408] focus:outline-none"
           />
 
           <div
@@ -300,7 +300,7 @@ const Wishlist = () => {
             <button
               type="button"
               onClick={() => setDropdownOpen((open) => !open)}
-              className="flex items-center justify-between w-full h-[48px] px-3 border border-[#5A2408] rounded-sm font-manrope font-medium text-[#5A2408] text-[16px] bg-[#FAF6F2] transition duration-200 ease-in-out focus:outline-none"
+              className="flex items-center justify-between w-full h-[48px] px-3 border border-[#5A2408]  font-manrope font-medium text-[#5A2408] text-[16px] bg-[#FAF6F2] transition duration-200 ease-in-out focus:outline-none"
             >
               {SORT_OPTIONS.find((opt) => opt.value === sortBy)?.label || 'Sort by'}
               <svg
@@ -321,7 +321,7 @@ const Wishlist = () => {
             </button>
 
             {dropdownOpen && (
-              <div className="absolute left-0 right-0 shadow-lg border border-t-0 border-[#5A2408] rounded-b-lg bg-[#FAF6F2] overflow-hidden z-10 max-h-50 ">
+              <div className="absolute left-0 right-0 shadow-lg border border-t-0 border-[#5A2408]  bg-[#FAF6F2] overflow-hidden z-10 max-h-50 ">
                 {SORT_OPTIONS.map((opt) => (
                   <div
                     key={opt.value}
@@ -355,7 +355,7 @@ const Wishlist = () => {
             </p>
             <button
               onClick={handleContinueShopping}
-              className="bg-[#5A2408] hover:bg-[#3B1505] text-white uppercase text-[15px] font-bold font-manrope px-8 py-3 rounded transition"
+              className="bg-[#5A2408] hover:bg-[#3B1505] text-white uppercase text-[15px] font-bold font-manrope px-8 py-3  transition"
             >
               Continue Shopping
             </button>
@@ -365,7 +365,7 @@ const Wishlist = () => {
             {filteredItems.map((item) => (
               <motion.div
                 key={`${item.id}-${item.selectedSize || 'default'}`}
-                className="relative bg-white border border-[#E5E1DD] rounded-lg flex flex-col justify-between shadow-sm pt-6 pb-0 w-[300px] min-h-[460px] transition duration-200"
+                className="relative bg-white border border-[#E5E1DD]  flex flex-col justify-between shadow-sm pt-6 pb-0 w-[300px] min-h-[460px] transition duration-200"
                 whileHover={{ scale: 1.02 }}
               >
                 <button
@@ -418,7 +418,7 @@ const Wishlist = () => {
                 <button
                   onClick={(e) => handleAddToCart(item, e)}
                   disabled={false}
-                  className={`w-full h-[48px] bg-[#431A06] hover:bg-[#3B1505] uppercase text-white text-[14px] font-semibold font-manrope rounded-b-lg transition flex items-center justify-center gap-2`}
+                  className={`w-full h-[48px] bg-[#431A06] hover:bg-[#3B1505] uppercase text-white text-[14px] font-semibold font-manrope  transition flex items-center justify-center gap-2`}
                 >
                   <ShoppingCart size={18} />
                   <span>

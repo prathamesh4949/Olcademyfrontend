@@ -419,7 +419,7 @@ const MensCollection = () => {
                     onClick={() => toggleSection(sectionKey)}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.98 }}
-                    className="border-2 transition-all duration-300 rounded-lg w-full max-w-[311px] h-[54px] sm:h-[60px] px-5 flex items-center justify-center"
+                    className="border-2 transition-all duration-300  w-full max-w-[311px] h-[54px] sm:h-[60px] px-5 flex items-center justify-center"
                     style={{
                       borderColor: '#431A06',
                       backgroundColor: 'transparent',
@@ -495,7 +495,7 @@ const MensCollection = () => {
                 </p>
                 <Button 
                   onClick={handleClick}
-                  className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white px-5 sm:px-7 py-2.5 sm:py-3.5 text-sm sm:text-base font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                  className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white px-5 sm:px-7 py-2.5 sm:py-3.5 text-sm sm:text-base font-semibold  shadow-lg hover:shadow-xl transition-all duration-300"
                 >
                   {banner.buttonText}
                 </Button>
@@ -563,7 +563,7 @@ const MensCollection = () => {
               >
                 <Button 
                   onClick={handleClick}
-                  className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white px-7 sm:px-9 py-3.5 sm:py-4.5 text-base sm:text-lg font-semibold rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
+                  className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white px-7 sm:px-9 py-3.5 sm:py-4.5 text-base sm:text-lg font-semibold  shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
                 >
                   {banner.buttonText}
                 </Button>
@@ -754,13 +754,13 @@ const MensCollection = () => {
             <div className="flex flex-col sm:flex-row gap-3.5 justify-center">
               <Button 
                 onClick={() => window.location.reload()}
-                className="bg-[#79300f] text-white px-5 py-2 rounded-lg hover:bg-[#5a2408] transition-colors"
+                className="bg-[#79300f] text-white px-5 py-2  hover:bg-[#5a2408] transition-colors"
               >
                 Retry
               </Button>
               <Button 
                 onClick={() => navigate('/')}
-                className="bg-gray-500 text-white px-5 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+                className="bg-gray-500 text-white px-5 py-2  hover:bg-gray-600 transition-colors"
               >
                 Go Home
               </Button>

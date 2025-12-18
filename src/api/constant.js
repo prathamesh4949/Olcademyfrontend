@@ -7,6 +7,7 @@ const PRODUCTION_BASE_URL = "https://olcademybackend.vercel.app";
 const DEVELOPMENT_BASE_URL = "http://localhost:8000";
 
 export const API_BASE_URL = isDevelopment ? DEVELOPMENT_BASE_URL : PRODUCTION_BASE_URL;
+// export const API_BASE_URL = PRODUCTION_BASE_URL;
 
 // API Endpoints
 export const USER_API_END_POINT = `${API_BASE_URL}/user`;

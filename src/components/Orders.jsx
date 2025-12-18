@@ -294,7 +294,7 @@ const Orders = () => {
           {/* Order Details Modal */}
           <AnimatePresence>
             {showOrderDetails && selectedOrder && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowOrderDetails(false)}>
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[10050] flex items-center justify-center p-4" onClick={() => setShowOrderDetails(false)}>
                 <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} onClick={(e) => e.stopPropagation()} className="bg-gradient-to-br from-[#F5E9DC] to-[#E7DDC6] dark:from-[#3d1a0a] dark:to-[#2c0f06] border border-[#79300f]/20 dark:border-[#f6d110]/30 rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto relative">
                   <div className="bg-gradient-to-r from-[#79300f] to-[#5a2408] dark:from-[#f6d110] dark:to-[#d4af37] text-white p-8 rounded-t-lg relative">
                     <div className="absolute top-4 right-4 opacity-20">
