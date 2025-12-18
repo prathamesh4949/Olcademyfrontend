@@ -147,12 +147,12 @@ const WomensCollection = () => {
 
     if (!product) {
       return (
-        <div className="w-full max-w-[331px] bg-gray-200 dark:bg-gray-700 animate-pulse rounded-2xl p-6">
-          <div className="h-[200px] bg-gray-300 dark:bg-gray-600 rounded-xl mb-4"></div>
+        <div className="w-full max-w-[331px] bg-gray-200 dark:bg-gray-700 animate-pulse p-6">
+          <div className="h-[200px] bg-gray-300 dark:bg-gray-600  mb-4"></div>
           <div className="space-y-3">
-            <div className="h-6 bg-gray-300 dark:bg-gray-600 rounded"></div>
-            <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-3/4"></div>
-            <div className="h-8 bg-gray-300 dark:bg-gray-600 rounded"></div>
+            <div className="h-6 bg-gray-300 dark:bg-gray-600 "></div>
+            <div className="h-4 bg-gray-300 dark:bg-gray-600  w-3/4"></div>
+            <div className="h-8 bg-gray-300 dark:bg-gray-600 "></div>
           </div>
         </div>
       );
@@ -287,7 +287,7 @@ const WomensCollection = () => {
         <div className="relative bg-white dark:bg-gray-700 flex items-center justify-center overflow-hidden w-full aspect-[331/273] p-3">
           {imageLoading && (
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#79300f]"></div>
+              <div className="animate-spin  h-8 w-8 border-b-2 border-[#79300f]"></div>
             </div>
           )}
           <motion.img
@@ -306,7 +306,7 @@ const WomensCollection = () => {
             onClick={handleWishlistToggle}
             whileHover={{ scale: 1.15 }}
             whileTap={{ scale: 0.9 }}
-            className="absolute top-2.5 right-2.5 bg-white dark:bg-gray-800 rounded-full p-1.5 shadow-lg hover:shadow-xl transition-all duration-200 z-10 w-[27px] h-[27px] flex items-center justify-center"
+            className="absolute top-2.5 right-2.5 bg-white dark:bg-gray-800  p-1.5 shadow-lg hover:shadow-xl transition-all duration-200 z-10 w-[27px] h-[27px] flex items-center justify-center"
             aria-label={isInWishlist(product._id) ? 'Remove from wishlist' : 'Add to wishlist'}
           >
             <FiHeart
@@ -446,7 +446,7 @@ const WomensCollection = () => {
                     onClick={() => toggleSection(sectionKey)}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.98 }}
-                    className="border-2 transition-all duration-300 rounded-lg w-full max-w-[311px] h-[54px] sm:h-[60px] px-5 flex items-center justify-center"
+                    className="border-2 transition-all duration-300  w-full max-w-[311px] h-[54px] sm:h-[60px] px-5 flex items-center justify-center"
                     style={{
                       borderColor: '#431A06',
                       backgroundColor: 'transparent',
@@ -522,7 +522,7 @@ const WomensCollection = () => {
                 </p>
                 <Button
                   onClick={handleClick}
-                  className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white px-5 sm:px-7 py-2.5 sm:py-3.5 text-sm sm:text-base font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                  className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white px-5 sm:px-7 py-2.5 sm:py-3.5 text-sm sm:text-base font-semibold  shadow-lg hover:shadow-xl transition-all duration-300"
                 >
                   {banner.buttonText}
                 </Button>
@@ -559,17 +559,17 @@ const WomensCollection = () => {
               </p>
               <Button
                 onClick={handleClick}
-                className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white px-8 py-4 text-lg font-semibold rounded-xl"
+                className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white px-8 py-4 text-lg font-semibold "
               >
                 {banner.buttonText}
               </Button>
             </div>
             <div className="relative">
-              <div className="bg-gradient-to-br from-[#79300f]/10 to-[#5a2408]/10 rounded-2xl p-8">
+              <div className="bg-gradient-to-br from-[#79300f]/10 to-[#5a2408]/10  p-8">
                 <img
                   src={banner.image || '/images/newimg1.PNG'}
                   alt={banner.altText || banner.title}
-                  className="w-full h-[400px] object-contain rounded-xl"
+                  className="w-full h-[400px] object-contain "
                 />
               </div>
             </div>
@@ -633,7 +633,7 @@ const WomensCollection = () => {
               >
                 <Button
                   onClick={handleClick}
-                  className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white px-7 sm:px-9 py-3.5 sm:py-4.5 text-base sm:text-lg font-semibold rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
+                  className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white px-7 sm:px-9 py-3.5 sm:py-4.5 text-base sm:text-lg font-semibold  shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
                 >
                   {banner.buttonText}
                 </Button>
@@ -660,7 +660,7 @@ const WomensCollection = () => {
               </motion.div>
 
               <motion.div
-                className="absolute -z-10 bg-gradient-to-br from-[#79300f]/5 to-[#5a2408]/5 rounded-full blur-3xl w-[80%] h-[80%]"
+                className="absolute -z-10 bg-gradient-to-br from-[#79300f]/5 to-[#5a2408]/5  blur-3xl w-[80%] h-[80%]"
                 animate={{
                   scale: [1, 1.1, 1],
                   rotate: [0, 5, 0]
@@ -825,13 +825,13 @@ const WomensCollection = () => {
             <div className="flex gap-4 justify-center">
               <Button
                 onClick={() => window.location.reload()}
-                className="bg-[#79300f] text-white px-6 py-2 rounded-lg hover:bg-[#5a2408] transition-colors"
+                className="bg-[#79300f] text-white px-6 py-2  hover:bg-[#5a2408] transition-colors"
               >
                 Retry
               </Button>
               <Button
                 onClick={() => navigate('/')}
-                className="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+                className="bg-gray-500 text-white px-6 py-2  hover:bg-gray-600 transition-colors"
               >
                 Go Home
               </Button>
