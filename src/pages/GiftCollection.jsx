@@ -432,26 +432,17 @@ const GiftCollection = () => {
     const hasMoreProducts = products.length > 4;
 
     return (
-      <motion.section
-        variants={fadeIn('up', 0.3)}
-        initial="hidden"
-        whileInView="show"
-        viewport={{ once: false, amount: 0.2 }}
+      <section
         className="py-10 sm:py-14 lg:py-16 px-4 sm:px-6 bg-[#F8F6F3] dark:bg-[#0d0603]"
         id={`collection-${collectionKey}`}
       >
         <div className="max-w-[1555px] mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-7 sm:mb-10 lg:mb-14"
-          >
+          <div className="text-center mb-7 sm:mb-10 lg:mb-14">
             <h3 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4" style={{ fontFamily: 'Playfair Display, serif', color: darkMode ? '#f6d110' : '#271004' }}>
               {title}
             </h3>
             <div className="w-24 h-1 bg-gradient-to-r from-[#79300f] to-[#5a2408] rounded-full mx-auto"></div>
-          </motion.div>
+          </div>
 
           {loading ? (
             <div className="flex justify-center items-center h-64">
@@ -459,27 +450,19 @@ const GiftCollection = () => {
             </div>
           ) : products.length > 0 ? (
             <>
-              <motion.div 
-                layout
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-7 lg:gap-10 mb-7 sm:mb-10 justify-items-center"
-              >
-                <AnimatePresence mode="popLayout">
-                  {displayProducts.map((product) => {
-                    if (!product || !product._id) return null;
-                    return (
-                      <ProductCard key={product._id} product={product} />
-                    );
-                  })}
-                </AnimatePresence>
-              </motion.div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-7 lg:gap-10 mb-7 sm:mb-10 justify-items-center">
+                {displayProducts.map((product) => {
+                  if (!product || !product._id) return null;
+                  return (
+                    <ProductCard key={product._id} product={product} />
+                  );
+                })}
+              </div>
 
-              {/* View All / Show Less Button */}
               {hasMoreProducts && (
                 <div className="flex justify-center mt-7 sm:mt-10 lg:mt-14">
-                  <motion.button
+                  <button
                     onClick={() => toggleSection(collectionKey)}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.98 }}
                     className="border-2 transition-all duration-300 rounded-lg w-full max-w-[311px] h-[54px] sm:h-[60px] px-5 flex items-center justify-center"
                     style={{
                       borderColor: '#431A06',
@@ -496,32 +479,26 @@ const GiftCollection = () => {
                     >
                       {isExpanded ? 'Show Less' : 'View All Gifts'}
                     </span>
-                  </motion.button>
+                  </button>
                 </div>
               )}
             </>
           ) : (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-16"
-            >
+            <div className="text-center py-16">
               <Gift size={48} className="mx-auto mb-4 text-gray-400 dark:text-gray-600" />
               <p className="text-lg text-gray-500 dark:text-gray-400 mb-4">
                 No products available in this collection.
               </p>
-              <motion.button
+              <button
                 onClick={() => handleRetry()}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
                 className="bg-gradient-to-r from-[#79300f] to-[#5a2408] text-white px-6 py-3 rounded-xl font-semibold shadow-lg transition-all duration-300"
               >
                 Try Again
-              </motion.button>
-            </motion.div>
+              </button>
+            </div>
           )}
         </div>
-      </motion.section>
+      </section>
     );
   });
 
@@ -555,39 +532,18 @@ const GiftCollection = () => {
     };
 
     return (
-      <motion.section
-        variants={fadeIn('down', 0.3)}
-        initial="hidden"
-        animate="show"
-        className="relative min-h-screen flex items-center justify-center overflow-hidden"
-      >
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#F5E9DC] via-[#E7DDC6] to-[#D4C5A9] dark:from-gray-900 dark:via-gray-800 dark:to-gray-900"></div>
         
-        <motion.div
-          animate={{ y: [-20, 20, -20], x: [-10, 10, -10] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-20 left-20 w-4 h-4 bg-[#79300f]/30 rounded-full blur-sm"
-        />
-        
         <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 grid lg:grid-cols-2 gap-16 items-center">
-          <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-center lg:text-left space-y-8"
-          >
+          <div className="text-center lg:text-left space-y-8">
             <div className="space-y-6">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-                className="inline-flex items-center space-x-2 bg-gradient-to-r from-[#F5E9DC] to-[#E7DDC6] dark:from-gray-800 dark:to-gray-700 px-6 py-3 border border-[#D4C5A9] dark:border-gray-600"
-              >
+              <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-[#F5E9DC] to-[#E7DDC6] dark:from-gray-800 dark:to-gray-700 px-6 py-3 border border-[#D4C5A9] dark:border-gray-600">
                 <Crown className="text-[#79300f] dark:text-[#f6d110]" size={20} />
                 <span className="text-[#79300f] dark:text-[#f6d110] font-semibold text-sm uppercase tracking-wider">
                   {bannerData.subtitle}
                 </span>
-              </motion.div>
+              </div>
               
               <h1 className="text-5xl md:text-7xl font-bold leading-tight">
                 <span className="bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-200 bg-clip-text text-transparent">
@@ -604,48 +560,32 @@ const GiftCollection = () => {
               </p>
             </div>
             
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.8 }}
-              className="flex flex-col sm:flex-row gap-4"
-            >
-              <motion.button
+            <div className="flex flex-col sm:flex-row gap-4">
+              <button
                 onClick={handleClick}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white font-bold py-4 px-8  shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center justify-center space-x-3"
+                className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white font-bold py-4 px-8 shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center justify-center space-x-3"
               >
                 <span className="text-lg">{bannerData.buttonText}</span>
                 <ChevronRight size={20} />
-              </motion.button>
+              </button>
               
-              <motion.button
+              <button
                 onClick={() => navigate('/wishlist-collection')}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-[#79300f] hover:text-[#79300f] dark:hover:border-[#f6d110] dark:hover:text-[#f6d110] font-semibold py-4 px-8  transition-all duration-300 flex items-center justify-center space-x-3"
+                className="border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-[#79300f] hover:text-[#79300f] dark:hover:border-[#f6d110] dark:hover:text-[#f6d110] font-semibold py-4 px-8 transition-all duration-300 flex items-center justify-center space-x-3"
                 aria-label="View your wishlist"
               >
                 <Heart size={20} />
                 <span className="text-lg">View Wishlist</span>
-              </motion.button>
-            </motion.div>
-          </motion.div>
+              </button>
+            </div>
+          </div>
           
-          <motion.div
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="relative"
-          >
-            <div className="relative  overflow-hidden shadow-2xl">
-              <motion.img
+          <div className="relative">
+            <div className="relative overflow-hidden shadow-2xl">
+              <img
                 src={bannerData.backgroundImage}
                 alt="Gift Hero"
                 className="w-full h-auto max-h-[700px] object-cover"
-                whileHover={{ scale: 1.05 }}
-                transition={{ duration: 0.7 }}
                 onError={(e) => {
                   e.target.src = '/images/default-gift-hero.png';
                 }}
@@ -653,20 +593,9 @@ const GiftCollection = () => {
               />
               <div className="absolute inset-0 bg-gradient-to-tr from-[#79300f]/10 via-transparent to-[#5a2408]/10"></div>
             </div>
-            
-            <motion.div
-              animate={{ y: [-10, 10, -10], rotate: [0, 5, 0] }}
-              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute -top-6 -right-6 w-20 h-20 bg-gradient-to-br from-[#79300f]/30 to-[#5a2408]/30  blur-xl"
-            />
-            <motion.div
-              animate={{ y: [10, -10, 10], rotate: [0, -5, 0] }}
-              transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute -bottom-6 -left-6 w-16 h-16 bg-gradient-to-tr from-[#5a2408]/30 to-[#79300f]/30  blur-xl"
-            />
-          </motion.div>
+          </div>
         </div>
-      </motion.section>
+      </section>
     );
   };
 
