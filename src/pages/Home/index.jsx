@@ -482,7 +482,7 @@ const handleSubscribe = async () => {
             onClick={handleWishlistToggle}
             whileHover={{ scale: 1.15 }}
             whileTap={{ scale: 0.9 }}
-            className="absolute top-2.5 right-2.5 bg-white dark:bg-gray-800 rounded-full p-1.5 shadow-lg hover:shadow-xl transition-all duration-200 z-10 w-[27px] h-[27px] flex items-center justify-center"
+            className="absolute top-2.5 right-2.5 bg-white dark:bg-gray-800  p-1.5 shadow-lg hover:shadow-xl transition-all duration-200 z-10 w-[27px] h-[27px] flex items-center justify-center"
             aria-label={isInWishlist(product._id) ? 'Remove from wishlist' : 'Add to wishlist'}
           >
             <FiHeart
@@ -631,7 +631,7 @@ const handleSubscribe = async () => {
                     onClick={() => toggleSection(sectionKey)}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.98 }}
-                    className="border-2 transition-all duration-300 rounded-lg w-full max-w-[311px] h-[54px] sm:h-[60px] px-5 flex items-center justify-center"
+                    className="border-2 transition-all duration-300  w-full max-w-[311px] h-[54px] sm:h-[60px] px-5 flex items-center justify-center"
                     style={{
                       borderColor: '#431A06',
                       backgroundColor: 'transparent',
@@ -725,7 +725,7 @@ const handleSubscribe = async () => {
 
               <button
                 onClick={handleClick}
-                className="bg-gradient-to-r from-[#431A06] to-[#5a2408] hover:from-[#431A06] hover:to-[#79300f] text-white px-8 py-3 text-lg font-semibold rounded-lg transition-all duration-300 hover:shadow-lg transform hover:scale-105 flex items-center gap-3 w-fit"
+                className="bg-gradient-to-r from-[#431A06] to-[#5a2408] hover:from-[#431A06] hover:to-[#79300f] text-white px-8 py-3 text-lg font-semibold  transition-all duration-300 hover:shadow-lg transform hover:scale-105 flex items-center gap-3 w-fit"
               >
                 <span>{banner.buttonText || 'Explore Collection'}</span>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -783,7 +783,7 @@ const handleSubscribe = async () => {
 
               <button
                 onClick={handleClick}
-                className="bg-gradient-to-r from-[#431A06] to-[#5a2408] hover:from-[#431A06] hover:to-[#79300f] text-white px-8 py-3 text-lg font-semibold rounded-lg transition-all duration-300 hover:shadow-lg transform hover:scale-105 flex items-center gap-3 w-fit"
+                className="bg-gradient-to-r from-[#431A06] to-[#5a2408] hover:from-[#431A06] hover:to-[#79300f] text-white px-8 py-3 text-lg font-semibold transition-all duration-300 hover:shadow-lg transform hover:scale-105 flex items-center gap-3 w-fit"
               >
                 <span>{banner.buttonText || 'View Collection'}</span>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -916,7 +916,7 @@ const handleSubscribe = async () => {
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.8, opacity: 0 }}
-            className="bg-white rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+            className="bg-white  p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-6">
@@ -936,7 +936,7 @@ const handleSubscribe = async () => {
                 <img
                   src={quickViewProduct.images?.[0] || '/images/default-gift.png'}
                   alt={quickViewProduct.name || 'Product'}
-                  className="w-full h-64 object-contain rounded-2xl bg-gray-100"
+                  className="w-full h-64 object-contain  bg-gray-100"
                   onError={(e) => {
                     e.target.src = '/images/default-gift.png';
                   }}
@@ -961,7 +961,7 @@ const handleSubscribe = async () => {
                         setIsCartOpen(true);
                         handleClose();
                       }}
-                      className="flex-1 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-700 hover:via-teal-700 hover:to-cyan-700 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center space-x-2 border border-emerald-400/30 shadow-emerald-500/20"
+                      className="flex-1 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-700 hover:via-teal-700 hover:to-cyan-700 text-white py-3  font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center space-x-2 border border-emerald-400/30 shadow-emerald-500/20"
                     >
                       <ShoppingCart size={20} />
                       <span>View in Cart</span>
@@ -969,7 +969,7 @@ const handleSubscribe = async () => {
                   ) : (
                     <button
                       onClick={handleQuickViewAddToCart}
-                      className="flex-1 bg-gradient-to-r from-[#79300f] to-[#5a2408] text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center space-x-2"
+                      className="flex-1 bg-gradient-to-r from-[#79300f] to-[#5a2408] text-white py-3  font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center space-x-2"
                     >
                       <ShoppingBag size={20} />
                       <span>Add to Cart</span>
@@ -977,7 +977,7 @@ const handleSubscribe = async () => {
                   )}
                   <button
                     onClick={handleQuickViewWishlist}
-                    className="px-4 py-3 border-2 border-[#79300f] text-[#79300f] rounded-xl hover:bg-[#79300f] hover:text-white transition-all duration-300"
+                    className="px-4 py-3 border-2 border-[#79300f] text-[#79300f] hover:bg-[#79300f] hover:text-white transition-all duration-300"
                     aria-label="Add to wishlist"
                   >
                     <Heart
@@ -996,7 +996,7 @@ const handleSubscribe = async () => {
                         addNotification('Product details not available', 'error', null, 'general');
                       }
                     }}
-                    className="px-4 py-3 border-2 border-gray-300 text-gray-600 rounded-xl hover:bg-gray-300 hover:text-gray-800 transition-all duration-300"
+                    className="px-4 py-3 border-2 border-gray-300 text-gray-600  hover:bg-gray-300 hover:text-gray-800 transition-all duration-300"
                     aria-label="View full details"
                   >
                     <Eye size={20} />
@@ -1239,7 +1239,7 @@ const handleSubscribe = async () => {
                 />
                 <Button
                   onClick={handleSubscribe}
-                  className="bg-gradient-to-br from-[#CDAF6E] via-[#E4C77F] to-[#F5E6A1]  px-6 py-2 rounded-sm font-bold text-sm  hover:bg-[#E4BF8A] transition-colors tracking-wider whitespace-nowrap font-[Manrope] !text-[#341405]"
+                  className="bg-gradient-to-br from-[#CDAF6E] via-[#E4C77F] to-[#F5E6A1]  px-6 py-2  font-bold text-sm  hover:bg-[#E4BF8A] transition-colors tracking-wider whitespace-nowrap font-[Manrope] !text-[#341405]"
                 >
                   JOIN THE CIRCLE
                 </Button>

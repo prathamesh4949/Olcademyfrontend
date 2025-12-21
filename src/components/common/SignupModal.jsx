@@ -125,20 +125,21 @@ const SignupModal = ({ isOpen, onClose, openLogin, openVerify, setEmail }) => {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: 10010 }}>
       <div className="bg-white w-full max-w-5xl max-h-[90vh] rounded-2xl overflow-hidden flex shadow-2xl">
         {/* Left Side Image */}
-        <div className="hidden md:block md:w-1/2 h-full relative">
-          <img
-            src={perfumeImage}
-            alt="Perfume"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-        </div>
+        <div className="hidden md:block md:w-1/2 min-h-full relative">
+        <img
+           src={perfumeImage}
+           alt="Perfume"
+           className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+      </div>
+
 
         {/* Right Side Form */}
-        <div className="w-full md:w-1/2 bg-gradient-to-br from-[#f8f5f1] to-white p-8 flex flex-col justify-center overflow-y-auto max-h-[90vh]">
-          {/* Header */}
-          <div className="text-center mb-6">
-            <h2 className="text-3xl font-bold text-[#79300f] mb-2">Vesarii</h2>
+        <div className="w-full md:w-1/2 bg-gradient-to-br from-[#f8f5f1] to-white p-10 flex flex-col overflow-y-auto max-h-[90vh]">
+         {/* Header */}
+          <div className="text-center mb-6 pt-2">
+            <h2 className=" text-3xl font-bold text-[#79300f] mb-2">Vesarii</h2>
             <h3 className="text-xl font-semibold text-[#79300f] mb-2">Join Our Scented World</h3>
             <p className="text-sm text-gray-600">
               Enjoy early access to new collections, exclusive offers, and a welcome treat of 10% off your first order.

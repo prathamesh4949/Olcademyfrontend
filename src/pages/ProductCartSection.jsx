@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { FiX } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
@@ -136,7 +135,7 @@ const ProductCartSection = ({ isOpen, onClose }) => {
               <button
                 onClick={clearCart}
                 disabled={loading}
-                className="ml-28 md:ml-20 text-[#5A2408] border border-[#5A2408] rounded-full px-4 py-1 text-sm font-medium hover:bg-[#EAE1DC] transition"
+                className="ml-28 md:ml-20 text-[#5A2408] border border-[#5A2408]  px-4 py-1 text-sm font-medium hover:bg-[#EAE1DC] transition"
               >
                 {loading ? 'Clearing...' : 'Clear Cart'}
               </button>
@@ -163,7 +162,7 @@ const ProductCartSection = ({ isOpen, onClose }) => {
               </p>
               <button
                 onClick={handleContinueShopping}
-                className="mt-6 bg-[#431A06] hover:bg-[#5A2408] text-white text-sm font-semibold px-6 py-2 rounded shadow transition"
+                className="mt-6 bg-[#431A06] hover:bg-[#5A2408] text-white text-sm font-semibold px-6 py-2  shadow transition"
               >
                 Continue Shopping
               </button>
@@ -171,11 +170,11 @@ const ProductCartSection = ({ isOpen, onClose }) => {
           ) : (
             cartItems.map((item) => (
               <div key={item.id} className="py-2">
-                <div className="flex items-stretch p-3 rounded-md hover:bg-[#efecece9] transition-colors duration-200">
+                <div className="flex items-stretch p-3 hover:bg-[#efecece9] transition-colors duration-200">
                   <img
                     src={item.image}
                     alt={item.name}
-                    className="w-[50px] object-contain rounded-md mr-5 cursor-pointer mt-2 self-stretch"
+                    className="w-[50px] object-contain  mr-5 cursor-pointer mt-2 self-stretch"
                     onClick={() => handleProductClick(item)}
                   />
                   <div className="flex-1 flex flex-col justify-between">
@@ -203,7 +202,7 @@ const ProductCartSection = ({ isOpen, onClose }) => {
                     </div>
                     {/* Swap order: Quantity left, MRP right */}
                     <div className="flex items-center justify-between mt-2">
-                      <div className="flex rounded-[6px] ml-2">
+                      <div className="flex  ml-2">
                         <button
                           onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
                           disabled={item.quantity <= 1 && loading || isUpdatingQuantity}
@@ -231,7 +230,7 @@ const ProductCartSection = ({ isOpen, onClose }) => {
                         className="ml-4 text-[15px] font-medium text-[#484848]"
                         style={{ whiteSpace: 'nowrap' }}
                       >
-                        MRP: ${item.price}
+                        MRP: ${(item.price * item.quantity).toFixed(2)}
                       </span>
                     </div>
                   </div>
@@ -254,7 +253,7 @@ const ProductCartSection = ({ isOpen, onClose }) => {
           <button
             onClick={handleCheckout}
             disabled={loading || isUpdatingQuantity || cartItems.some((item) => item.outOfStock || item.exceedsStock)}
-            className="w-full bg-[#551e03] hover:bg-[#72300d] text-white text-[15px] font-playfair font-bold uppercase py-3 rounded transition duration-200 tracking-wide"
+            className="w-full bg-[#551e03] hover:bg-[#72300d] text-white text-[15px] font-playfair font-bold uppercase py-3  transition duration-200 tracking-wide"
           >
             CHECK OUT
           </button>

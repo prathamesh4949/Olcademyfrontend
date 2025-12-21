@@ -282,7 +282,7 @@ const UnisexCollection = () => {
             onClick={handleWishlistToggle}
             whileHover={{ scale: 1.15 }}
             whileTap={{ scale: 0.9 }}
-            className="absolute top-2.5 right-2.5 bg-white dark:bg-gray-800 rounded-full p-1.5 shadow-lg hover:shadow-xl transition-all duration-200 z-10 w-[27px] h-[27px] flex items-center justify-center"
+            className="absolute top-2.5 right-2.5 bg-white dark:bg-gray-800  p-1.5 shadow-lg hover:shadow-xl transition-all duration-200 z-10 w-[27px] h-[27px] flex items-center justify-center"
             aria-label={isInWishlist(product._id) ? 'Remove from wishlist' : 'Add to wishlist'}
           >
             <FiHeart
@@ -413,7 +413,7 @@ const UnisexCollection = () => {
                     onClick={() => toggleSection(sectionKey)}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.98 }}
-                    className="border-2 transition-all duration-300 rounded-lg w-full max-w-[311px] h-[54px] sm:h-[60px] px-5 flex items-center justify-center"
+                    className="border-2 transition-all duration-300  w-full max-w-[311px] h-[54px] sm:h-[60px] px-5 flex items-center justify-center"
                     style={{ borderColor: '#431A06', backgroundColor: 'transparent', color: '#431A06' }}
                   >
                     <span
@@ -469,7 +469,7 @@ const UnisexCollection = () => {
                 <p className="text-sm sm:text-base lg:text-lg mb-5 sm:mb-7 text-gray-200">{banner.description}</p>
                 <Button
                   onClick={handleClick}
-                  className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white px-5 sm:px-7 py-2.5 sm:py-3.5 text-sm sm:text-base font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                  className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white px-5 sm:px-7 py-2.5 sm:py-3.5 text-sm sm:text-base font-semibold  shadow-lg hover:shadow-xl transition-all duration-300"
                 >
                   {banner.buttonText}
                 </Button>
@@ -528,7 +528,7 @@ const UnisexCollection = () => {
               >
                 <Button
                   onClick={handleClick}
-                  className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white px-7 sm:px-9 py-3.5 sm:py-4.5 text-base sm:text-lg font-semibold rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
+                  className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white px-7 sm:px-9 py-3.5 sm:py-4.5 text-base sm:text-lg font-semibold  shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
                 >
                   {banner.buttonText}
                 </Button>
@@ -547,7 +547,7 @@ const UnisexCollection = () => {
               </motion.div>
 
               <motion.div
-                className="absolute -z-10 bg-gradient-to-br from-[#79300f]/5 to-[#5a2408]/5 rounded-full blur-3xl w-[80%] h-[80%]"
+                className="absolute -z-10 bg-gradient-to-br from-[#79300f]/5 to-[#5a2408]/5  blur-3xl w-[80%] h-[80%]"
                 animate={{
                   scale: [1, 1.1, 1],
                   rotate: [0, 5, 0]
@@ -704,10 +704,10 @@ const UnisexCollection = () => {
             <h2 className="text-xl sm:text-2xl font-bold mb-3.5">Failed to load content</h2>
             <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400 mb-3.5">{error}</p>
             <div className="flex flex-col sm:flex-row gap-3.5 justify-center">
-              <Button onClick={() => window.location.reload()} className="bg-[#79300f] text-white px-5 py-2 rounded-lg hover:bg-[#5a2408] transition-colors">
+              <Button onClick={() => window.location.reload()} className="bg-[#79300f] text-white px-5 py-2  hover:bg-[#5a2408] transition-colors">
                 Retry
               </Button>
-              <Button onClick={() => navigate('/')} className="bg-gray-500 text-white px-5 py-2 rounded-lg hover:bg-gray-600 transition-colors">
+              <Button onClick={() => navigate('/')} className="bg-gray-500 text-white px-5 py-2  hover:bg-gray-600 transition-colors">
                 Go Home
               </Button>
             </div>

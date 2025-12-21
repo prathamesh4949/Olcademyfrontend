@@ -581,7 +581,7 @@ const GiftCollection = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.4 }}
-                className="inline-flex items-center space-x-2 bg-gradient-to-r from-[#F5E9DC] to-[#E7DDC6] dark:from-gray-800 dark:to-gray-700 px-6 py-3 rounded-full border border-[#D4C5A9] dark:border-gray-600"
+                className="inline-flex items-center space-x-2 bg-gradient-to-r from-[#F5E9DC] to-[#E7DDC6] dark:from-gray-800 dark:to-gray-700 px-6 py-3 border border-[#D4C5A9] dark:border-gray-600"
               >
                 <Crown className="text-[#79300f] dark:text-[#f6d110]" size={20} />
                 <span className="text-[#79300f] dark:text-[#f6d110] font-semibold text-sm uppercase tracking-wider">
@@ -614,7 +614,7 @@ const GiftCollection = () => {
                 onClick={handleClick}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white font-bold py-4 px-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center justify-center space-x-3"
+                className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white font-bold py-4 px-8  shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center justify-center space-x-3"
               >
                 <span className="text-lg">{bannerData.buttonText}</span>
                 <ChevronRight size={20} />
@@ -624,7 +624,7 @@ const GiftCollection = () => {
                 onClick={() => navigate('/wishlist-collection')}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-[#79300f] hover:text-[#79300f] dark:hover:border-[#f6d110] dark:hover:text-[#f6d110] font-semibold py-4 px-8 rounded-2xl transition-all duration-300 flex items-center justify-center space-x-3"
+                className="border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-[#79300f] hover:text-[#79300f] dark:hover:border-[#f6d110] dark:hover:text-[#f6d110] font-semibold py-4 px-8  transition-all duration-300 flex items-center justify-center space-x-3"
                 aria-label="View your wishlist"
               >
                 <Heart size={20} />
@@ -639,7 +639,7 @@ const GiftCollection = () => {
             transition={{ duration: 0.8, delay: 0.4 }}
             className="relative"
           >
-            <div className="relative rounded-3xl overflow-hidden shadow-2xl">
+            <div className="relative  overflow-hidden shadow-2xl">
               <motion.img
                 src={bannerData.backgroundImage}
                 alt="Gift Hero"
@@ -657,12 +657,12 @@ const GiftCollection = () => {
             <motion.div
               animate={{ y: [-10, 10, -10], rotate: [0, 5, 0] }}
               transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute -top-6 -right-6 w-20 h-20 bg-gradient-to-br from-[#79300f]/30 to-[#5a2408]/30 rounded-full blur-xl"
+              className="absolute -top-6 -right-6 w-20 h-20 bg-gradient-to-br from-[#79300f]/30 to-[#5a2408]/30  blur-xl"
             />
             <motion.div
               animate={{ y: [10, -10, 10], rotate: [0, -5, 0] }}
               transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute -bottom-6 -left-6 w-16 h-16 bg-gradient-to-tr from-[#5a2408]/30 to-[#79300f]/30 rounded-full blur-xl"
+              className="absolute -bottom-6 -left-6 w-16 h-16 bg-gradient-to-tr from-[#5a2408]/30 to-[#79300f]/30  blur-xl"
             />
           </motion.div>
         </div>
@@ -718,7 +718,7 @@ const GiftCollection = () => {
             <h2 className="text-4xl md:text-5xl font-dm-serif text-[#79300f] dark:text-[#f6d110] mb-4">
               Why Choose Our Gifts?
             </h2>
-            <div className="w-24 h-1 bg-gradient-to-r from-[#79300f] to-[#5a2408] rounded-full mx-auto"></div>
+            <div className="w-24 h-1 bg-gradient-to-r from-[#79300f] to-[#5a2408]  mx-auto"></div>
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -729,7 +729,7 @@ const GiftCollection = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.2 }}
                 whileHover={{ scale: 1.03, y: -5 }}
-                className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-500 border border-white/50 dark:border-gray-700/50 group cursor-pointer"
+                className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm  p-8 shadow-xl hover:shadow-2xl transition-all duration-500 border border-white/50 dark:border-gray-700/50 group cursor-pointer"
                 onClick={() => {
                   if (banner._id) handleBannerClick(banner);
                   if (banner.buttonLink) {
@@ -743,7 +743,7 @@ const GiftCollection = () => {
                 }}
               >
                 <div className="space-y-6">
-                  <div className="relative overflow-hidden rounded-2xl">
+                  <div className="relative overflow-hidden ">
                     <motion.img
                       src={banner.image || '/images/default-gift.png'}
                       alt={banner.title}
@@ -768,7 +768,7 @@ const GiftCollection = () => {
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-2 group-hover:scale-105"
+                      className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white font-semibold py-3 px-6  shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-2 group-hover:scale-105"
                       onClick={(e) => {
                         e.stopPropagation();
                         if (banner._id) handleBannerClick(banner);
@@ -878,7 +878,7 @@ const GiftCollection = () => {
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.8, opacity: 0 }}
-            className="bg-white dark:bg-gray-800 rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+            className="bg-white dark:bg-gray-800  p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-6">
@@ -899,7 +899,7 @@ const GiftCollection = () => {
                 <img
                   src={quickViewProduct.images?.[0] || '/images/default-gift.png'}
                   alt={quickViewProduct.name}
-                  className="w-full h-64 object-contain rounded-2xl bg-gray-100 dark:bg-gray-700"
+                  className="w-full h-64 object-contain  bg-gray-100 dark:bg-gray-700"
                   onError={(e) => {
                     e.target.src = '/images/default-gift.png';
                   }}
@@ -924,7 +924,7 @@ const GiftCollection = () => {
                         setIsCartOpen(true);
                         handleClose();
                       }}
-                      className="flex-1 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-700 hover:via-teal-700 hover:to-cyan-700 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center space-x-2 border border-emerald-400/30 shadow-emerald-500/20"
+                      className="flex-1 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-700 hover:via-teal-700 hover:to-cyan-700 text-white py-3 font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center space-x-2 border border-emerald-400/30 shadow-emerald-500/20"
                     >
                       <ShoppingCart size={18} />
                       <span>View in Cart</span>
@@ -932,7 +932,7 @@ const GiftCollection = () => {
                   ) : (
                     <button
                       onClick={handleQuickViewAddToCart}
-                      className="flex-1 bg-gradient-to-r from-[#79300f] to-[#5a2408] text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center space-x-2"
+                      className="flex-1 bg-gradient-to-r from-[#79300f] to-[#5a2408] text-white py-3  font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center space-x-2"
                     >
                       <ShoppingCart size={18} />
                       <span>Add to Cart</span>
@@ -940,7 +940,7 @@ const GiftCollection = () => {
                   )}
                   <button
                     onClick={handleQuickViewWishlist}
-                    className="px-4 py-3 border-2 border-[#79300f] text-[#79300f] rounded-xl hover:bg-[#79300f] hover:text-white transition-all duration-300"
+                    className="px-4 py-3 border-2 border-[#79300f] text-[#79300f]  hover:bg-[#79300f] hover:text-white transition-all duration-300"
                     aria-label="Add to wishlist"
                   >
                     <Heart size={20} className={isInWishlist(quickViewProduct._id) ? 'fill-red-600 text-red-600' : ''} />
@@ -950,7 +950,7 @@ const GiftCollection = () => {
                       navigate(`/product/${quickViewProduct._id}`);
                       handleClose();
                     }}
-                    className="px-4 py-3 border-2 border-gray-300 text-gray-600 rounded-xl hover:bg-gray-300 hover:text-gray-800 transition-all duration-300"
+                    className="px-4 py-3 border-2 border-gray-300 text-gray-600  hover:bg-gray-300 hover:text-gray-800 transition-all duration-300"
                     aria-label="View full details"
                   >
                     <Eye size={20} />
@@ -1098,9 +1098,9 @@ const GiftCollection = () => {
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="text-center max-w-md mx-auto p-8 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/20 dark:border-gray-700/20"
+          className="text-center max-w-md mx-auto p-8 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm  shadow-2xl border border-white/20 dark:border-gray-700/20"
         >
-          <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
+          <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-red-600  flex items-center justify-center mx-auto mb-6">
             <AlertCircle size={32} className="text-white" />
           </div>
           <h2 className="text-2xl font-bold mb-4 bg-gradient-to-r from-[#79300f] to-[#5a2408] bg-clip-text text-transparent">
@@ -1113,7 +1113,7 @@ const GiftCollection = () => {
               disabled={retryCount >= 3}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="bg-gradient-to-r from-[#79300f] to-[#5a2408] text-white px-6 py-3 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+              className="bg-gradient-to-r from-[#79300f] to-[#5a2408] text-white px-6 py-3  font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
             >
               <RefreshCw size={18} />
               <span>{retryCount >= 3 ? 'Too many retries' : 'Try Again'}</span>

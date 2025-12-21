@@ -425,7 +425,7 @@ const AllFragrancesSection = () => {
             whileInView="show"
             viewport={{ once: false, amount: 0.4 }}
             href="/product-cart"
-            className="inline-block bg-[#79300f] dark:bg-[#442b03] text-white dark:text-[#f6d110] px-5 py-2 text-sm font-medium rounded-md hover:bg-[#5e160e] dark:hover:bg-[#dab61f] dark:hover:text-black transition"
+            className="inline-block bg-[#79300f] dark:bg-[#442b03] text-white dark:text-[#f6d110] px-5 py-2 text-sm font-medium  hover:bg-[#5e160e] dark:hover:bg-[#dab61f] dark:hover:text-black transition"
           >
             Shop Sample Now
           </motion.a>
