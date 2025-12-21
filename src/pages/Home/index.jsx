@@ -124,6 +124,8 @@ const HomePage = () => {
     }
   };
 
+  
+
   // Updated fetchHomeData with scent integration
   useEffect(() => {
     const fetchHomeData = async () => {
@@ -262,15 +264,66 @@ const HomePage = () => {
     setSignatureCurrentIndex
   );
 
-  const handleSubscribe = () => {
-    if (email && acceptTerms) {
-      addNotification('Thank you for subscribing to our exclusive circle!', 'success', null, 'general');
-      setEmail('');
+  const validateEmail = (email) => {
+  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  return regex.test(email);
+};
+
+
+  // const handleSubscribe = () => {
+  //   if (email && acceptTerms) {
+  //     addNotification('Thank you for subscribing to our exclusive circle!', 'success', null, 'general');
+  //     setEmail('');
+  //     setAcceptTerms(false);
+  //   } else {
+  //     addNotification('Please enter your email and accept terms to continue.', 'error', null, 'general');
+  //   }
+  // };
+
+
+const handleSubscribe = async () => {
+  // setAcceptTerms(true);
+  if (!email) {
+    addNotification("Please enter your email", "error", null, "general");
+    return;
+  }
+
+  if (!validateEmail(email)) {
+    addNotification("Please enter a valid email address", "error", null, "general");
+    return;
+  }
+
+  if (!acceptTerms) {
+    addNotification("Please accept terms & conditions", "error", null, "general");
+    return;
+  }
+
+  try {
+    const res = await fetch("http://localhost:8000/api/subscribe", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email }),
+    });
+    console.log("Response status:", res.status);
+
+    const data = await res.json();
+
+    if (data.success) {
+      addNotification("Welcome to the Inner Circle!", "success", email, "general");
+      setEmail("");
       setAcceptTerms(false);
     } else {
-      addNotification('Please enter your email and accept terms to continue.', 'error', null, 'general');
+      addNotification(data.message, "error", null, "general");
     }
-  };
+  } catch (error) {
+    console.error("Subscribe error:", error);
+    addNotification("Something went wrong. Please try again.", "error", null, "general");
+  }
+};
+
+
 
   // Enhanced product navigation handler with validation
   const handleProductClick = (product) => {
@@ -1181,7 +1234,8 @@ const HomePage = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   className="px-6 py-4 flex-1 outline-none border border-[#D4AF7A]/40 focus:border-[#D4AF7A] transition-all duration-300 bg-transparent
     bg-gradient-to-br from-[#CDAF6E] via-[#E4C77F] to-[#F5E6A1] bg-clip-text text-transparent
-    placeholder:text-transparent placeholder:bg-gradient-to-br placeholder:from-[#CDAF6E] placeholder:via-[#E4C77F] placeholder:to-[#E4C77F] placeholder:bg-clip-text"
+    placeholder:text-transparent placeholder:bg-gradient-to-br placeholder:from-[#CDAF6E] placeholder:via-[#E4C77F] placeholder:to-[#E4C77F] placeholder:bg-clip-text caret-[#D4AF7A]
+"
                 />
                 <Button
                   onClick={handleSubscribe}
@@ -1190,6 +1244,24 @@ const HomePage = () => {
                   JOIN THE CIRCLE
                 </Button>
               </div>
+
+                {/* ✅ ADD THIS BLOCK (THIS WAS MISSING) */}
+  <div className="flex items-center justify-center gap-3 mb-4">
+    <input
+      type="checkbox"
+      id="acceptTerms"
+      checked={acceptTerms}
+      onChange={(e) => setAcceptTerms(e.target.checked)}
+      className="w-4 h-4 cursor-pointer accent-[#CDAF6E]"
+    />
+
+    <label
+      htmlFor="acceptTerms"
+      className="text-sm text-[#EFE9E6] cursor-pointer select-none"
+    >
+      I agree to the Terms & Conditions
+    </label>
+  </div>
 
               <p className="text-[14px] text-[#EFE9E6]">
                 By joining, you'll receive updates on limited editions and private events.

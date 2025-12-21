@@ -40,6 +40,7 @@ import Orders from './components/Orders';
 import SearchResults from './pages/SearchResults';
 import AboutPage from './components/common/AboutPage';
 import UserProfile from './components/UserProfile';
+import DiscoverCollection from './pages/DiscoverTheCollection';
 
 const AppRoutes = ({ darkMode, setDarkMode }) => {
   return (
@@ -54,6 +55,7 @@ const AppRoutes = ({ darkMode, setDarkMode }) => {
                 element={<HomePage darkMode={darkMode} setDarkMode={setDarkMode} />} 
               />
               <Route path="/universal-collection" element={<UniversalCollection />} />
+              <Route path="/discover-collection" element={<DiscoverCollection />} />
               <Route path="/mens-collection" element={<MensCollection />} />
               <Route path="/womens-collection" element={<Womenscollection />} />
               <Route path="/all-fragrances" element={<AllFragrancesSection />} />
