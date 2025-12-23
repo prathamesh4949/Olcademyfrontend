@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '../api/constant';
+import axios from 'axios';
 
 class ProductService {
   // ✅ ENHANCED: Helper to construct full image URLs from filenames
@@ -598,6 +599,13 @@ class ProductService {
       };
     }
   }
+  // get related products
+getRelatedProducts(productId) {
+  return axios.get(
+    `${API_BASE_URL}/api/products/${productId}/related`
+  );
+}
+
 
   // ===== BANNER METHODS =====
   async getBanners(filters = {}) {
