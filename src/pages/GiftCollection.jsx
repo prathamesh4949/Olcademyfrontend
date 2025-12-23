@@ -571,7 +571,7 @@ const GiftCollection = () => {
               
               <button
                 onClick={() => navigate('/wishlist-collection')}
-                className="border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-[#79300f] hover:text-[#79300f] dark:hover:border-[#f6d110] dark:hover:text-[#f6d110] font-semibold py-4 px-8 transition-all duration-300 flex items-center justify-center space-x-3"
+                className="border-2 border-[#79300f] text-gray-700 dark:text-gray-300 hover:border-[#79300f] hover:text-[#79300f] dark:hover:border-[#f6d110] dark:hover:text-[#f6d110] font-semibold py-4 px-8 transition-all duration-300 flex items-center justify-center space-x-3"
                 aria-label="View your wishlist"
               >
                 <Heart size={20} />
