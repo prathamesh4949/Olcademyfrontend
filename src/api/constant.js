@@ -1,3 +1,5 @@
+//src/api/constant.js
+
 const isDevelopment =
     process.env.NODE_ENV === 'development' ||
     (typeof window !== 'undefined' && window.location.hostname === 'localhost') ||

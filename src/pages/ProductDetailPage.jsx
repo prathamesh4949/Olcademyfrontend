@@ -10,7 +10,7 @@ import { Star, Heart, ShoppingCart, AlertCircle, CheckCircle, X } from 'lucide-r
 import ProductService from '../services/productService';
 import ScentService from '../services/scentService';
 import ProductCartSection from '../pages/ProductCartSection'; // Import cart sidebar component
-
+import { API_BASE_URL } from '@/api/constant';
 // Tab configuration for product info sections
 const TAB = [
   { key: 'description', label: 'DESCRIPTION' },
@@ -37,8 +37,18 @@ export default function ProductDetailPage() {
   const [isCartOpen, setIsCartOpen] = useState(false); // State to control cart sidebar visibility
   // State management for notifications
   const [notifications, setNotifications] = useState([]);
+  //img handler
 
-  // Add notification helper
+  const resolveImage = (image) => {
+    if (!image) return '/images/default-perfume.png';
+  
+    if (image.startsWith('http')) return image;
+  
+    // Backend-served image
+    return `${API_BASE_URL}/api/products/images/${image}`;
+  };
+
+    // Add notification helper
   const addNotification = useCallback((message, type = 'success', productName = null, actionType = 'general') => {
     const id = Date.now();
     setNotifications((prev) => [...prev, { id, message, type, productName, actionType }]);
@@ -660,7 +670,7 @@ useEffect(() => {
       {/* Image */}
       <div className="relative bg-white flex items-center justify-center overflow-hidden w-full aspect-[331/273] p-3">
         <img
-          src={related.images?.[0] || '/images/default-perfume.png'}
+         src={resolveImage(related.images?.[0])}
           alt={related.name}
           className="object-contain w-full h-full max-w-[248px] max-h-[248px]"
         />
