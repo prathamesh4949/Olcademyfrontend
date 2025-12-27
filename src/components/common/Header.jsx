@@ -16,7 +16,7 @@ const navItems = [
   { label: 'GIFTS', path: '/gift-collection' }
 ];
 
-const Header = () => {
+const Header = ({ darkMode, setDarkMode }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -458,4 +458,4 @@ const Header = () => {
   );
 };
 
-export default Header;
+export default React.memo(Header);

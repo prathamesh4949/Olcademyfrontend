@@ -1022,7 +1022,7 @@ const GiftCollection = () => {
   // Enhanced Error State
   const ErrorState = () => (
     <div className="min-h-screen bg-[#F2F2F2] dark:bg-[#0d0603] text-[#79300f] dark:text-[#f6d110]">
-      <Header darkMode={darkMode} setDarkMode={setDarkMode} />
+      {/* <Header darkMode={darkMode} setDarkMode={setDarkMode} /> */}
       <div className="flex justify-center items-center min-h-[80vh]">
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
@@ -1065,7 +1065,7 @@ const GiftCollection = () => {
   // Loading State
   const LoadingState = () => (
     <div className="min-h-screen bg-[#F2F2F2] dark:bg-[#0d0603]">
-      <Header darkMode={darkMode} setDarkMode={setDarkMode} />
+      {/* <Header darkMode={darkMode} setDarkMode={setDarkMode} /> */}
       <div className="flex justify-center items-center min-h-[80vh]">
         <motion.div
           initial={{ opacity: 0 }}
@@ -1087,81 +1087,87 @@ const GiftCollection = () => {
     </div>
   );
 
-  // Main render logic
-  if (error && !loading) {
-    return <ErrorState />;
-  }
-
-  if (loading && Object.values(collections).every(collection => collection.length === 0)) {
-    return <LoadingState />;
-  }
-
   return (
+    <>
+    <Header darkMode={darkMode} setDarkMode={setDarkMode} />
     <div className="min-h-screen bg-[#F2F2F2] dark:bg-[#0d0603] text-[#79300f] dark:text-[#f6d110]">
-      <Header darkMode={darkMode} setDarkMode={setDarkMode} />
-      <NotificationSystem />
-      <QuickViewModal />
       
+      {/* HEADER */}
+      {/* <Header darkMode={darkMode} setDarkMode={setDarkMode} /> */}
+  
+      {/* PAGE BODY */}
+      {loading ? (
+        <LoadingState />
+      ) : error ? (
+        <ErrorState />
+      ) : (
+        <>
+          <NotificationSystem />
+          <QuickViewModal />
+  
       {/* CART SIDEBAR - ADD THIS */}
       <ProductCartSection isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
-
-      <HeroBanner banner={banners.hero} />
-
-      <div id="collections">
-        <CollectionSection
-          title="Gifts For Her"
-          collectionKey="for_her"
-          visibleCount={4}
-        />
-      </div>
-
-      <CollectionSection
-        title="Gifts For Him"
-        collectionKey="for_him"
-        visibleCount={4}
-      />
-
-      <CollectionSection
-        title="Gifts Under $50"
-        collectionKey="by_price_under_50"
-        visibleCount={4}
-      />
-
-      <CollectionSection
-        title="Gifts Under $100"
-        collectionKey="by_price_under_100"
-        visibleCount={4}
-      />
-
-      <CollectionSection
-        title="Gifts Under $200"
-        collectionKey="by_price_under_200"
-        visibleCount={4}
-      />
-
-      <CollectionSection
-        title="Home & Living"
-        collectionKey="home_gift"
-        visibleCount={4}
-      />
-
-      <CollectionSection
-        title="Birthday Celebrations"
-        collectionKey="birthday_gift"
-        visibleCount={4}
-      />
+  
+          <HeroBanner banner={banners.hero} />
+  
+          <div id="collections">
+            <CollectionSection
+              title="Gifts For Her"
+              collectionKey="for_her"
+              visibleCount={4}
+            />
+          </div>
+  
+          <CollectionSection
+            title="Gifts For Him"
+            collectionKey="for_him"
+            visibleCount={4}
+          />
+  
+          <CollectionSection
+            title="Gifts Under $50"
+            collectionKey="by_price_under_50"
+            visibleCount={4}
+          />
+  
+          <CollectionSection
+            title="Gifts Under $100"
+            collectionKey="by_price_under_100"
+            visibleCount={4}
+          />
+  
+          <CollectionSection
+            title="Gifts Under $200"
+            collectionKey="by_price_under_200"
+            visibleCount={4}
+          />
+  
+          <CollectionSection
+            title="Home & Living"
+            collectionKey="home_gift"
+            visibleCount={4}
+          />
+  
+          <CollectionSection
+            title="Birthday Celebrations"
+            collectionKey="birthday_gift"
+            visibleCount={4}
+          />
 
       <CollectionSection
         title="Wedding Gifts"
         collectionKey="wedding_gift"
         visibleCount={4}
       />
-
-      <BottomBannersSection />
-
+  
+          <BottomBannersSection />
+        </>
+      )}
+  
       <Footer />
     </div>
+    </>
   );
 };
 
-export default GiftCollection;
+      export default GiftCollection;
