@@ -37,8 +37,16 @@ export default function ProductDetailPage() {
   const [isCartOpen, setIsCartOpen] = useState(false); // State to control cart sidebar visibility
   // State management for notifications
   const [notifications, setNotifications] = useState([]);
+  //img handler
 
-  // Add notification helper
+  const resolveImage = (img) => {
+  if (!img) return '/images/default-perfume.png';
+  if (img.startsWith('http')) return img;
+  if (img.startsWith('/')) return img;
+  return `/images/${img}`;
+};
+
+    // Add notification helper
   const addNotification = useCallback((message, type = 'success', productName = null, actionType = 'general') => {
     const id = Date.now();
     setNotifications((prev) => [...prev, { id, message, type, productName, actionType }]);
@@ -660,7 +668,7 @@ useEffect(() => {
       {/* Image */}
       <div className="relative bg-white flex items-center justify-center overflow-hidden w-full aspect-[331/273] p-3">
         <img
-          src={related.images?.[0] || '/images/default-perfume.png'}
+         src={resolveImage(related.images?.[0])}
           alt={related.name}
           className="object-contain w-full h-full max-w-[248px] max-h-[248px]"
         />
