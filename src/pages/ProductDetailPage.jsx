@@ -10,7 +10,7 @@ import { Star, Heart, ShoppingCart, AlertCircle, CheckCircle, X } from 'lucide-r
 import ProductService from '../services/productService';
 import ScentService from '../services/scentService';
 import ProductCartSection from '../pages/ProductCartSection'; // Import cart sidebar component
-
+import { API_BASE_URL } from '@/api/constant';
 // Tab configuration for product info sections
 const TAB = [
   { key: 'description', label: 'DESCRIPTION' },
@@ -39,12 +39,14 @@ export default function ProductDetailPage() {
   const [notifications, setNotifications] = useState([]);
   //img handler
 
-  const resolveImage = (img) => {
-  if (!img) return '/images/default-perfume.png';
-  if (img.startsWith('http')) return img;
-  if (img.startsWith('/')) return img;
-  return `/images/${img}`;
-};
+  const resolveImage = (image) => {
+    if (!image) return '/images/default-perfume.png';
+  
+    if (image.startsWith('http')) return image;
+  
+    // Backend-served image
+    return `${API_BASE_URL}/api/products/images/${image}`;
+  };
 
     // Add notification helper
   const addNotification = useCallback((message, type = 'success', productName = null, actionType = 'general') => {
