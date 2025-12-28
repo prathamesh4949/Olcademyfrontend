@@ -649,6 +649,31 @@ class ScentService {
     }
   }
 
+  // Get related scents
+  static async getRelatedScents(id) {
+    const service = new ScentService();
+    try {
+      if (!id) throw new Error('Scent ID is required');
+
+      const cleanId = id.toString().trim();
+      const endpoint = `/${cleanId}/related`;
+
+      console.log('Fetching related scents from:', `${SCENT_API_END_POINT}${endpoint}`);
+
+      const response = await service.apiCall(endpoint);
+
+      // Normalize images
+      if (response.success && response.data && response.data.related_products) {
+         response.data.related_products = response.data.related_products.map(scent => ScentService.normalizeScentImages(scent));
+      }
+
+      return response;
+    } catch (error) {
+       console.error('Error fetching related scents:', error);
+       return { success: false, data: { related_products: [] }, message: error.message };
+    }
+  }
+
   // CRITICAL: Get single scent by ID - This is what makes navigation work!
   static async getScentById(id) {
     const service = new ScentService();
