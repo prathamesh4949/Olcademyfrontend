@@ -1,3 +1,4 @@
+// src/services/productService.js
 import { API_BASE_URL } from '../api/constant';
 import axios from 'axios';
 
@@ -464,30 +465,18 @@ class ProductService {
     });
   }
 
-  async searchProducts(query, filters = {}) {
-    const searchParams = {
-      q: query,
-      ...filters
+ async searchProducts(query) {
+  const response = await this.apiCall(`/api/products/search?q=${encodeURIComponent(query)}`);
+
+  if (response.success && response.data) {
+    return {
+      products: response.data.products || [],
+      scents: response.data.scents || []
     };
-
-    const queryParams = new URLSearchParams();
-    Object.entries(searchParams).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        queryParams.append(key, value);
-      }
-    });
-
-    const response = await this.apiCall(`/api/products/search?${queryParams.toString()}`);
-    
-    // Normalize images
-    if (response.success && response.data) {
-      response.data = Array.isArray(response.data)
-        ? response.data.map(product => this.normalizeProductImages(product))
-        : response.data;
-    }
-    
-    return response;
   }
+
+  return { products: [], scents: [] };
+}
 
   async getProduct(id) {
     if (!id) {

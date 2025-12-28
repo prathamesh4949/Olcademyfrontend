@@ -59,6 +59,8 @@ export default function ProductDetailPage() {
       setNotifications((prev) => prev.filter((n) => n.id !== id));
     }, 3000);
   }, []);
+  // Check if current page is a scent page
+  const isScentPage = location.pathname.startsWith('/scent');
 
   // Fetch product details on id/path change
   useEffect(() => {
@@ -686,115 +688,119 @@ if (relatedRes?.data?.related_products) {
           YOU MAY ALSO LIKE
         </h2>
 <div className="flex justify-center">
-<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-7 justify-items-center w-full">
-  {relatedProducts.slice(0, 4).map((related) => (
-    <motion.div
-      key={related._id}
-      whileHover={{ y: -8, boxShadow: '0 10px 30px rgba(0,0,0,0.15)' }}
-      transition={{ duration: 0.3 }}
-      onClick={() => navigate(`/product/${related._id}`)}
-      className="bg-white overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300 w-full max-w-[331px]"
-      // style={{ minHeight: '520px' }}
-    >
-      {/* Image */}
-      <div className="relative bg-white flex items-center justify-center overflow-hidden w-full aspect-[331/273] p-3">
-        <img
-         src={resolveImage(related.images?.[0])}
-          alt={related.name}
-          className="object-contain w-full h-full max-w-[248px] max-h-[248px]"
-        />
-
-        {/* Wishlist */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleWishlistToggle(related);
-          }}
-          className="absolute top-2.5 right-2.5 bg-white rounded-full p-1.5 shadow-lg w-[27px] h-[27px] flex items-center justify-center"
-        >
-          <Heart
-            size={14}
-            className={
-              isInWishlist(related)
-                ? 'fill-[#3F2E1F] text-[#3F2E1F]'
-                : 'text-gray-600'
-            }
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-7 justify-items-center w-full">
+    {relatedProducts.slice(0, 4).map((related) => (
+      <motion.div
+        key={related._id}
+        whileHover={{ y: -8, boxShadow: '0 10px 30px rgba(0,0,0,0.15)' }}
+        transition={{ duration: 0.3 }}
+        onClick={() =>
+          navigate(isScentPage ? `/scent/${related._id}` : `/product/${related._id}`)
+        }
+        className="bg-white overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300 w-full max-w-[331px] flex flex-col"
+      >
+        {/* Image */}
+        <div className="relative bg-white flex items-center justify-center overflow-hidden w-full aspect-[331/273] p-3">
+          <img
+            src={resolveImage(related.images?.[0])}
+            alt={related.name}
+            className="object-contain w-full h-full max-w-[248px] max-h-[248px]"
           />
-        </button>
-      </div>
 
-      {/* Content */}
-      <div className="px-3.5 py-3.5 flex flex-col gap-3.5">
-        <h3
-          className="font-bold uppercase text-center line-clamp-1 text-xl"
-          style={{
-            fontFamily: 'Playfair Display, serif',
-            letterSpacing: '0.05em',
-            color: '#5A2408',
-          }}
-        >
-          {related.name}
-        </h3>
-
-        {/* Rating */}
-        <div className="flex items-center justify-center gap-1">
-          {[...Array(5)].map((_, i) => (
-            <Star
-              key={i}
+          {/* Wishlist */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleWishlistToggle(related);
+            }}
+            className="absolute top-2.5 right-2.5 bg-white rounded-full p-1.5 shadow-lg w-[27px] h-[27px] flex items-center justify-center"
+          >
+            <Heart
               size={14}
-              style={{
-                color: '#5A2408',
-                fill: i < Math.floor(related.rating || 5) ? '#5A2408' : 'transparent',
-              }}
-              className={i < Math.floor(related.rating || 5) ? '' : 'opacity-30'}
+              className={
+                isInWishlist(related)
+                  ? 'fill-[#3F2E1F] text-[#3F2E1F]'
+                  : 'text-gray-600'
+              }
             />
-          ))}
+          </button>
         </div>
 
-        {/* Description */}
-        <p
-          className="text-center line-clamp-2 text-sm"
-          style={{
-            fontFamily: 'Manrope, sans-serif',
-            fontWeight: 500,
-            color: '#7E513A',
-          }}
-        >
-          {related.description || 'Premium fragrance'}
-        </p>
+        {/* Content */}
+        <div className="px-3.5 py-3.5 flex flex-col flex-1 gap-3.5">
+          <h3
+            className="font-bold uppercase text-center line-clamp-1 text-xl"
+            style={{
+              fontFamily: 'Playfair Display, serif',
+              letterSpacing: '0.05em',
+              color: '#5A2408',
+            }}
+          >
+            {related.name}
+          </h3>
 
-        {/* Price */}
-        <p
-          className="font-bold text-center text-lg"
-          style={{
-            fontFamily: 'Manrope, sans-serif',
-            color: '#431A06',
-          }}
-        >
-          ${Number(related.price).toFixed(2)}
-        </p>
+          {/* Rating */}
+          <div className="flex items-center justify-center gap-1">
+            {[...Array(5)].map((_, i) => (
+              <Star
+                key={i}
+                size={14}
+                style={{
+                  color: '#5A2408',
+                  fill: i < Math.floor(related.rating || 5) ? '#5A2408' : 'transparent',
+                }}
+                className={i < Math.floor(related.rating || 5) ? '' : 'opacity-30'}
+              />
+            ))}
+          </div>
 
-        {/* View Details Button */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            navigate(`/product/${related._id}`);
-          }}
+          {/* Description */}
+          <p
+            className="text-center line-clamp-2 text-sm"
+            style={{
+              fontFamily: 'Manrope, sans-serif',
+              fontWeight: 500,
+              color: '#7E513A',
+            }}
+          >
+            {related.description || 'Premium fragrance'}
+          </p>
+
+          {/* Price */}
+          <p
+            className="font-bold text-center text-lg"
+            style={{
+              fontFamily: 'Manrope, sans-serif',
+              color: '#431A06',
+            }}
+          >
+            ${Number(related.price).toFixed(2)}
+          </p>
+
+          {/* BUTTON FIXED AT BOTTOM */}
+          <div className="mt-auto">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(isScentPage ? `/scent/${related._id}` : `/product/${related._id}`);
+              }}
           className="flex items-center justify-center text-white font-bold uppercase transition-all duration-300 w-full h-[54px] -mx-3.5 px-3.5"
-          style={{
-            backgroundColor: '#431A06',
-            fontFamily: 'Manrope, sans-serif',
-            letterSpacing: '0.05em',
+              style={{
+                backgroundColor: '#431A06',
+                fontFamily: 'Manrope, sans-serif',
+                letterSpacing: '0.05em',
             width: 'calc(100% + 28px)',
-          }}
-        >
-          View Details
-        </button>
-      </div>
-    </motion.div>
-  ))}
+              }}
+            >
+              View Details
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    ))}
+  </div>
 </div>
-</div>
+
 
       </main>
       <Footer />

@@ -1,3 +1,5 @@
+// src/pages/SearchResults.jsx
+
 import React, { useState, useEffect, useCallback, memo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Header from '../components/common/Header';
@@ -50,13 +52,34 @@ const SearchResults = () => {
     const urlParams = new URLSearchParams(location.search);
     const query = urlParams.get('q') || '';
     setSearchQuery(query);
-    fetchAllProducts();
+    fetchSearchResults();
   }, [location.search]);
 
   // Apply filters whenever products or filters change
   useEffect(() => {
     applyFilters();
   }, [allProducts, filters, searchQuery]);
+
+
+  const fetchSearchResults = async () => {
+  setIsLoading(true);
+
+  try {
+    const res = await ProductService.searchProducts(searchQuery);
+
+    const mergedResults = [
+      ...(res.products || []),
+      ...(res.scents || [])
+    ];
+
+    setAllProducts(mergedResults);
+  } catch (err) {
+    console.error("Search failed", err);
+    setAllProducts([]);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const fetchAllProducts = async () => {
     setIsLoading(true);
