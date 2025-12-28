@@ -1,3 +1,5 @@
+// src/pages/ProductDetailPage.jsx
+
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -65,29 +67,38 @@ export default function ProductDetailPage() {
         setProduct(null);
         setRelatedProducts([]);
 
-        // 👉 SCENT PAGE
+              // 👉 SCENT PAGE
         if (location.pathname.startsWith('/scent')) {
-          const scentPromise = ScentService.getScentById(id);
-          const relatedPromise = ProductService.getRelatedProducts(id);
+  const scentPromise = ScentService.getScentById(id);
+  const relatedScentPromise = ScentService.getRelatedScents(id);
 
-          const [scentRes, relatedRes] = await Promise.all([
-            scentPromise,
-            relatedPromise
-          ]);
+  const [scentRes, relatedRes] = await Promise.all([
+    scentPromise,
+    relatedScentPromise
+  ]);
 
-          if (scentRes?.data) {
-            setProduct(scentRes.data);
-          }
+  if (scentRes?.data) {
+    setProduct(scentRes.data);
+  }
 
-          // ✅ SET RELATED PRODUCTS FOR SCENT
-          if (relatedRes?.data?.data?.related_products) {
-            setRelatedProducts(relatedRes.data.data.related_products);
-          } else {
-            setRelatedProducts([]);
-          }
+if (relatedRes?.data?.data?.related_products) {
+  const normalized = relatedRes.data.data.related_products.map(p => ({
+    ...p,
+    price: p.price ?? p.discountedPrice ?? p.sizes?.[0]?.price ?? 0,
+    rating: p.rating ?? 5,
+    images: p.images?.length
+      ? p.images
+      : ['/images/default-perfume.png'],
+  }));
 
-          return;
-        }
+  setRelatedProducts(normalized);
+} else {
+  setRelatedProducts([]);
+}
+
+  return;
+}
+
 
         // 👉 PRODUCT PAGE (NORMAL FLOW)
         const productPromise = ProductService.getProduct(id);
@@ -433,11 +444,13 @@ export default function ProductDetailPage() {
                 ({product.reviews || 0})
               </span>
             </div>
+            <div className='p-2'>
 
-            {/* Description */}
+            </div>
+            {/* Description
             <div className="font-[Manrope] font-medium text-base md:text-[20px] leading-[26px] tracking-[0.04em] align-middle text-[#666464] mt-4 mb-4">
               {product.description}
-            </div>
+            </div> */}
 
             {/* Size selection */}
             <div className="flex items-center gap-3 mb-5 mt-1">
