@@ -11,6 +11,7 @@ import ProductService from '../services/productService';
 import ScentService from '../services/scentService';
 import ProductCartSection from '../pages/ProductCartSection'; // Import cart sidebar component
 import { API_BASE_URL } from '@/api/constant';
+
 // Tab configuration for product info sections
 const TAB = [
   { key: 'description', label: 'DESCRIPTION' },
@@ -37,8 +38,8 @@ export default function ProductDetailPage() {
   const [isCartOpen, setIsCartOpen] = useState(false); // State to control cart sidebar visibility
   // State management for notifications
   const [notifications, setNotifications] = useState([]);
-  //img handler
 
+  //img handler
   const resolveImage = (image) => {
     if (!image) return '/images/default-perfume.png';
   
@@ -58,55 +59,55 @@ export default function ProductDetailPage() {
   }, []);
 
   // Fetch product details on id/path change
-useEffect(() => {
-  const fetchProductDetailPage = async () => {
-    try {
-      setProduct(null);
-      setRelatedProducts([]);
+  useEffect(() => {
+    const fetchProductDetailPage = async () => {
+      try {
+        setProduct(null);
+        setRelatedProducts([]);
 
-      // 👉 SCENT PAGE
-      if (location.pathname.startsWith('/scent')) {
-        const scentRes = await ScentService.getScentById(id);
+        // 👉 SCENT PAGE
+        if (location.pathname.startsWith('/scent')) {
+          const scentRes = await ScentService.getScentById(id);
 
-        if (scentRes?.data) {
-          setProduct(scentRes.data);
+          if (scentRes?.data) {
+            setProduct(scentRes.data);
+          }
+
+          return;
         }
 
-        return;
-      }
+        // 👉 PRODUCT PAGE (NORMAL FLOW)
+        const productPromise = ProductService.getProduct(id);
+        const relatedPromise = ProductService.getRelatedProducts(id);
 
-      // 👉 PRODUCT PAGE (NORMAL FLOW)
-      const productPromise = ProductService.getProduct(id);
-      const relatedPromise = ProductService.getRelatedProducts(id);
+        const [productRes, relatedRes] = await Promise.all([
+          productPromise,
+          relatedPromise
+        ]);
 
-      const [productRes, relatedRes] = await Promise.all([
-        productPromise,
-        relatedPromise
-      ]);
+        // ✅ SET PRODUCT
+        if (productRes?.data?.product) {
+          setProduct(productRes.data.product);
+        } else {
+          console.error('❌ Product not found');
+        }
 
-      // ✅ SET PRODUCT
-      if (productRes?.data?.product) {
-        setProduct(productRes.data.product);
-      } else {
-        console.error('❌ Product not found');
-      }
+        // ✅ SET RELATED PRODUCTS
+        if (relatedRes?.data?.data?.related_products) {
+          setRelatedProducts(relatedRes.data.data.related_products);
+        } else {
+          setRelatedProducts([]);
+        }
 
-      // ✅ SET RELATED PRODUCTS
-      if (relatedRes?.data?.data?.related_products) {
-        setRelatedProducts(relatedRes.data.data.related_products);
-      } else {
+      } catch (error) {
+        console.error('❌ Product detail fetch failed:', error);
+        setProduct(null);
         setRelatedProducts([]);
       }
+    };
 
-    } catch (error) {
-      console.error('❌ Product detail fetch failed:', error);
-      setProduct(null);
-      setRelatedProducts([]);
-    }
-  };
-
-  fetchProductDetailPage();
-}, [id, location.pathname]);
+    fetchProductDetailPage();
+  }, [id, location.pathname]);
 
 
   // Default selected size and displayed price
@@ -206,7 +207,7 @@ useEffect(() => {
 
   // Notification System
   const NotificationSystem = () => (
-    <div className="fixed z-[10000] space-y-3" style={{ top: '40px', right: '20px' }}>
+    <div className="fixed z-[10000] space-y-3 px-4 w-full max-w-[440px]" style={{ top: '40px', right: '0' }}>
       <AnimatePresence>
         {notifications.map((notification) => (
           <motion.div
@@ -217,8 +218,8 @@ useEffect(() => {
             transition={{ duration: 0.3 }}
             style={{
               position: 'relative',
-              width: '400px',
-              height: '100px',
+              width: '100%',
+              minHeight: '100px',
               backgroundColor: '#EDE4CF',
               overflow: 'hidden',
               boxShadow: '4px 6px 16px 0px rgba(0,0,0,0.1), 18px 24px 30px 0px rgba(0,0,0,0.09), 40px 53px 40px 0px rgba(0,0,0,0.05), 71px 95px 47px 0px rgba(0,0,0,0.01), 110px 149px 52px 0px rgba(0,0,0,0)',
@@ -311,7 +312,7 @@ useEffect(() => {
                 position: 'absolute',
                 top: '56px',
                 left: '96px',
-                width: '271px',
+                right: '16px',
                 fontFamily: 'Manrope, sans-serif',
                 fontWeight: 400,
                 fontSize: '16px',
@@ -337,7 +338,7 @@ useEffect(() => {
     >
       <Header />
       <NotificationSystem />
-      <main className="max-w-[1200px] ml-5 pt-12 pb-24 px-4 w-full">
+      <main className="max-w-[1200px] mx-auto pt-12 pb-24 px-4 w-full">
         {/* Product detail layout: left image, right details */}
         <div className="flex flex-col md:flex-row gap-12">
           {/* ✅ UPDATED: Image section with clickable thumbnails */}
@@ -349,7 +350,7 @@ useEffect(() => {
                   <div key={index} className="relative group">
                     <button
                       onClick={() => setSelectedImage(image)}
-                      className={`w-[90px] h-[90px] bg-white border-2 flex-shrink-0 overflow-hidden transition-all duration-300 ${
+                      className={`w-[60px] h-[60px] md:w-[90px] md:h-[90px] bg-white border-2 flex-shrink-0 overflow-hidden transition-all duration-300 ${
                         selectedImage === image
                           ? 'border-[#5A2408] shadow-md opacity-100'
                           : 'border-[#E0D5CC] opacity-70 hover:opacity-100 hover:border-[#5A2408]'
@@ -375,7 +376,7 @@ useEffect(() => {
                   '/images/default-perfume.png'
                 }
                 alt={product.name}
-                className="w-full max-w-[800px] h-[600px] object-contain bg-white transition-all duration-500 ease-in-out"
+                className="w-full max-w-[800px] h-auto max-h-[600px] object-contain bg-white transition-all duration-500 ease-in-out"
                 style={{
                   boxShadow: '0px 12px 36px rgba(63,46,31,0.10)',
                 }}
@@ -385,10 +386,10 @@ useEffect(() => {
 
           {/* Product info and actions */}
           <div className="md:w-1/2 w-full flex flex-col pr-2">
-            <h1 className="font-[Playfair] font-bold uppercase tracking-[0.05em] leading-[100%] text-[48px] text-[#5A2408] mb-2">
+            <h1 className="font-[Playfair] font-bold uppercase tracking-[0.05em] leading-[100%] text-3xl md:text-[48px] text-[#5A2408] mb-2">
               {product.name}
             </h1>
-            <p className="font-[manrope] font-medium text-[37px] leading-[100%] tracking-[0.02em] text-[#431A06] mt-3 mb-3">
+            <p className="font-[manrope] font-medium text-2xl md:text-[37px] leading-[100%] tracking-[0.02em] text-[#431A06] mt-3 mb-3">
               ${displayPrice}
             </p>
 
@@ -421,7 +422,7 @@ useEffect(() => {
             </div>
 
             {/* Description */}
-            <div className="font-[Manrope] font-medium text-[20px] leading-[26px] tracking-[0.04em] align-middle text-[#666464] mt-4 mb-4">
+            <div className="font-[Manrope] font-medium text-base md:text-[20px] leading-[26px] tracking-[0.04em] align-middle text-[#666464] mt-4 mb-4">
               {product.description}
             </div>
 
@@ -430,7 +431,7 @@ useEffect(() => {
               <span className="font-[manrope] font-semibold text-[25px] tracking-[0.02em] text-[#3A3A3A] text-lg">
                 Size:
               </span>
-              <div className="flex gap-[10px]">
+              <div className="flex gap-[10px] flex-wrap">
                 {product.sizes?.map((sizeObj, i) => (
                   <button
                     key={i}
@@ -469,12 +470,12 @@ useEffect(() => {
 
             {/* Tabs */}
             <div className="mt-8">
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 {TAB.map((tab) => (
                   <button
                     key={tab.key}
                     onClick={() => setSelectedTab(tab.key)}
-                    className={`w-[158px] h-[80px] px-6 py-3 text-[16px] font-manrope font-normal uppercase tracking-[0.02em] text-center transition-all duration-75`}
+                    className={`flex-1 min-w-[120px] px-2 py-3 text-[14px] md:text-[16px] font-manrope font-normal uppercase tracking-[0.02em] text-center transition-all duration-75`}
                     style={{
                       background:
                         selectedTab === tab.key ? '#431A06' : '#EFE9E6',
@@ -485,6 +486,7 @@ useEffect(() => {
                       border: 'none',
                       borderRadius: 0,
                       letterSpacing: '2%',
+                      minHeight: '60px'
                     }}
                   >
                     {tab.label}
@@ -550,10 +552,11 @@ useEffect(() => {
                           {product.fragrance_notes.top.map((note, index) => (
                             <span
                               key={index}
-                              className="px-10 py-4  text-white text-base flex items-center justify-center"
+                              className="px-6 py-2 md:px-10 md:py-4 text-white text-base flex items-center justify-center"
                               style={{
-                                width: '105px',
-                                height: '64px',
+                                width: 'auto',
+                                minWidth: '80px',
+                                minHeight: '40px',
                                 background: '#B59B8E',
                                 opacity: 1,
                               }}
@@ -651,13 +654,13 @@ useEffect(() => {
 
         {/* Related Products */}
         <h2
-          className="mt-20 mb-8 text-center font-serif font-extrabold text-3xl tracking-widest uppercase"
+          className="mt-20 mb-8 text-center font-serif font-extrabold text-2xl md:text-3xl tracking-widest uppercase"
           style={{ color: '#3F2E1F' }}
         >
           YOU MAY ALSO LIKE
         </h2>
 <div className="flex justify-center">
-<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-7 justify-items-center">
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-7 justify-items-center w-full">
   {relatedProducts.slice(0, 4).map((related) => (
     <motion.div
       key={related._id}
