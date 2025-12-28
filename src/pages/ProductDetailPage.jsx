@@ -81,8 +81,8 @@ export default function ProductDetailPage() {
     setProduct(scentRes.data);
   }
 
-if (relatedRes?.data?.data?.related_products) {
-  const normalized = relatedRes.data.data.related_products.map(p => ({
+if (relatedRes?.data?.related_products) {
+  const normalized = relatedRes.data.related_products.map(p => ({
     ...p,
     price: p.price ?? p.discountedPrice ?? p.sizes?.[0]?.price ?? 0,
     rating: p.rating ?? 5,
