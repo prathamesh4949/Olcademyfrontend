@@ -333,7 +333,8 @@ const Header = ({ darkMode, setDarkMode }) => {
                 style={{
                   minWidth: navMinWidth,
                   padding: navPadding,
-                  borderBottom: isActiveNavItem(item.path) ? '1px solid #341405' : 'none'
+                  borderBottom: isActiveNavItem(item.path) ? '1px solid #341405' : 'none',
+                  textAlign: 'center'
                 }}
               >
                 <Link
