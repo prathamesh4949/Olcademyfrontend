@@ -67,10 +67,22 @@ export default function ProductDetailPage() {
 
         // 👉 SCENT PAGE
         if (location.pathname.startsWith('/scent')) {
-          const scentRes = await ScentService.getScentById(id);
+          const scentPromise = ScentService.getScentById(id);
+          const relatedScentPromise = ScentService.getRelatedScents(id);
+
+          const [scentRes, relatedRes] = await Promise.all([
+            scentPromise,
+            relatedScentPromise
+          ]);
 
           if (scentRes?.data) {
             setProduct(scentRes.data);
+          }
+
+          if (relatedRes?.data?.related_products) {
+            setRelatedProducts(relatedRes.data.related_products);
+          } else {
+            setRelatedProducts([]);
           }
 
           return;
