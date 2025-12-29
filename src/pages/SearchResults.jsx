@@ -271,7 +271,13 @@ const SearchResults = () => {
         addNotification('Product not available', 'error');
         return;
       }
-      navigate(`/product/${product._id.toString()}`);
+
+      // Check if the product is from the scents collection
+      if (product.collection) {
+        navigate(`/scent/${product._id.toString()}`);
+      } else {
+        navigate(`/product/${product._id.toString()}`);
+      }
     };
 
     const getProductImage = () => {
