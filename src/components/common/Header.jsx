@@ -92,8 +92,8 @@ const Header = ({ darkMode, setDarkMode }) => {
   const iconLayerTop = isScrolled ? '26px' : '86px';
 
   const navFontSize = isScrolled ? '18px' : '20px';
-  const navPadding = isScrolled ? '6px 10px' : '12px 18px';
-  const navMinWidth = isScrolled ? '95px' : '142px';
+  const navPadding = isScrolled ? '2px 8px' : '12px 8px';
+  const navMinWidth = isScrolled ? '80px' : '120px';
 
   const spacerHeight = INITIAL_HEIGHT;
 
@@ -333,7 +333,8 @@ const Header = ({ darkMode, setDarkMode }) => {
                 style={{
                   minWidth: navMinWidth,
                   padding: navPadding,
-                  borderBottom: isActiveNavItem(item.path) ? '1px solid #341405' : 'none'
+                  borderBottom: isActiveNavItem(item.path) ? '1px solid #341405' : 'none',
+                  textAlign: 'center'
                 }}
               >
                 <Link

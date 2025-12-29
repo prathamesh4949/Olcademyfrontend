@@ -1,3 +1,5 @@
+// src/services/scentService.js
+
 import { API_BASE_URL } from '../api/constant';
 const SCENT_API_END_POINT = `${API_BASE_URL}/api/scents`;
 
@@ -156,7 +158,7 @@ class ScentService {
       throw error;
     }
   }
-
+ 
   // ===== ADMIN SCENT MANAGEMENT METHODS =====
 
   // Get all scents with filters and pagination
@@ -649,6 +651,8 @@ class ScentService {
     }
   }
 
+
+
   // CRITICAL: Get single scent by ID - This is what makes navigation work!
   static async getScentById(id) {
     const service = new ScentService();
@@ -749,6 +753,24 @@ class ScentService {
           seasons: ['spring', 'summer', 'autumn', 'winter'],
           occasions: ['casual', 'formal', 'romantic', 'office', 'party', 'evening']
         }
+      };
+    }
+  }
+
+  // Get related products
+  static async getRelatedScents(productId) {
+    const service = new ScentService();
+    try {
+      console.log('Fetching related scents for product ID:', productId);
+      const endpoint = `/${productId}/related`;
+      const response = await service.apiCall(endpoint);
+      return response;
+    } catch (error) {
+      console.error('Error fetching related scents:', error);
+      return {
+        success: false,
+        message: error.message,
+        data: []
       };
     }
   }
