@@ -119,8 +119,8 @@ const SearchResults = () => {
       filtered = filtered.filter(product => {
         const nameMatch = product.name?.toLowerCase().includes(searchTerm);
         const brandMatch = product.brand?.toLowerCase().includes(searchTerm);
-        const descriptionMatch = product.description?.toLowerCase().includes(searchTerm);
-        return nameMatch || brandMatch || descriptionMatch;
+        // const descriptionMatch = product.description?.toLowerCase().includes(searchTerm);
+        return nameMatch || brandMatch ; //|| descriptionMatch;
       });
       console.log(`🔍 After search filter (${searchQuery}): ${filtered.length} products`);
     }
