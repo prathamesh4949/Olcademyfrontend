@@ -279,7 +279,7 @@ const PerfectDiscoverGiftsCollection = () => {
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F5F0]">
+    <div className="min-h-screen flex flex-col bg-F8F6F3 text-79300f">
       <Header />
       <NotificationSystem />
 
@@ -288,7 +288,7 @@ const PerfectDiscoverGiftsCollection = () => {
 
       {/* HERO SECTION (unchanged) */}
       <section className="relative overflow-hidden w-full bg-gradient-to-br from-purple-100 via-pink-100 to-rose-100">
-        <div className="relative w-full h-[500px] flex items-center justify-center">
+        <div className="relative w-full h-[400px] flex items-center justify-center">
           <img
             src="/images/unisex.png"
             className="w-full h-full object-cover"

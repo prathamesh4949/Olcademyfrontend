@@ -247,7 +247,7 @@ const MensSignatureCollection = () => {
       <main className="flex-1">
         {/* BANNER SECTION */}
         <section className="relative overflow-hidden w-full bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900">
-          <div className="relative w-full h-[500px] md:h-[600px] lg:h-[700px] flex items-center justify-center">
+          <div className="relative w-full h-[400px] md:h-[400px] lg:h-[400px] flex items-center justify-center">
             <img
               src="/images/unisex.png"
               className="w-full h-full object-cover"

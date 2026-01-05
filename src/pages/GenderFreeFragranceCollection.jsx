@@ -495,7 +495,7 @@ const GenderFreeFragranceCollection = () => {
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F5F0]">
+    <div className="min-h-screen flex flex-col bg-F8F6F3 text-79300f">
       <Header />
       <NotificationSystem />
 
@@ -508,7 +508,7 @@ const GenderFreeFragranceCollection = () => {
       <main className="flex-1">
         {/* Hero Section */}
         <section className="relative overflow-hidden w-full bg-gradient-to-br from-purple-100 via-pink-100 to-rose-100 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800">
-          <div className="relative w-full h-[500px] md:h-[600px] lg:h-[700px] flex items-center justify-center">
+          <div className="relative w-full h-[400px] md:h-[400px] lg:h-[400px] flex items-center justify-center">
             <img
               src="/images/don1.png"
               alt="MA VESARII Gender-Free Fragrance Collection"
@@ -571,7 +571,7 @@ const GenderFreeFragranceCollection = () => {
                 >
                   Beyond Boundaries, Beyond Labels
                 </motion.p>
-                <motion.p
+                {/* <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 1, delay: 1 }}
@@ -583,7 +583,7 @@ const GenderFreeFragranceCollection = () => {
                   }}
                 >
                   Discover Our Inclusive Scent Collection
-                </motion.p>
+                </motion.p> */}
               </div>
             </div>
           </div>
@@ -621,11 +621,11 @@ const GenderFreeFragranceCollection = () => {
               </div>
             ) : (
               <>
-                <div className="mb-6 text-center">
+                {/* <div className="mb-6 text-center">
                   <p className="text-gray-600 dark:text-gray-400">
                     Showing {scents.length} of {totalPages * itemsPerPage} gender-free scents
                   </p>
-                </div>
+                </div> */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                   {scents.map((scent) => (
                     <ScentCard key={scent._id} scent={scent} />
