@@ -118,14 +118,8 @@ const AppRoutes = ({ darkMode, setDarkMode }) => {
                   </ProtectedRoute>
                 } 
               />
-              <Route 
-                path="/wishlist-collection" 
-                element={
-                  <ProtectedRoute>
-                    <Wishlist />
-                  </ProtectedRoute>
-                } 
-              />
+              
+             <Route path="/wishlist-collection" element={<Wishlist />} />
 
                <Route path='/userProfile' element={<UserProfile/>}/>
               <Route 

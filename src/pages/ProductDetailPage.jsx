@@ -449,10 +449,7 @@ if (relatedRes?.data?.related_products) {
             <div className='p-2'>
 
             </div>
-            {/* Description
-            <div className="font-[Manrope] font-medium text-base md:text-[20px] leading-[26px] tracking-[0.04em] align-middle text-[#666464] mt-4 mb-4">
-              {product.description}
-            </div> */}
+            
 
             {/* Size selection */}
             <div className="flex items-center gap-3 mb-5 mt-1">

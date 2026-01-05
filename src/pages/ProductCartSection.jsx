@@ -239,7 +239,7 @@ const ProductCartSection = ({ isOpen, onClose }) => {
             ))
           )}
         </div>
-        {/* 3A3A3A */}
+       
         <div className="pt-4 pb-5 px-7 bg-[#F9F7F6]">
           <div className="flex justify-between items-center mb-3">
             <span className="text-[16px] font-manrope font-medium text-[#3A3A3A]">SUBTOTAL</span>
@@ -264,5 +264,3 @@ const ProductCartSection = ({ isOpen, onClose }) => {
 };
 
 export default ProductCartSection;
-
-
