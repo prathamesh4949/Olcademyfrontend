@@ -688,7 +688,7 @@ const ScentCard = memo(({ scent, addToCart, isInCart, toggleWishlist, isInWishli
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F5F0] dark:bg-gray-900">
+    <div className="min-h-screen flex flex-col bg-F8F6F3 text-79300f">
       <Header />
       <NotificationSystem />
       <QuickViewModal />
@@ -698,7 +698,7 @@ const ScentCard = memo(({ scent, addToCart, isInCart, toggleWishlist, isInWishli
       <main className="flex-1">
         {/* Hero Section - Updated with don.png banner */}
         <section className="relative overflow-hidden w-full bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800">
-          <div className="relative w-full h-[500px] md:h-[600px] lg:h-[700px] flex items-center justify-center">
+          <div className="relative w-full h-[400px] md:h-[400px] lg:h-[400px] flex items-center justify-center">
             <img
               src="/images/don.png"
               alt="MA VESARII Scents Without Limits Collection"
@@ -769,7 +769,7 @@ const ScentCard = memo(({ scent, addToCart, isInCart, toggleWishlist, isInWishli
                   Boundless Fragrance Freedom
                 </motion.p>
                 
-                <motion.p
+                {/* <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 1, delay: 1 }}
@@ -781,7 +781,7 @@ const ScentCard = memo(({ scent, addToCart, isInCart, toggleWishlist, isInWishli
                   }}
                 >
                   Explore Our Limitless Collection
-                </motion.p>
+                </motion.p> */}
               </div>
             </div>
           </div>
@@ -820,11 +820,11 @@ const ScentCard = memo(({ scent, addToCart, isInCart, toggleWishlist, isInWishli
               </div>
             ) : (
               <>
-                <div className="mb-6 text-center">
+                {/* <div className="mb-6 text-center">
                   <p className="text-gray-600 dark:text-gray-400">
                     Showing {scents.length} of {totalPages * itemsPerPage} limitless scents
                   </p>
-                </div>
+                </div> */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                   {scents.map((scent) => {
                     if (!scent || !scent._id) {

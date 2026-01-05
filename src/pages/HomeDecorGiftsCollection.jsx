@@ -105,304 +105,554 @@ const PerfectGiftsLuxuryCollection = () => {
     }
   };
 
-  const ScentCard = memo(({ scent, addToCart, isInCart, toggleWishlist, isInWishlist, navigate, addNotification, setIsCartOpen }) => {
-    const [isHovered, setIsHovered] = useState(false);
-    const [imageError, setImageError] = useState({ primary: false, hover: false });
-    const [isAddingToCart, setIsAddingToCart] = useState(false);
-    const [imageLoading, setImageLoading] = useState(true);
+  // const ScentCard = memo(({ scent, addToCart, isInCart, toggleWishlist, isInWishlist, navigate, addNotification, setIsCartOpen }) => {
+  //   const [isHovered, setIsHovered] = useState(false);
+  //   const [imageError, setImageError] = useState({ primary: false, hover: false });
+  //   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  //   const [imageLoading, setImageLoading] = useState(true);
 
-    if (!scent) {
-      return (
-        <div className="w-full bg-gray-200 dark:bg-gray-700 animate-pulse rounded-2xl p-6">
-          <div className="h-[250px] bg-gray-300 dark:bg-gray-600 rounded-xl mb-4"></div>
-          <div className="space-y-3">
-            <div className="h-6 bg-gray-300 dark:bg-gray-600 rounded"></div>
-            <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-3/4"></div>
-            <div className="h-8 bg-gray-300 dark:bg-gray-600 rounded"></div>
-          </div>
-        </div>
-      );
+  //   if (!scent) {
+  //     return (
+  //       <div className="w-full bg-gray-200 dark:bg-gray-700 animate-pulse rounded-2xl p-6">
+  //         <div className="h-[250px] bg-gray-300 dark:bg-gray-600 rounded-xl mb-4"></div>
+  //         <div className="space-y-3">
+  //           <div className="h-6 bg-gray-300 dark:bg-gray-600 rounded"></div>
+  //           <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-3/4"></div>
+  //           <div className="h-8 bg-gray-300 dark:bg-gray-600 rounded"></div>
+  //         </div>
+  //       </div>
+  //     );
+  //   }
+
+  //   const productInCart = isInCart(scent._id?.toString(), scent.sizes && scent.sizes.length > 0 ? scent.sizes[0].size : null);
+
+  //   const handleAddToCartClick = async (e) => {
+  //     e.stopPropagation();
+  //     setIsAddingToCart(true);
+
+  //     const cartItem = {
+  //       id: scent._id.toString(),
+  //       name: scent.name,
+  //       price: Number(scent.price),
+  //       image: scent.images && scent.images.length > 0 ? scent.images[0] : '/images/default-scent.png',
+  //       quantity: 1,
+  //       selectedSize: scent.sizes && scent.sizes.length > 0 ? scent.sizes[0].size : null,
+  //       personalization: null,
+  //       brand: scent.brand || '',
+  //       sku: scent.sku || ''
+  //     };
+
+  //     try {
+  //       const success = await addToCart(cartItem);
+  //       if (success) {
+  //         addNotification(null, 'success', scent.name, 'cart');
+  //       } else {
+  //         addNotification('Failed to add item to cart', 'error');
+  //       }
+  //     } catch (error) {
+  //       console.error('Add to cart error:', error);
+  //       addNotification('Something went wrong. Please try again.', 'error');
+  //     } finally {
+  //       setIsAddingToCart(false);
+  //     }
+  //   };
+
+  //   const handleViewInCart = (e) => {
+  //     e.stopPropagation();
+  //     setIsCartOpen(true);
+  //   };
+
+  //   const handleWishlistToggle = (e) => {
+  //     e.stopPropagation();
+      
+  //     if (!scent._id) {
+  //       addNotification('Unable to add to wishlist', 'error');
+  //       return;
+  //     }
+
+  //     try {
+  //       const wasInWishlist = isInWishlist(scent._id);
+        
+  //       const wishlistProduct = {
+  //         id: scent._id.toString(),
+  //         name: scent.name,
+  //         price: scent.price,
+  //         image: scent.images && scent.images.length > 0 ? scent.images[0] : '/images/default-scent.png',
+  //         description: scent.description || '',
+  //         category: scent.category || '',
+  //         brand: scent.brand || '',
+  //         selectedSize: null
+  //       };
+        
+  //       toggleWishlist(wishlistProduct);
+  //       addNotification(
+  //         wasInWishlist ? 'Removed from wishlist' : 'Added to wishlist!',
+  //         'success',
+  //         scent.name,
+  //         'wishlist'
+  //       );
+  //     } catch (error) {
+  //       console.error('Wishlist toggle error:', error);
+  //       addNotification('Failed to update wishlist', 'error');
+  //     }
+  //   };
+
+  //   const handleProductClick = () => {
+  //     if (scent._id) {
+  //       navigate(`/scent/${scent._id}`);
+  //     }
+  //   };
+
+  //   const getProductImage = () => {
+  //     if (isHovered && scent.hoverImage && !imageError.hover) {
+  //       return scent.hoverImage;
+  //     }
+  //     if (scent.images && Array.isArray(scent.images) && scent.images.length > 0 && !imageError.primary) {
+  //       return scent.images[0];
+  //     }
+  //     return '/images/default-scent.png';
+  //   };
+
+  //   const handleImageError = (e, type = 'primary') => {
+  //     setImageError(prev => ({ ...prev, [type]: true }));
+  //     setImageLoading(false);
+  //     e.target.src = '/images/default-scent.png';
+  //   };
+
+  //   const handleImageLoad = () => {
+  //     setImageLoading(false);
+  //   };
+
+  //   return (
+  //     <motion.div
+  //       layout
+  //       whileHover={{ scale: 1.02, y: -5 }}
+  //       transition={{ duration: 0.3, type: "spring", stiffness: 300 }}
+  //       className="bg-gradient-to-br from-slate-100 via-gray-50 to-zinc-100 dark:from-gray-800 dark:to-gray-700 p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 text-left relative border border-slate-200 dark:border-gray-600 group cursor-pointer backdrop-blur-sm flex flex-col"
+  //       onMouseEnter={() => setIsHovered(true)}
+  //       onMouseLeave={() => setIsHovered(false)}
+  //       onClick={handleProductClick}
+  //     >
+  //       {/* Wishlist Button */}
+  //       <motion.button
+  //         whileHover={{ scale: 1.1 }}
+  //         whileTap={{ scale: 0.9 }}
+  //         onClick={handleWishlistToggle}
+  //         className="absolute top-4 right-4 text-slate-600 hover:text-red-600 dark:text-gray-300 dark:hover:text-red-400 z-10 bg-white/90 dark:bg-black/90 backdrop-blur-sm rounded-full p-2 shadow-md transition-all duration-200"
+  //         aria-label={isInWishlist(scent._id) ? 'Remove from wishlist' : 'Add to wishlist'}
+  //       >
+  //         <FiHeart size={18} className={isInWishlist(scent._id) ? 'fill-red-600 text-red-600' : ''} />
+  //       </motion.button>
+
+  //       {/* Quick View Button */}
+  //       <AnimatePresence>
+  //         {isHovered && (
+  //           <motion.button
+  //             initial={{ opacity: 0, scale: 0.8 }}
+  //             animate={{ opacity: 1, scale: 1 }}
+  //             exit={{ opacity: 0, scale: 0.8 }}
+  //             whileHover={{ scale: 1.1 }}
+  //             whileTap={{ scale: 0.9 }}
+  //             onClick={(e) => handleQuickView(scent, e)}
+  //             className="absolute top-4 right-16 bg-white/90 dark:bg-black/90 backdrop-blur-sm rounded-full p-2 shadow-md transition-all duration-200 z-10"
+  //             aria-label="Quick view"
+  //           >
+  //             <Eye size={18} className="text-slate-600 dark:text-gray-300" />
+  //           </motion.button>
+  //         )}
+  //       </AnimatePresence>
+
+  //       {/* In Cart Badge */}
+  //       {productInCart && (
+  //         <div className="absolute top-4 left-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md z-10 border border-emerald-400">
+  //           ✓ IN CART
+  //         </div>
+  //       )}
+
+  //       {/* Luxury Gift Badge */}
+  //       <div className="absolute top-4 left-4 bg-gradient-to-r from-slate-600 to-zinc-700 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md z-10 border border-slate-400 flex items-center space-x-1">
+  //         <Gem size={12} />
+  //         <span>LUXURY</span>
+  //       </div>
+
+  //       {/* Image Container */}
+  //       <div className="bg-white/50 dark:bg-black/20 backdrop-blur-sm rounded-xl p-4 mb-4 shadow-inner relative overflow-hidden">
+  //         {imageLoading && (
+  //           <div className="absolute inset-0 flex items-center justify-center">
+  //             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-600"></div>
+  //           </div>
+  //         )}
+  //         <img 
+  //           src={getProductImage()}
+  //           alt={scent.name || 'Scent'} 
+  //           className={`h-[250px] w-full object-contain transition-all duration-500 group-hover:scale-105 ${imageLoading ? 'opacity-0' : 'opacity-100'}`} 
+  //           onError={(e) => handleImageError(e, isHovered ? 'hover' : 'primary')}
+  //           onLoad={handleImageLoad}
+  //           loading="lazy"
+  //         />
+          
+  //         {/* Overlay on hover */}
+  //         <AnimatePresence>
+  //           {isHovered && (
+  //             <motion.div
+  //               initial={{ opacity: 0 }}
+  //               animate={{ opacity: 1 }}
+  //               exit={{ opacity: 0 }}
+  //               className="absolute inset-0 bg-gradient-to-t from-slate-900/30 to-transparent rounded-xl flex items-end justify-center pb-4"
+  //             >
+  //               <span className="text-white text-sm font-medium bg-slate-600/70 px-3 py-1 rounded-full backdrop-blur-sm">
+  //                 Luxury Experience
+  //               </span>
+  //             </motion.div>
+  //           )}
+  //         </AnimatePresence>
+  //       </div>
+
+  //       {/* Product Info */}
+  //       <div className="space-y-3 flex-1">
+  //         <div className="flex items-start justify-between">
+  //           <h3 className="text-xl font-alata text-slate-900 dark:text-gray-200 font-bold leading-tight">
+  //             {scent.name || 'Unnamed Scent'}
+  //           </h3>
+  //           {scent.rating > 0 && (
+  //             <div className="flex items-center space-x-1">
+  //               <Star size={14} className="text-yellow-500 fill-current" />
+  //               <span className="text-sm text-gray-600 dark:text-gray-400">
+  //                 {scent.rating.toFixed(1)}
+  //               </span>
+  //             </div>
+  //           )}
+  //         </div>
+
+  //         {/* Brand */}
+  //         {scent.brand && (
+  //           <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+  //             by {scent.brand}
+  //           </p>
+  //         )}
+          
+  //         {scent.description && (
+  //           <p className="text-sm text-slate-700 dark:text-gray-400 leading-relaxed line-clamp-2">
+  //             {scent.description}
+  //           </p>
+  //         )}
+
+  //         {/* Scent Details */}
+  //         <div className="flex flex-wrap gap-2 text-xs">
+  //           {scent.scentFamily && (
+  //             <span className="bg-slate-100 dark:bg-slate-800/30 text-slate-700 dark:text-slate-300 px-2 py-1 rounded-full capitalize">
+  //               {scent.scentFamily}
+  //             </span>
+  //           )}
+  //           {scent.intensity && (
+  //             <span className="bg-zinc-100 dark:bg-zinc-800/30 text-zinc-700 dark:text-zinc-300 px-2 py-1 rounded-full capitalize">
+  //               {scent.intensity}
+  //             </span>
+  //           )}
+  //           {scent.concentration && (
+  //             <span className="bg-gray-100 dark:bg-gray-800/30 text-gray-700 dark:text-gray-300 px-2 py-1 rounded-full capitalize">
+  //               {scent.concentration}
+  //             </span>
+  //           )}
+  //         </div>
+          
+  //         <div className="flex items-center justify-between pt-2">
+  //           <div className="flex flex-col">
+  //             <p className="text-xl font-bold text-slate-600 dark:text-gray-300">
+  //               ${typeof scent.price === 'number' ? scent.price.toFixed(2) : '0.00'}
+  //             </p>
+  //             {scent.originalPrice && scent.originalPrice > scent.price && (
+  //               <p className="text-sm text-gray-500 dark:text-gray-400 line-through">
+  //                 ${scent.originalPrice.toFixed(2)}
+  //               </p>
+  //             )}
+  //           </div>
+  //           <div className="bg-gradient-to-r from-slate-500/10 to-zinc-500/10 dark:bg-gradient-to-r dark:from-slate-400/10 dark:to-zinc-400/10 px-2 py-1 rounded-full">
+  //             <span className="text-xs text-slate-700 dark:text-slate-400 font-medium flex items-center space-x-1">
+  //               <Gem size={10} />
+  //               <span>LUXURY</span>
+  //             </span>
+  //           </div>
+  //         </div>
+  //       </div>
+
+  //       {/* Action Button */}
+  //       <motion.button
+  //         onClick={productInCart ? handleViewInCart : handleAddToCartClick}
+  //         disabled={isAddingToCart}
+  //         whileHover={{ scale: 1.02 }}
+  //         whileTap={{ scale: 0.98 }}
+  //         className={`w-full font-semibold py-3 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 mt-4 ${
+  //           productInCart 
+  //             ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-700 hover:via-teal-700 hover:to-cyan-700 text-white border border-emerald-400/30 shadow-emerald-500/20'
+  //             : 'bg-gradient-to-r from-slate-600 to-zinc-700 hover:from-slate-700 hover:to-zinc-800 text-white'
+  //         }`}
+  //       >
+  //         {isAddingToCart ? (
+  //           <RefreshCw size={18} className="animate-spin" />
+  //         ) : productInCart ? (
+  //           <ShoppingCart size={18} />
+  //         ) : (
+  //           <ShoppingBag size={18} />
+  //         )}
+  //         <span>
+  //           {isAddingToCart ? 'Adding...' : productInCart ? 'View in Cart' : 'Add to Cart'}
+  //         </span>
+  //       </motion.button>
+  //     </motion.div>
+  //   );
+  // });
+  const ScentCard = memo(({ scent, addToCart, isInCart, toggleWishlist, isInWishlist, navigate, addNotification, setIsCartOpen }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const [imageError, setImageError] = useState({ primary: false, hover: false });
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+
+  if (!scent) return null;
+
+  const scentInCart = isInCart(
+    scent._id?.toString(),
+    scent.sizes && scent.sizes.length > 0 ? scent.sizes[0].size : null
+  );
+
+  const handleAddToCart = async (e) => {
+    e.stopPropagation();
+    setIsAddingToCart(true);
+
+    const cartItem = {
+      id: scent._id.toString(),
+      name: scent.name,
+      price: Number(scent.price),
+      image:
+        scent.images && scent.images.length > 0
+          ? scent.images[0]
+          : "/images/default-scent.png",
+      quantity: 1,
+      selectedSize:
+        scent.sizes && scent.sizes.length > 0 ? scent.sizes[0].size : null,
+      personalization: null,
+    };
+
+    try {
+      const success = await addToCart(cartItem);
+      if (success) {
+        addNotification(null, 'success', scent.name, 'cart');
+      } else {
+        addNotification('Failed to add item to cart', 'error');
+      }
+    } catch (error) {
+      console.error('Add to cart error:', error);
+      addNotification('Something went wrong. Please try again.', 'error');
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
+
+  const handleWishlistToggle = (e) => {
+    e.stopPropagation();
+    if (!scent._id) {
+      addNotification('Unable to add to wishlist', 'error');
+      return;
     }
 
-    const productInCart = isInCart(scent._id?.toString(), scent.sizes && scent.sizes.length > 0 ? scent.sizes[0].size : null);
+    try {
+      const wasInWishlist = isInWishlist(scent._id);
 
-    const handleAddToCartClick = async (e) => {
-      e.stopPropagation();
-      setIsAddingToCart(true);
-
-      const cartItem = {
+      const wishlistItem = {
         id: scent._id.toString(),
         name: scent.name,
-        price: Number(scent.price),
-        image: scent.images && scent.images.length > 0 ? scent.images[0] : '/images/default-scent.png',
-        quantity: 1,
-        selectedSize: scent.sizes && scent.sizes.length > 0 ? scent.sizes[0].size : null,
-        personalization: null,
-        brand: scent.brand || '',
-        sku: scent.sku || ''
+        price: scent.price,
+        image:
+          scent.images && scent.images.length > 0
+            ? scent.images[0]
+            : "/images/default-scent.png",
+        description: scent.description || "",
+        category: scent.category || "",
+        selectedSize: null,
       };
 
-      try {
-        const success = await addToCart(cartItem);
-        if (success) {
-          addNotification(null, 'success', scent.name, 'cart');
-        } else {
-          addNotification('Failed to add item to cart', 'error');
-        }
-      } catch (error) {
-        console.error('Add to cart error:', error);
-        addNotification('Something went wrong. Please try again.', 'error');
-      } finally {
-        setIsAddingToCart(false);
-      }
-    };
+      toggleWishlist(wishlistItem);
+      addNotification(
+        wasInWishlist ? 'Removed from wishlist' : 'Added to wishlist!',
+        'success',
+        scent.name,
+        'wishlist'
+      );
+    } catch (error) {
+      console.error('Wishlist toggle error:', error);
+      addNotification('Failed to update wishlist', 'error');
+    }
+  };
 
-    const handleViewInCart = (e) => {
-      e.stopPropagation();
-      setIsCartOpen(true);
-    };
+  const handleCardClick = () => {
+    if (!scent._id) {
+      addNotification('Scent not available', 'error');
+      return;
+    }
+    navigate(`/scent/${scent._id.toString()}`);
+  };
 
-    const handleWishlistToggle = (e) => {
-      e.stopPropagation();
-      
-      if (!scent._id) {
-        addNotification('Unable to add to wishlist', 'error');
-        return;
-      }
+  const getScentImage = () => {
+    if (isHovered && scent.hoverImage && !imageError.hover) {
+      return scent.hoverImage;
+    }
+    if (
+      scent.images &&
+      Array.isArray(scent.images) &&
+      scent.images.length > 0 &&
+      !imageError.primary
+    ) {
+      return scent.images[0];
+    }
+    return "/images/default-scent.png";
+  };
 
-      try {
-        const wasInWishlist = isInWishlist(scent._id);
-        
-        const wishlistProduct = {
-          id: scent._id.toString(),
-          name: scent.name,
-          price: scent.price,
-          image: scent.images && scent.images.length > 0 ? scent.images[0] : '/images/default-scent.png',
-          description: scent.description || '',
-          category: scent.category || '',
-          brand: scent.brand || '',
-          selectedSize: null
-        };
-        
-        toggleWishlist(wishlistProduct);
-        addNotification(
-          wasInWishlist ? 'Removed from wishlist' : 'Added to wishlist!',
-          'success',
-          scent.name,
-          'wishlist'
-        );
-      } catch (error) {
-        console.error('Wishlist toggle error:', error);
-        addNotification('Failed to update wishlist', 'error');
-      }
-    };
+  const handleImageError = (e, type = "primary") => {
+    setImageError((prev) => ({ ...prev, [type]: true }));
+    e.target.src = "/images/default-scent.png";
+  };
 
-    const handleProductClick = () => {
-      if (scent._id) {
-        navigate(`/scent/${scent._id}`);
-      }
-    };
-
-    const getProductImage = () => {
-      if (isHovered && scent.hoverImage && !imageError.hover) {
-        return scent.hoverImage;
-      }
-      if (scent.images && Array.isArray(scent.images) && scent.images.length > 0 && !imageError.primary) {
-        return scent.images[0];
-      }
-      return '/images/default-scent.png';
-    };
-
-    const handleImageError = (e, type = 'primary') => {
-      setImageError(prev => ({ ...prev, [type]: true }));
-      setImageLoading(false);
-      e.target.src = '/images/default-scent.png';
-    };
-
-    const handleImageLoad = () => {
-      setImageLoading(false);
-    };
-
-    return (
-      <motion.div
-        layout
-        whileHover={{ scale: 1.02, y: -5 }}
-        transition={{ duration: 0.3, type: "spring", stiffness: 300 }}
-        className="bg-gradient-to-br from-slate-100 via-gray-50 to-zinc-100 dark:from-gray-800 dark:to-gray-700 p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 text-left relative border border-slate-200 dark:border-gray-600 group cursor-pointer backdrop-blur-sm flex flex-col"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        onClick={handleProductClick}
-      >
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -8, boxShadow: "0 10px 30px rgba(0,0,0,0.15)" }}
+      transition={{ duration: 0.3 }}
+      className="bg-white dark:bg-gray-800 overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300 w-full max-w-[331px]"
+      style={{ height: "auto", minHeight: "528px" }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={handleCardClick}
+    >
+      {/* Image Container */}
+      <div className="relative bg-white dark:bg-gray-700 flex items-center justify-center overflow-hidden w-full aspect-[331/273] p-3">
+        <motion.img
+          src={getScentImage()}
+          alt={scent.name || "Scent"}
+          className="object-contain w-full h-full max-w-[248px] max-h-[248px]"
+          onError={(e) => handleImageError(e, isHovered ? "hover" : "primary")}
+          animate={{ scale: isHovered ? 1.08 : 1 }}
+          transition={{ duration: 0.4 }}
+          loading="lazy"
+        />
         {/* Wishlist Button */}
         <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
           onClick={handleWishlistToggle}
-          className="absolute top-4 right-4 text-slate-600 hover:text-red-600 dark:text-gray-300 dark:hover:text-red-400 z-10 bg-white/90 dark:bg-black/90 backdrop-blur-sm rounded-full p-2 shadow-md transition-all duration-200"
-          aria-label={isInWishlist(scent._id) ? 'Remove from wishlist' : 'Add to wishlist'}
+          whileHover={{ scale: 1.15 }}
+          whileTap={{ scale: 0.9 }}
+          className="absolute top-2.5 right-2.5 bg-white dark:bg-gray-800 rounded-full p-1.5 shadow-lg hover:shadow-xl transition-all duration-200 z-10 w-[27px] h-[27px] flex items-center justify-center"
+          aria-label={
+            isInWishlist(scent._id) ? "Remove from wishlist" : "Add to wishlist"
+          }
         >
-          <FiHeart size={18} className={isInWishlist(scent._id) ? 'fill-red-600 text-red-600' : ''} />
-        </motion.button>
-
-        {/* Quick View Button */}
-        <AnimatePresence>
-          {isHovered && (
-            <motion.button
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={(e) => handleQuickView(scent, e)}
-              className="absolute top-4 right-16 bg-white/90 dark:bg-black/90 backdrop-blur-sm rounded-full p-2 shadow-md transition-all duration-200 z-10"
-              aria-label="Quick view"
-            >
-              <Eye size={18} className="text-slate-600 dark:text-gray-300" />
-            </motion.button>
-          )}
-        </AnimatePresence>
-
-        {/* In Cart Badge */}
-        {productInCart && (
-          <div className="absolute top-4 left-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md z-10 border border-emerald-400">
-            ✓ IN CART
-          </div>
-        )}
-
-        {/* Luxury Gift Badge */}
-        <div className="absolute top-4 left-4 bg-gradient-to-r from-slate-600 to-zinc-700 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md z-10 border border-slate-400 flex items-center space-x-1">
-          <Gem size={12} />
-          <span>LUXURY</span>
-        </div>
-
-        {/* Image Container */}
-        <div className="bg-white/50 dark:bg-black/20 backdrop-blur-sm rounded-xl p-4 mb-4 shadow-inner relative overflow-hidden">
-          {imageLoading && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-600"></div>
-            </div>
-          )}
-          <img 
-            src={getProductImage()}
-            alt={scent.name || 'Scent'} 
-            className={`h-[250px] w-full object-contain transition-all duration-500 group-hover:scale-105 ${imageLoading ? 'opacity-0' : 'opacity-100'}`} 
-            onError={(e) => handleImageError(e, isHovered ? 'hover' : 'primary')}
-            onLoad={handleImageLoad}
-            loading="lazy"
+          <FiHeart
+            size={14}
+            className={`transition-all duration-200 ${
+              isInWishlist(scent._id)
+                ? "fill-red-600 text-red-600"
+                : "text-gray-700 dark:text-gray-300"
+            }`}
           />
-          
-          {/* Overlay on hover */}
-          <AnimatePresence>
-            {isHovered && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-gradient-to-t from-slate-900/30 to-transparent rounded-xl flex items-end justify-center pb-4"
-              >
-                <span className="text-white text-sm font-medium bg-slate-600/70 px-3 py-1 rounded-full backdrop-blur-sm">
-                  Luxury Experience
-                </span>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+        </motion.button>
+      </div>
 
-        {/* Product Info */}
-        <div className="space-y-3 flex-1">
-          <div className="flex items-start justify-between">
-            <h3 className="text-xl font-alata text-slate-900 dark:text-gray-200 font-bold leading-tight">
-              {scent.name || 'Unnamed Scent'}
-            </h3>
-            {scent.rating > 0 && (
-              <div className="flex items-center space-x-1">
-                <Star size={14} className="text-yellow-500 fill-current" />
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                  {scent.rating.toFixed(1)}
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Brand */}
-          {scent.brand && (
-            <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
-              by {scent.brand}
-            </p>
-          )}
-          
-          {scent.description && (
-            <p className="text-sm text-slate-700 dark:text-gray-400 leading-relaxed line-clamp-2">
-              {scent.description}
-            </p>
-          )}
-
-          {/* Scent Details */}
-          <div className="flex flex-wrap gap-2 text-xs">
-            {scent.scentFamily && (
-              <span className="bg-slate-100 dark:bg-slate-800/30 text-slate-700 dark:text-slate-300 px-2 py-1 rounded-full capitalize">
-                {scent.scentFamily}
-              </span>
-            )}
-            {scent.intensity && (
-              <span className="bg-zinc-100 dark:bg-zinc-800/30 text-zinc-700 dark:text-zinc-300 px-2 py-1 rounded-full capitalize">
-                {scent.intensity}
-              </span>
-            )}
-            {scent.concentration && (
-              <span className="bg-gray-100 dark:bg-gray-800/30 text-gray-700 dark:text-gray-300 px-2 py-1 rounded-full capitalize">
-                {scent.concentration}
-              </span>
-            )}
-          </div>
-          
-          <div className="flex items-center justify-between pt-2">
-            <div className="flex flex-col">
-              <p className="text-xl font-bold text-slate-600 dark:text-gray-300">
-                ${typeof scent.price === 'number' ? scent.price.toFixed(2) : '0.00'}
-              </p>
-              {scent.originalPrice && scent.originalPrice > scent.price && (
-                <p className="text-sm text-gray-500 dark:text-gray-400 line-through">
-                  ${scent.originalPrice.toFixed(2)}
-                </p>
-              )}
-            </div>
-            <div className="bg-gradient-to-r from-slate-500/10 to-zinc-500/10 dark:bg-gradient-to-r dark:from-slate-400/10 dark:to-zinc-400/10 px-2 py-1 rounded-full">
-              <span className="text-xs text-slate-700 dark:text-slate-400 font-medium flex items-center space-x-1">
-                <Gem size={10} />
-                <span>LUXURY</span>
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Action Button */}
-        <motion.button
-          onClick={productInCart ? handleViewInCart : handleAddToCartClick}
-          disabled={isAddingToCart}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className={`w-full font-semibold py-3 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 mt-4 ${
-            productInCart 
-              ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-700 hover:via-teal-700 hover:to-cyan-700 text-white border border-emerald-400/30 shadow-emerald-500/20'
-              : 'bg-gradient-to-r from-slate-600 to-zinc-700 hover:from-slate-700 hover:to-zinc-800 text-white'
-          }`}
+      {/* Info Section */}
+      <div className="px-3.5 py-3.5 flex flex-col gap-3.5">
+        {/* Name */}
+        <h3
+          className="font-bold uppercase text-center line-clamp-1 text-lg sm:text-xl md:text-2xl"
+          style={{
+            fontFamily: "Playfair Display, serif",
+            letterSpacing: "0.05em",
+            color: "#5A2408",
+            minHeight: "28px",
+          }}
         >
-          {isAddingToCart ? (
-            <RefreshCw size={18} className="animate-spin" />
-          ) : productInCart ? (
-            <ShoppingCart size={18} />
+          {scent.name || ""}
+        </h3>
+
+        {/* Rating */}
+        <div
+          className="flex items-center justify-center gap-1"
+          style={{ minHeight: "18px" }}
+        >
+          {scent.rating ? (
+            [...Array(5)].map((_, index) => (
+              <Star
+                key={index}
+                size={14}
+                style={{
+                  color: "#5A2408",
+                  fill:
+                    index < Math.floor(scent.rating) ? "#5A2408" : "transparent",
+                }}
+                className={`${
+                  index < Math.floor(scent.rating) ? "" : "opacity-30"
+                }`}
+              />
+            ))
           ) : (
-            <ShoppingBag size={18} />
+            <div className="h-3.5"></div>
           )}
+        </div>
+
+        {/* Description */}
+        <p
+          className="text-center line-clamp-2 text-sm sm:text-base"
+          style={{
+            fontFamily: "Manrope, sans-serif",
+            fontWeight: "500",
+            letterSpacing: "0.02em",
+            color: "#7E513A",
+            minHeight: "40px",
+          }}
+        >
+          {scent.description || ""}
+        </p>
+
+        {/* Price */}
+        <p
+          className="font-bold text-center text-lg sm:text-xl"
+          style={{
+            fontFamily: "Manrope, sans-serif",
+            letterSpacing: "0.02em",
+            color: "#431A06",
+            minHeight: "24px",
+          }}
+        >
+          ${typeof scent.price === "number" ? scent.price.toFixed(2) : "0.00"}
+        </p>
+
+        {/* Add to Cart Button */}
+        <motion.button
+          onClick={
+            scentInCart
+              ? (e) => {
+                  e.stopPropagation();
+                  setIsCartOpen(true);
+                }
+              : handleAddToCart
+          }
+          disabled={isAddingToCart}
+          whileHover={{ scale: 1.02, opacity: 0.9 }}
+          whileTap={{ scale: 0.98 }}
+          className="flex items-center justify-center gap-2 sm:gap-2.5 text-white font-bold uppercase transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed w-full h-[54px] sm:h-[60px] text-sm sm:text-base md:text-lg -mx-3.5 px-3.5"
+          style={{
+            backgroundColor: scentInCart ? "#431A06" : "#431A06",
+            fontFamily: "Manrope, sans-serif",
+            letterSpacing: "0.05em",
+            width: "calc(100% + 28px)",
+          }}
+        >
+          <ShoppingCart size={20} className="sm:w-[24px] sm:h-[24px]" />
           <span>
-            {isAddingToCart ? 'Adding...' : productInCart ? 'View in Cart' : 'Add to Cart'}
+            {isAddingToCart ? "Adding..." : scentInCart ? "View Cart" : "Add to Cart"}
           </span>
         </motion.button>
-      </motion.div>
-    );
-  });
-
+      </div>
+    </motion.div>
+  );
+});
   ScentCard.displayName = 'ScentCard';
 
   // Quick View Modal
@@ -734,7 +984,7 @@ const PerfectGiftsLuxuryCollection = () => {
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-50 dark:bg-gray-900">
+    <div className="min-h-screen flex flex-col bg-F8F6F3 text-79300f">
       <Header />
       <NotificationSystem />
       <QuickViewModal />
@@ -743,9 +993,15 @@ const PerfectGiftsLuxuryCollection = () => {
       
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="bg-gradient-to-br from-slate-700 via-zinc-800 to-gray-900 text-white py-20 px-6">
-          <div className="max-w-7xl mx-auto text-center">
-            <motion.div
+         <section className="relative overflow-hidden w-full bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900">
+          <div className="relative w-full h-[400px] md:h-[400px] lg:h-[400px] flex items-center justify-center">
+            <img
+              src="/images/unisex.png"
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60"></div>
+            <div className="absolute text-white text-center text-shadow inset-0 flex items-center justify-center">
+               <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
@@ -762,6 +1018,7 @@ const PerfectGiftsLuxuryCollection = () => {
                 for the most discerning recipients who deserve nothing but the finest.
               </p>
             </motion.div>
+            </div>
           </div>
         </section>
 

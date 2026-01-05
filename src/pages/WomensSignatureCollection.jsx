@@ -224,6 +224,24 @@ const WomensSignatureCollection = () => {
       <ProductCartSection isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
 
       <main className="flex-1">
+        {/* BANNER SECTION */}
+         <section className="relative overflow-hidden w-full bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900">
+                  <div className="relative w-full h-[400px] md:h-[400px] lg:h-[400px] flex items-center justify-center">
+                    <img
+                      src="/images/unisex.png"
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60"></div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-center px-6">
+                        <Star className="w-20 h-20 mx-auto text-purple-400 mb-6" />
+                        <h1 className="text-6xl md:text-7xl font-bold text-white tracking-wider">
+                          Women's Signature Collection
+                        </h1>
+                      </div>
+                    </div>
+                  </div>
+                </section>
         <section className="py-12 px-6">
           <div className="max-w-7xl mx-auto">
             {loading ? (
