@@ -26,6 +26,9 @@ const HeroSection = () => {
     navigate('/about-page');
   };
 
+const handleClickDiscover = () => {
+    navigate('/discover-collection');
+  }
   return (
     <section
       className="flex flex-col items-center justify-center w-full min-h-screen bg-[#F9F7F6]"
@@ -94,6 +97,7 @@ const HeroSection = () => {
               }}
             >
               <button
+              onClick={handleClickDiscover}
                 className="font-[Manrope] font-normal uppercase"
                 style={{
                   width: '243px',
