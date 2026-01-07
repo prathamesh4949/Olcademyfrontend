@@ -1,4 +1,3 @@
-
 import React, { useEffect, useMemo, useState } from "react";
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
@@ -8,29 +7,18 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-/**
- * DISCOVER COLLECTION PAGE
- * - Signature / Summer / Customer Favourites
- * - Just Arrived / Best Sellers / Huntsman Savile Row
- *   (Men + Women + Unisex MERGED)
- * - Backend driven
- */
-
 const DiscoverCollectionPage = () => {
-
   const navigate = useNavigate();
-  
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // SAME keys – unchanged
   const [collections, setCollections] = useState({
     fragrant_favourites: [],
     summer_scents: [],
     signature_collection: [],
     trending_scents: [],
     best_seller_scents: [],
-
     just_arrived: [],
     best_sellers: [],
     huntsman_savile_row: []
@@ -56,7 +44,7 @@ const DiscoverCollectionPage = () => {
           scentRes,
           menRes,
           womenRes,
-          unisexRes // ✅ ONLY ADDITION
+          unisexRes
         ] = await Promise.all([
           ProductService.getHomeCollections(),
           ScentService.getFeaturedScents(),
@@ -65,7 +53,6 @@ const DiscoverCollectionPage = () => {
           ProductService.getUnisexCollections()
         ]);
 
-        // HOME COLLECTIONS
         if (homeRes?.success) {
           setCollections(prev => ({
             ...prev,
@@ -75,7 +62,6 @@ const DiscoverCollectionPage = () => {
           }));
         }
 
-        // SCENT COLLECTIONS
         if (scentRes?.success) {
           setCollections(prev => ({
             ...prev,
@@ -84,7 +70,6 @@ const DiscoverCollectionPage = () => {
           }));
         }
 
-        // 🔥 MERGE MEN + WOMEN + UNISEX (ONLY CHANGE)
         setCollections(prev => ({
           ...prev,
           just_arrived: [
@@ -103,9 +88,7 @@ const DiscoverCollectionPage = () => {
             ...(unisexRes?.data?.huntsman_savile_row || [])
           ]
         }));
-
       } catch (err) {
-        console.error("Discover fetch error:", err);
         setError("Failed to load collections");
       } finally {
         setLoading(false);
@@ -115,7 +98,7 @@ const DiscoverCollectionPage = () => {
     fetchData();
   }, []);
 
-  /* ================= MERGE ALL PRODUCTS ================= */
+  /* ================= ALL PRODUCTS ================= */
   const allProducts = useMemo(() => {
     return [
       ...collections.signature_collection,
@@ -129,25 +112,21 @@ const DiscoverCollectionPage = () => {
     ].filter(Boolean);
   }, [collections]);
 
-  /* ================= FILTER LOGIC (UNCHANGED) ================= */
+  /* ================= FILTER ================= */
   const filteredProducts = useMemo(() => {
     return allProducts.filter(p => {
-      if (!p || !p._id) return false;
+      if (!p?._id) return false;
 
-      // COLLECTION FILTER
       if (activeCollection !== "all") {
         const list = collections[activeCollection] || [];
         if (!list.some(i => i._id === p._id)) return false;
       }
 
-      // CATEGORY FILTER
       const cat = (p.category || "").toLowerCase();
       if (filters.category !== "all" && !cat.includes(filters.category)) return false;
 
-      // RATING FILTER
       if (filters.minRating && (p.rating || 0) < filters.minRating) return false;
 
-      // PRICE FILTER
       const price = Number(p.price || 0);
       if (filters.priceRange === "low" && price > 50) return false;
       if (filters.priceRange === "mid" && (price < 50 || price > 120)) return false;
@@ -160,15 +139,23 @@ const DiscoverCollectionPage = () => {
   /* ================= COLLECTION CARD ================= */
   const CollectionCard = ({ title, description, count, collectionKey }) => (
     <motion.div
-      whileHover={{ y: -6 }}
+      whileHover={{ y: -8 }}
+      whileTap={{ scale: 0.97 }}
       onClick={() => setActiveCollection(collectionKey)}
-      className={`bg-white shadow-md p-6 text-center cursor-pointer border-2 transition ${
-        activeCollection === collectionKey ? "border-[#431A06]" : "border-transparent"
-      }`}
+      className={`p-8 text-center cursor-pointer border transition-all duration-300
+        ${
+          activeCollection === collectionKey
+            ? "border-[#431A06] bg-[#FBF8F6]"
+            : "border-[#E6DDD7] bg-white hover:border-[#431A06]"
+        }`}
     >
-      <h3 className="text-2xl font-serif text-[#431A06] mb-2">{title}</h3>
-      <p className="text-sm text-[#7E513A] mb-3">{description}</p>
-      <span className="text-xs uppercase text-[#79300f]">{count} products</span>
+      <h3 className="text-2xl font-serif text-[#431A06] mb-3">{title}</h3>
+      <p className="text-sm text-[#7E513A] mb-4 leading-relaxed">
+        {description}
+      </p>
+      <span className="text-xs uppercase tracking-widest text-[#79300f]">
+        {count} Products
+      </span>
     </motion.div>
   );
 
@@ -176,48 +163,61 @@ const DiscoverCollectionPage = () => {
     <div className="min-h-screen bg-[#F9F7F6]">
       <Header />
 
-      {/* HERO */}
-      <section className="py-20 text-center px-6">
-        <h1 className="text-5xl font-serif text-[#271004] mb-4">
+      {/* ================= HERO ================= */}
+      <section className="py-28 px-6 text-center bg-[#F5F2EF]">
+        <h1 className="text-5xl md:text-6xl font-serif tracking-wide text-[#271004] mb-6">
           Discover the Collection
         </h1>
-        <p className="max-w-2xl mx-auto text-[#7E513A]">
-          Explore fragrances by mood, season and style.
+        <p className="max-w-2xl mx-auto text-lg text-[#7E513A] leading-relaxed">
+          Explore fragrances curated by mood, season, and timeless elegance.
         </p>
       </section>
 
-      {/* COLLECTION FILTER CARDS */}
-      <section className="max-w-7xl mx-auto px-6 mb-16 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
+      {/* ================= COLLECTIONS ================= */}
+      <section className="max-w-7xl mx-auto px-6 mb-20 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
         <CollectionCard title="Signature Collection" description="Timeless Vesarii classics" count={collections.signature_collection.length} collectionKey="signature_collection" />
-        <CollectionCard title="Summer Scents" description="Fresh & radiant" count={collections.summer_scents.length} collectionKey="summer_scents" />
-        <CollectionCard title="Customer Favourites" description="Loved by customers" count={collections.fragrant_favourites.length} collectionKey="fragrant_favourites" />
-        <CollectionCard title="Just Arrived" description="Newest fragrances" count={collections.just_arrived.length} collectionKey="just_arrived" />
-        <CollectionCard title="Best Sellers" description="Top-selling scents" count={collections.best_sellers.length} collectionKey="best_sellers" />
-        <CollectionCard title="Huntsman Savile Row" description="Luxury British craftsmanship" count={collections.huntsman_savile_row.length} collectionKey="huntsman_savile_row" />
+        <CollectionCard title="Summer Scents" description="Fresh & radiant fragrances" count={collections.summer_scents.length} collectionKey="summer_scents" />
+        <CollectionCard title="Customer Favourites" description="Loved by our customers" count={collections.fragrant_favourites.length} collectionKey="fragrant_favourites" />
+        <CollectionCard title="Just Arrived" description="Newest creations" count={collections.just_arrived.length} collectionKey="just_arrived" />
+        <CollectionCard title="Best Sellers" description="Most popular scents" count={collections.best_sellers.length} collectionKey="best_sellers" />
+        <CollectionCard title="Huntsman Savile Row" description="British luxury craftsmanship" count={collections.huntsman_savile_row.length} collectionKey="huntsman_savile_row" />
       </section>
 
-      {/* ✅ FILTER BAR (RESTORED & UNCHANGED) */}
-      <section className="max-w-6xl mx-auto px-6 mb-10 flex flex-wrap gap-4 justify-between">
+      {/* ================= FILTER BAR ================= */}
+      <section className="max-w-6xl mx-auto px-6 mb-14 flex flex-wrap justify-between gap-6">
         <div className="flex gap-4 flex-wrap">
-          <select value={filters.category} onChange={e => setFilters({ ...filters, category: e.target.value })}>
-            <option value="all">All Categories</option>
-            <option value="men">Men</option>
-            <option value="women">Women</option>
-            <option value="unisex">Unisex</option>
-          </select>
-
-          <select value={filters.minRating} onChange={e => setFilters({ ...filters, minRating: Number(e.target.value) })}>
-            <option value={0}>All Ratings</option>
-            <option value={4}>4★ & above</option>
-            <option value={3}>3★ & above</option>
-          </select>
-
-          <select value={filters.priceRange} onChange={e => setFilters({ ...filters, priceRange: e.target.value })}>
-            <option value="all">All Prices</option>
-            <option value="low">Below $50</option>
-            <option value="mid">$50 – $120</option>
-            <option value="high">Above $120</option>
-          </select>
+          {["category", "minRating", "priceRange"].map((key, i) => (
+            <select
+              key={i}
+              value={filters[key]}
+              onChange={e => setFilters({ ...filters, [key]: key === "minRating" ? Number(e.target.value) : e.target.value })}
+              className="border border-[#E6DDD7] px-4 py-2 text-sm bg-white text-[#431A06] focus:outline-none focus:border-[#431A06]"
+            >
+              {key === "category" && (
+                <>
+                  <option value="all">All Categories</option>
+                  <option value="men">Men</option>
+                  <option value="women">Women</option>
+                  <option value="unisex">Unisex</option>
+                </>
+              )}
+              {key === "minRating" && (
+                <>
+                  <option value={0}>All Ratings</option>
+                  <option value={4}>4★ & above</option>
+                  <option value={3}>3★ & above</option>
+                </>
+              )}
+              {key === "priceRange" && (
+                <>
+                  <option value="all">All Prices</option>
+                  <option value="low">Below $50</option>
+                  <option value="mid">$50 – $120</option>
+                  <option value="high">Above $120</option>
+                </>
+              )}
+            </select>
+          ))}
         </div>
 
         <button
@@ -225,37 +225,38 @@ const DiscoverCollectionPage = () => {
             setFilters({ category: "all", minRating: 0, priceRange: "all" });
             setActiveCollection("all");
           }}
-          className="text-sm underline text-[#431A06]"
+          className="text-sm tracking-wide text-[#431A06] underline underline-offset-4 hover:opacity-70"
         >
           Clear Filters
         </button>
       </section>
 
-      {/* PRODUCT GRID */}
-      <section className="max-w-7xl mx-auto px-6 pb-24">
+      {/* ================= PRODUCTS ================= */}
+      <section className="max-w-7xl mx-auto px-6 pb-32">
+        <h2 className="text-3xl font-serif text-center text-[#271004] mb-14">
+          Curated Fragrances
+        </h2>
+
         {loading ? (
           <div className="text-center py-20">Loading…</div>
         ) : error ? (
           <div className="text-center text-red-600 py-20">{error}</div>
-        ) : filteredProducts.length === 0 ? (
-          <div className="text-center py-20 text-gray-500">No products found.</div>
         ) : (
-          <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 cursor-pointer">
+          <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
             <AnimatePresence>
               {filteredProducts.map(product => (
                 <motion.div
                   key={product._id}
-                  onClick={() => navigate(`/product/${product._id}`)} // ✅ CLICK TO DETAIL
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-white shadow-md p-4"
+                  whileHover={{ y: -6 }}
+                  onClick={() => navigate(`/product/${product._id}`)}
+                  className="bg-white border border-[#E6DDD7] p-5 cursor-pointer hover:shadow-xl transition-all"
                 >
                   <img
-                    src={product.images?.[0] || "/images/default-gift.png"}
+                    src={product.images?.[0]}
                     alt={product.name}
-                    className="h-48 w-full object-contain mb-4"
+                    className="h-56 w-full object-contain mb-6"
                   />
-                  <h4 className="font-serif text-lg text-[#431A06] text-center">
+                  <h4 className="font-serif text-lg text-[#431A06] text-center mb-1">
                     {product.name}
                   </h4>
                   <div className="flex justify-center my-2">
@@ -263,11 +264,13 @@ const DiscoverCollectionPage = () => {
                       <Star
                         key={i}
                         size={14}
-                        className={i < Math.floor(product.rating || 0) ? "text-[#431A06]" : "text-gray-300"}
+                        className={i < Math.floor(product.rating || 0) ? "text-[#431A06]" : "text-[#E0D6CF]"}
                       />
                     ))}
                   </div>
-                  <p className="text-center text-sm text-[#7E513A]">${product.price}</p>
+                  <p className="text-center text-sm text-[#7E513A] tracking-wide">
+                    ${product.price}
+                  </p>
                 </motion.div>
               ))}
             </AnimatePresence>
