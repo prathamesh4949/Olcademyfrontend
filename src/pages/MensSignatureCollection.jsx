@@ -158,7 +158,7 @@ const MensSignatureCollection = () => {
             <motion.button
               onClick={handleWishlistToggle}
               whileHover={{ scale: 1.15 }}
-              className="absolute top-2.5 right-2.5 bg-white dark:bg-gray-800 rounded-full p-1.5 shadow-lg z-10"
+              className="absolute top-2.5 right-2.5 bg-white dark:bg-gray-800 rounded-full p-1.5  z-10"
             >
               <Heart size={14} className={isInWishlist(scent._id) ? 'fill-red-600 text-red-600' : 'text-gray-700'} />
             </motion.button>

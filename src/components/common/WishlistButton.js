@@ -5,6 +5,7 @@ import { FiHeart } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import { useWishlist } from '@/WishlistContext';
 import { toast } from 'react-hot-toast';
+import { useAuth } from '@/context/AuthContext';
 
 const WishlistButton = ({ 
   product, 
@@ -15,7 +16,8 @@ const WishlistButton = ({
   onError = null 
 }) => {
   const { isInWishlist, toggleWishlist, loading } = useWishlist();
-  
+  const { isAuthenticated } = useAuth(); // Check if user is logged in
+
   // Check if product is in wishlist using the correct ID field
   const productId = product._id || product.id;
   const inWishlist = isInWishlist(productId);
@@ -51,12 +53,29 @@ const WishlistButton = ({
       console.log('Adding to wishlist:', wishlistProduct);
       
       const wasInWishlist = inWishlist;
-      toggleWishlist(wishlistProduct);
-      
-      const message = wasInWishlist ? 'Removed from wishlist' : 'Added to wishlist!';
-      toast.success(message);
-      
-      if (onSuccess) onSuccess(message, !wasInWishlist);
+
+      if (isAuthenticated) {
+        // User is logged in, update MongoDB
+        toggleWishlist(wishlistProduct);
+        const message = wasInWishlist ? 'Removed from wishlist' : 'Added to wishlist!';
+        toast.success(message);
+        
+        if (onSuccess) onSuccess(message, !wasInWishlist);
+      } else {
+        // User is not logged in, update localStorage
+        const localWishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
+        const exists = localWishlist.find(item => item.id === productId);
+
+        if (exists) {
+          const updatedWishlist = localWishlist.filter(item => item.id !== productId);
+          localStorage.setItem('wishlist', JSON.stringify(updatedWishlist));
+          toast.success('Removed from wishlist');
+        } else {
+          localWishlist.push(wishlistProduct);
+          localStorage.setItem('wishlist', JSON.stringify(localWishlist));
+          toast.success('Added to wishlist!');
+        }
+      }
       
     } catch (error) {
       console.error('Wishlist toggle error:', error);

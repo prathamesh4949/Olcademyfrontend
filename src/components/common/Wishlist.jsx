@@ -8,6 +8,7 @@ import { useWishlist } from '@/WishlistContext';
 import { useCart } from '@/CartContext';
 import { FiHeart, FiX } from 'react-icons/fi';
 import { ShoppingCart, AlertCircle, CheckCircle } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 const SORT_OPTIONS = [
   { value: '', label: 'Sort by' },
@@ -28,8 +29,9 @@ const Wishlist = () => {
   const [notifications, setNotifications] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  const { wishlistItems, removeFromWishlist, isInitialized, refreshWishlist } = useWishlist();
+  const { wishlistItems, removeFromWishlist, isInitialized, refreshWishlist, addToWishlist } = useWishlist();
   const { isInCart, addToCart } = useCart();
+  const { isAuthenticated } = useAuth();
 
   // Add notification helper
   const addNotification = useCallback((message, type = 'success', productName = null, actionType = 'general') => {
@@ -127,6 +129,18 @@ const Wishlist = () => {
       Number(a.rating || 0) - Number(b.rating || 0)
     );
   }
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      // Sync local storage wishlist to MongoDB
+      const localWishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
+      localWishlist.forEach(item => {
+        addToWishlist(item);
+      });
+      localStorage.removeItem('wishlist'); // Clear local storage after syncing
+      refreshWishlist();
+    }
+  }, [isAuthenticated]);
 
   if (!isInitialized) {
     return (
