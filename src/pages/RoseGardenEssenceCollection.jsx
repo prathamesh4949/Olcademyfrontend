@@ -244,7 +244,7 @@ const ScentCard = memo(({ scent, addToCart, isInCart, toggleWishlist, isInWishli
           onClick={handleWishlistToggle}
           whileHover={{ scale: 1.15 }}
           whileTap={{ scale: 0.9 }}
-          className="absolute top-2.5 right-2.5 bg-white dark:bg-gray-800 rounded-full p-1.5 shadow-lg hover:shadow-xl transition-all duration-200 z-10 w-[27px] h-[27px] flex items-center justify-center"
+          className="absolute top-2.5 right-2.5 bg-white dark:bg-gray-800 rounded-full p-1.5  transition-all duration-200 z-10 w-[27px] h-[27px] flex items-center justify-center"
           aria-label={
             isInWishlist(scent._id) ? "Remove from wishlist" : "Add to wishlist"
           }

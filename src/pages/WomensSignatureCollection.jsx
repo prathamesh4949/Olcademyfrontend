@@ -153,7 +153,7 @@ const WomensSignatureCollection = () => {
           <motion.button
             onClick={handleWishlistToggle}
             whileHover={{ scale: 1.15 }}
-            className="absolute top-2 right-2 bg-white rounded-full p-1.5 shadow-lg"
+            className="absolute top-2 right-2 bg-white rounded-full p-1.5"
           >
             <Heart
               size={14}

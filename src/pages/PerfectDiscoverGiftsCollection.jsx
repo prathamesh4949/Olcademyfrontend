@@ -181,7 +181,7 @@ const PerfectDiscoverGiftsCollection = () => {
             <motion.button
               whileHover={{ scale: 1.15 }}
               onClick={(e) => handleWishlistToggleBase(scent, e)}
-              className="bg-white rounded-full p-1.5 shadow-lg"
+              className="bg-white rounded-full p-1.5 "
             >
               <Heart
                 size={14}
