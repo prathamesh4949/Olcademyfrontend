@@ -323,9 +323,9 @@ const Orders = () => {
                     className="group bg-gradient-to-br from-[#F5E9DC] to-[#E7DDC6] dark:from-[#3d1a0a] dark:to-[#2c0f06] border border-[#79300f]/20 dark:border-[#f6d110]/30 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden relative"
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-[#79300f]/5 to-[#5a2408]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 dark:from-[#f6d110]/5 dark:to-[#d4af37]/5"></div>
-                    <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    {/* <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                       <Sparkles className="w-6 h-6 text-[#79300f] dark:text-[#f6d110]" />
-                    </div>
+                    </div> */}
                     <div className="bg-gradient-to-r from-[#F5E9DC]/80 to-[#E7DDC6]/80 dark:from-[#3d1a0a]/80 dark:to-[#2c0f06]/80 p-8 border-b border-[#79300f]/20 dark:border-[#f6d110]/20 relative z-10">
                       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
                         <div className="flex items-center gap-6">
@@ -460,7 +460,7 @@ const Orders = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
                 onClick={() => setShowOrderDetails(false)}
               >
                 <motion.div
@@ -471,9 +471,9 @@ const Orders = () => {
                   className="bg-gradient-to-br from-[#F5E9DC] to-[#E7DDC6] dark:from-[#3d1a0a] dark:to-[#2c0f06] border border-[#79300f]/20 dark:border-[#f6d110]/30 rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto relative"
                 >
                   <div className="bg-gradient-to-r from-[#79300f] to-[#5a2408] dark:from-[#f6d110] dark:to-[#d4af37] text-white p-8 rounded-t-lg relative">
-                    <div className="absolute top-4 right-4 opacity-20">
+                    {/* <div className="absolute top-4 right-4 opacity-20">
                       <Sparkles className="w-8 h-8" />
-                    </div>
+                    </div> */}
                     <div className="flex justify-between items-center relative z-10">
                       <div>
                         <h2 className="text-3xl font-bold mb-2">Order Details</h2>
