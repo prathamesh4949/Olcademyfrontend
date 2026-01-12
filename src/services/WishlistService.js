@@ -1,5 +1,5 @@
 // WishlistService.js
-import { API_BASE_URL } from '../api/constant';
+import { USER_API_END_POINT,API_BASE_URL } from '../api/constant';
 
 class WishlistService {
   // Base API call method with enhanced error handling

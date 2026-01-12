@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { useAuth } from './context/AuthContext';
 import axios from 'axios';
-import { USER_API_END_POINT } from '@/api/constant';
+import WishlistService from './services/WishlistService';
 
 const WishlistContext = createContext();
 
@@ -12,8 +12,7 @@ export const WishlistProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const { user, token } = useAuth();
 
-  // API base URL for wishlist - Updated to match your backend structure
-  const WISHLIST_API_BASE = `${USER_API_END_POINT}/wishlist`;
+  // Using centralized WishlistService for backend interactions
 
   // Configure axios defaults
   useEffect(() => {
@@ -53,18 +52,18 @@ export const WishlistProvider = ({ children }) => {
           }
 
           try {
-            const response = await axios.get(WISHLIST_API_BASE);
-            if (response.data.success) {
-              const dbItems = response.data.wishlistItems || [];
+            const response = await WishlistService.getWishlist();
+            if (response.success) {
+              const dbItems = response.wishlistItems || [];
               console.log('Loaded wishlist from database:', dbItems.length, 'items');
               
               if (localItems.length > 0) {
                 console.log('Syncing local items to database...');
                 await syncWishlistToDatabase(localItems);
                 
-                const syncResponse = await axios.get(WISHLIST_API_BASE);
-                if (syncResponse.data.success) {
-                  setWishlistItems(syncResponse.data.wishlistItems || []);
+                const syncResponse = await WishlistService.getWishlist();
+                if (syncResponse.success) {
+                  setWishlistItems(syncResponse.wishlistItems || []);
                   console.log('Wishlist synced successfully');
                 }
               } else {
@@ -119,7 +118,7 @@ export const WishlistProvider = ({ children }) => {
     };
 
     loadWishlist();
-  }, [user, token, isInitialized, WISHLIST_API_BASE]);
+  }, [user, token, isInitialized]);
 
   // Save to localStorage for all users (as fallback and for non-authenticated users)
   useEffect(() => {
@@ -136,7 +135,7 @@ export const WishlistProvider = ({ children }) => {
       console.log('Syncing wishlist to database...');
       for (const item of localWishlistItems) {
         try {
-          await axios.post(`${WISHLIST_API_BASE}/add`, {
+          await WishlistService.addToWishlist({
             id: item.id,
             name: item.name,
             price: item.price,
@@ -191,12 +190,12 @@ export const WishlistProvider = ({ children }) => {
       };
 
       if (user && token) {
-        // Try to add to database
+        // Try to add to database via service
         try {
           setLoading(true);
-          const response = await axios.post(`${WISHLIST_API_BASE}/add`, newItem);
-          if (response.data.success) {
-            setWishlistItems(response.data.wishlistItems || []);
+          const response = await WishlistService.addToWishlist(newItem);
+          if (response.success) {
+            setWishlistItems(response.wishlistItems || []);
             toast.success(`${product.name} added to wishlist`);
             return true;
           }
@@ -251,10 +250,10 @@ export const WishlistProvider = ({ children }) => {
       if (user && token) {
         try {
           setLoading(true);
-          const response = await axios.delete(`${WISHLIST_API_BASE}/remove/${id}`);
-          if (response.data.success) {
-            setWishlistItems(response.data.wishlistItems || []);
-            toast.success(response.data.message);
+          const response = await WishlistService.removeFromWishlist(id);
+          if (response.success) {
+            setWishlistItems(response.wishlistItems || []);
+            toast.success(response.message);
             return;
           }
         } catch (apiError) {
@@ -279,10 +278,10 @@ export const WishlistProvider = ({ children }) => {
       if (user && token) {
         try {
           setLoading(true);
-          const response = await axios.delete(`${WISHLIST_API_BASE}/clear`);
-          if (response.data.success) {
+          const response = await WishlistService.clearWishlist();
+          if (response.success) {
             setWishlistItems([]);
-            toast.success(response.data.message);
+            toast.success(response.message);
             return;
           }
         } catch (apiError) {
@@ -306,10 +305,10 @@ export const WishlistProvider = ({ children }) => {
       if (user && token) {
         try {
           setLoading(true);
-          const response = await axios.post(`${WISHLIST_API_BASE}/move-to-cart/${id}`);
-          if (response.data.success) {
-            setWishlistItems(response.data.wishlistItems || []);
-            toast.success(response.data.message);
+          const response = await WishlistService.moveToCart(id);
+          if (response.success) {
+            setWishlistItems(response.wishlistItems || []);
+            toast.success(response.message);
             return true;
           }
         } catch (apiError) {
@@ -360,9 +359,9 @@ export const WishlistProvider = ({ children }) => {
     if (user && token) {
       try {
         setLoading(true);
-        const response = await axios.get(WISHLIST_API_BASE);
-        if (response.data.success) {
-          setWishlistItems(response.data.wishlistItems || []);
+        const response = await WishlistService.getWishlist();
+        if (response.success) {
+          setWishlistItems(response.wishlistItems || []);
         }
       } catch (error) {
         console.error('Error refreshing wishlist:', error);
