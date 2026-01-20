@@ -7,6 +7,7 @@ import { API_BASE_URL } from '../api/constant';
 import { AuthContext } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, AlertCircle, X, Heart, ShoppingCart } from 'lucide-react';
+import { getShipment, saveShipment } from '../services/userService';
 
 const Checkout = () => {
   const [darkMode, setDarkMode] = useState(false);
@@ -32,6 +33,11 @@ const Checkout = () => {
     country: '',
     state: ''
   });
+
+  // Saved addresses tabs state
+  const [addresses, setAddresses] = useState([]);
+  const [activeAddressIndex, setActiveAddressIndex] = useState(0);
+  const [isSavingAddress, setIsSavingAddress] = useState(false);
 
   const [paymentInfo, setPaymentInfo] = useState({
     cardNumber: '',
@@ -83,6 +89,48 @@ const Checkout = () => {
     checkAuth();
   }, [user, navigate, currentStep]);
 
+  // Load saved shipment on mount (if authenticated) and initialize tabs
+  useEffect(() => {
+    const initAddresses = async () => {
+      // Always keep at least one address tab
+      let initial = [{
+        name: '',
+        email: user ? user.email : '',
+        phone: '',
+        address: '',
+        city: '',
+        zipCode: '',
+        country: '',
+        state: ''
+      }];
+
+      try {
+        if (user) {
+          const shipmentArr = await getShipment();
+          if (Array.isArray(shipmentArr) && shipmentArr.length > 0) {
+            // Normalize each entry to expected shape and ensure email
+            initial = shipmentArr.map((s) => ({
+              name: s?.name || '',
+              email: s?.email || (user ? user.email : ''),
+              phone: s?.phone || '',
+              address: s?.address || '',
+              city: s?.city || '',
+              zipCode: s?.zipCode || '',
+              country: s?.country || '',
+              state: s?.state || ''
+            }));
+          }
+        }
+      } catch (_) {
+        // Ignore and use default
+      }
+      setAddresses(initial);
+      setActiveAddressIndex(0);
+      setCustomerInfo(initial[0]);
+    };
+    initAddresses();
+  }, [user]);
+
   useEffect(() => {
     if (user && user.email && !customerInfo.email) {
       setCustomerInfo(prev => ({
@@ -131,6 +179,16 @@ const Checkout = () => {
         ...prev,
         [name]: type === 'checkbox' ? checked : value
       }));
+      // Keep current tab's address in sync
+      setAddresses(prev => {
+        const next = [...prev];
+        const base = next[activeAddressIndex] || {};
+        next[activeAddressIndex] = {
+          ...base,
+          [name]: type === 'checkbox' ? checked : value
+        };
+        return next;
+      });
     } else if (name in paymentInfo) {
       setPaymentInfo(prev => ({
         ...prev,
@@ -142,6 +200,91 @@ const Checkout = () => {
         ...prev,
         [name]: ''
       }));
+    }
+  };
+
+  const addNewAddressTab = () => {
+    const newAddress = {
+      name: '',
+      email: user ? user.email : '',
+      phone: '',
+      address: '',
+      city: '',
+      zipCode: '',
+      country: '',
+      state: ''
+    };
+    setAddresses(prev => {
+      const next = [...prev, newAddress];
+      setActiveAddressIndex(next.length - 1);
+      setCustomerInfo(newAddress);
+      return next;
+    });
+  };
+
+  const switchAddressTab = (index) => {
+    setActiveAddressIndex(index);
+    setCustomerInfo(addresses[index] || customerInfo);
+  };
+
+  const handleSaveAddress = async () => {
+    const token = localStorage.getItem('token');
+    if (!user && !token) {
+      navigate('/login', { state: { from: '/checkout' } });
+      return;
+    }
+    // Validate shipping fields before saving
+    const required = ['name', 'email', 'phone', 'address', 'city', 'zipCode', 'country'];
+    const missing = required.filter((k) => !customerInfo[k]?.toString().trim());
+    if (missing.length) {
+      addNotification('Please complete all required shipping fields.', 'error', null, 'general');
+      const newErrors = {};
+      missing.forEach((k) => (newErrors[k] = `${k.charAt(0).toUpperCase() + k.slice(1)} is required`));
+      setErrors((prev) => ({ ...prev, ...newErrors }));
+      return;
+    }
+    setIsSavingAddress(true);
+    try {
+      // Save the entire addresses array to match backend array schema
+      const result = await saveShipment(addresses);
+      if (result.success) {
+        addNotification(result.message || 'Address saved successfully', 'success', null, 'general');
+        // Update local state with canonical data returned
+        if (Array.isArray(result.shipment) && result.shipment.length > 0) {
+          setAddresses(result.shipment.map((s) => ({
+            name: s?.name || '',
+            email: s?.email || (user ? user.email : ''),
+            phone: s?.phone || '',
+            address: s?.address || '',
+            city: s?.city || '',
+            zipCode: s?.zipCode || '',
+            country: s?.country || '',
+            state: s?.state || ''
+          })));
+          // Keep active index within bounds
+          setActiveAddressIndex((idx) => Math.min(idx, result.shipment.length - 1));
+          setCustomerInfo((prev) => {
+            const idx = Math.min(activeAddressIndex, result.shipment.length - 1);
+            const s = result.shipment[idx];
+            return {
+              name: s?.name || '',
+              email: s?.email || (user ? user.email : ''),
+              phone: s?.phone || '',
+              address: s?.address || '',
+              city: s?.city || '',
+              zipCode: s?.zipCode || '',
+              country: s?.country || '',
+              state: s?.state || ''
+            };
+          });
+        }
+      } else {
+        addNotification(result.message || 'Failed to save address', 'error', null, 'general');
+      }
+    } catch (err) {
+      addNotification(err.message || 'Failed to save address', 'error', null, 'general');
+    } finally {
+      setIsSavingAddress(false);
     }
   };
 
@@ -359,6 +502,50 @@ const Checkout = () => {
   const renderShippingForm = () => (
     <div style={{ backgroundColor: 'white', padding: '2rem', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
       <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1.5rem', color: '#431A06' }}>Shipping Information</h3>
+      {/* Saved Address Tabs */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+        {addresses.map((addr, idx) => (
+          <button
+            key={`addr-tab-${idx}`}
+            type="button"
+            onClick={() => switchAddressTab(idx)}
+            style={{
+              padding: '0.4rem 0.75rem',
+              borderRadius: '9999px',
+              border: '1px solid',
+              borderColor: activeAddressIndex === idx ? '#431A06' : '#e5e7eb',
+              backgroundColor: activeAddressIndex === idx ? 'rgba(67, 26, 6, 0.05)' : 'white',
+              color: '#111827',
+              cursor: 'pointer',
+              fontWeight: 600
+            }}
+          >
+            Address {idx + 1}
+          </button>
+        ))}
+        <button
+          type="button"
+          aria-label="Add address"
+          onClick={addNewAddressTab}
+          style={{
+            width: '34px',
+            height: '34px',
+            borderRadius: '9999px',
+            border: '1px dashed #AC9157',
+            color: '#AC9157',
+            background: 'transparent',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            fontSize: '20px',
+            lineHeight: 1
+          }}
+          title="Add another address"
+        >
+          +
+        </button>
+      </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
         <div>
           <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Full Name *</label>
@@ -556,6 +743,28 @@ const Checkout = () => {
             </label>
           </div>
         ))}
+      </div>
+      {/* Save Address Action */}
+      <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'flex-end' }}>
+        <button
+          type="button"
+          onClick={handleSaveAddress}
+          disabled={isSavingAddress}
+          style={{
+            padding: '0.6rem 1.25rem',
+            backgroundColor: '#431A06',
+            color: 'white',
+            border: 'none',
+            borderRadius: '0.5rem',
+            cursor: isSavingAddress ? 'not-allowed' : 'pointer',
+            fontWeight: 600,
+            opacity: isSavingAddress ? 0.7 : 1
+          }}
+          onMouseEnter={(e) => !isSavingAddress && (e.target.style.backgroundColor = '#5a2308')}
+          onMouseLeave={(e) => !isSavingAddress && (e.target.style.backgroundColor = '#431A06')}
+        >
+          {isSavingAddress ? 'Saving…' : 'Save Address'}
+        </button>
       </div>
     </div>
   );

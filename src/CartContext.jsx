@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { useAuth } from './context/AuthContext';
 import axios from 'axios';
-import { USER_API_END_POINT } from '@/api/constant';
+import { USER_API_END_POINT,API_BASE_URL } from '@/api/constant';
 import BrownNotification from '@/components/BrownNotification';
 
 const CartContext = createContext();
@@ -19,7 +19,7 @@ export const CartProvider = ({ children }) => {
   };
 
   // API base URL for cart - Updated to match your backend structure
-  const CART_API_BASE = `${USER_API_END_POINT}/cart`;
+  const CART_API_BASE = `${API_BASE_URL}/cart`;
 
   // Configure axios defaults
   useEffect(() => {
