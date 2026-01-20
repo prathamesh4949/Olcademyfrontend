@@ -21,3 +21,13 @@ body {
   -ms-overflow-style: none; /* IE/Edge */
   scrollbar-width: none;    /* Firefox */
 }
+.header-scrolled .search-icon {
+    margin-right: auto !important;
+}
+
+/* Keep wishlist, cart, and profile together on the right */
+.header-scrolled .right-icons {
+    display: flex;
+    gap: 15px;
+    margin-left: auto;
+}

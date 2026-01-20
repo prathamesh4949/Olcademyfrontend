@@ -197,22 +197,22 @@ export const WishlistProvider = ({ children }) => {
           const response = await axios.post(`${WISHLIST_API_BASE}/add`, newItem);
           if (response.data.success) {
             setWishlistItems(response.data.wishlistItems || []);
-            toast.success(`${product.name} added to wishlist`);
-            return true;
+            // cess(`${product.name} added to wishlist`);
+            return true;toast.suc
           }
         } catch (apiError) {
           console.warn('Wishlist API not available, using localStorage only');
           // Fall back to localStorage
           const updatedWishlist = [...wishlistItems, newItem];
           setWishlistItems(updatedWishlist);
-          toast.success(`${product.name} added to wishlist`);
+          // toast.success(`${product.name} added to wishlist`);
           return true;
         }
       } else {
         // Add to localStorage for non-authenticated users
         const updatedWishlist = [...wishlistItems, newItem];
         setWishlistItems(updatedWishlist);
-        toast.success(`${product.name} added to wishlist`);
+        // toast.success(`${product.name} added to wishlist`);
         return true;
       }
     } catch (error) {
@@ -232,7 +232,7 @@ export const WishlistProvider = ({ children }) => {
         };
         const updatedWishlist = [...wishlistItems, newItem];
         setWishlistItems(updatedWishlist);
-        toast.success(`${product.name} added to wishlist`);
+        // toast.success(`${product.name} added to wishlist`);
         return true;
       } catch (localError) {
         console.error('Failed to add to local wishlist:', localError);
@@ -254,7 +254,7 @@ export const WishlistProvider = ({ children }) => {
           const response = await axios.delete(`${WISHLIST_API_BASE}/remove/${id}`);
           if (response.data.success) {
             setWishlistItems(response.data.wishlistItems || []);
-            toast.success(response.data.message);
+            // toast.success(response.data.message);
             return;
           }
         } catch (apiError) {
@@ -265,7 +265,7 @@ export const WishlistProvider = ({ children }) => {
       // Fall back to localStorage removal
       const updatedWishlist = wishlistItems.filter(item => item.id !== id);
       setWishlistItems(updatedWishlist);
-      toast.success(`${product?.name || 'Item'} removed from wishlist`);
+      // toast.success(`${product?.name || 'Item'} removed from wishlist`);
     } catch (error) {
       console.error('Remove from wishlist error:', error);
       toast.error('Failed to remove item from wishlist');

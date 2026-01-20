@@ -3,6 +3,7 @@ import { toast } from 'react-hot-toast';
 import { useAuth } from './context/AuthContext';
 import axios from 'axios';
 import { USER_API_END_POINT } from '@/api/constant';
+import BrownNotification from '@/components/BrownNotification';
 
 const CartContext = createContext();
 
@@ -11,6 +12,11 @@ export const CartProvider = ({ children }) => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [loading, setLoading] = useState(false);
   const { user, token } = useAuth();
+  const [notification, setNotification] = useState({ show: false, message: '' });
+
+  const showNotification = (message) => {
+    setNotification({ show: true, message });
+  };
 
   // API base URL for cart - Updated to match your backend structure
   const CART_API_BASE = `${USER_API_END_POINT}/cart`;
@@ -232,7 +238,7 @@ export const CartProvider = ({ children }) => {
           });
           if (response.data.success) {
             setCartItems(response.data.cartItems || []);
-            toast.success(`${product.name} added to cart`);
+            showNotification(`${product.name} added to cart`);
             return true;
           }
         } catch (apiError) {
@@ -240,14 +246,14 @@ export const CartProvider = ({ children }) => {
           // Fall back to localStorage
           const updatedCart = [...cartItems, newItem];
           setCartItems(updatedCart);
-          toast.success(`${product.name} added to cart`);
+          showNotification(`${product.name} added to cart`);
           return true;
         }
       } else {
         // Add to localStorage for non-authenticated users
         const updatedCart = [...cartItems, newItem];
         setCartItems(updatedCart);
-        toast.success(`${product.name} added to cart`);
+        showNotification(`${product.name} added to cart`);
         return true;
       }
     } catch (error) {
@@ -270,7 +276,7 @@ export const CartProvider = ({ children }) => {
         };
         const updatedCart = [...cartItems, newItem];
         setCartItems(updatedCart);
-        toast.success(`${product.name} added to cart`);
+        showNotification(`${product.name} added to cart`);
         return true;
       } catch (localError) {
         console.error('Failed to add to local cart:', localError);
@@ -292,7 +298,7 @@ export const CartProvider = ({ children }) => {
           const response = await axios.delete(`${CART_API_BASE}/remove/${id}`);
           if (response.data.success) {
             setCartItems(response.data.cartItems || []);
-            toast.success(response.data.message);
+            showNotification(response.data.message || `${product?.name || 'Item'} removed from cart`);
             return;
           }
         } catch (apiError) {
@@ -303,7 +309,7 @@ export const CartProvider = ({ children }) => {
       // Fall back to localStorage removal
       const updatedCart = cartItems.filter(item => item.id !== id);
       setCartItems(updatedCart);
-      toast.success(`${product?.name || 'Item'} removed from cart`);
+      showNotification(`${product?.name || 'Item'} removed from cart`);
     } catch (error) {
       console.error('Remove from cart error:', error);
       toast.error('Failed to remove item from cart');
@@ -312,33 +318,47 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  const clearCart = async () => {
-    try {
-      if (user && token) {
-        try {
-          setLoading(true);
-          const response = await axios.delete(`${CART_API_BASE}/clear`);
-          if (response.data.success) {
-            setCartItems([]);
-            toast.success(response.data.message);
-            return;
-          }
-        } catch (apiError) {
-          console.warn('Cart API not available, using localStorage only');
+  // const clearCart = async () => {
+  //   try {
+  //     if (user && token) {
+  //       try {
+  //         setLoading(true);
+  //         const response = await axios.delete(`${CART_API_BASE}/clear`);
+  //         if (response.data.success) {
+  //           setCartItems([]);
+  //           showNotification(response.data.message || 'Cart cleared');
+  //           return;
+  //         }
+  //       } catch (apiError) {
+  //         console.warn('Cart API not available, using localStorage only');
+  //       }
+  //     }
+      const clearCart = async () => {
+  try {
+    if (user && token) {
+      try {
+        setLoading(true);
+        const response = await axios.delete(`${CART_API_BASE}/clear`);
+        if (response.data.success) {
+          setCartItems([]);
+          showNotification(response.data.message || 'Cart cleared');
+          return;
         }
+      } catch (apiError) {
+        console.warn('Cart API not available, using localStorage only');
+        // Don't return here, let it fall through to localStorage clear
+      } finally {
+        setLoading(false);
       }
-      
-      // Fall back to localStorage clear
-      setCartItems([]);
-      toast.success('Cart cleared');
-    } catch (error) {
-      console.error('Clear cart error:', error);
-      toast.error('Failed to clear cart');
-    } finally {
-      setLoading(false);
     }
-  };
-
+  //    // Fall back to localStorage clear
+    setCartItems([]);
+    showNotification('Cart cleared');
+  } catch (error) {
+    console.error('Clear cart error:', error);
+    toast.error('Failed to clear cart');
+  }
+};
   const updateQuantity = async (id, quantity) => {
     if (quantity < 1) return;
     
@@ -350,7 +370,7 @@ export const CartProvider = ({ children }) => {
           const response = await axios.put(`${CART_API_BASE}/update/${id}`, { quantity });
           if (response.data.success) {
             setCartItems(response.data.cartItems || []);
-            toast.success('Quantity updated successfully');
+            showNotification('Quantity updated');
             return;
           }
         } catch (apiError) {
@@ -377,7 +397,7 @@ export const CartProvider = ({ children }) => {
           } : cartItem
         );
         setCartItems(updatedCart);
-        toast.success('Quantity updated successfully');
+        showNotification('Quantity updated');
       }
     } catch (error) {
       console.error('Update quantity error:', error);
@@ -428,6 +448,11 @@ export const CartProvider = ({ children }) => {
       isInitialized
     }}>
       {children}
+      <BrownNotification
+        message={notification.message}
+        isVisible={notification.show}
+        onClose={() => setNotification({ show: false, message: '' })}
+      />
     </CartContext.Provider>
   );
 };

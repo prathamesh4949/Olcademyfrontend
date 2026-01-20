@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import Routes from './Routes';
-import { AuthProvider } from './context/AuthContext'; // Import AuthProvider
+import { AuthProvider } from './context/AuthContext';
 
 function App() {
   const [darkMode, setDarkMode] = useState(false); 
   return (
-    <AuthProvider> {/* Wrap with AuthProvider */}
+    <AuthProvider>
       <div>
-        <Routes darkMode={darkMode} setDarkMode={setDarkMode} /> {/* Pass darkMode props */}
+      
+        <Routes darkMode={darkMode} setDarkMode={setDarkMode} />
       </div>
     </AuthProvider>
   );
