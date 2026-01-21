@@ -54,7 +54,7 @@ const handleClickDiscover = () => {
         <div
           className="absolute inset-0"
           style={{
-            background: 'rgba(249, 247, 246, 0.14)',
+            background: 'rgba(0, 0, 0, 0.18)',
             backdropFilter: 'blur(6px) saturate(120%)',
             WebkitBackdropFilter: 'blur(6px) saturate(120%)'
           }}
@@ -70,9 +70,10 @@ const handleClickDiscover = () => {
             style={{
               fontSize: '54px',
               lineHeight: '120%',
-              color: '#271004',
+              color: '#FFFFFF',
               textAlign: 'center',
-              margin: '0'
+              margin: '0',
+              textShadow: '0 2px 10px rgba(0,0,0,0.25)'
             }}
           >
             Crafted in Paris. Defined by You
@@ -83,10 +84,11 @@ const handleClickDiscover = () => {
             style={{
               fontSize: '18px',
               lineHeight: '150%',
-              color: '#431A06',
+              color: '#EFE9E6',
               textAlign: 'center',
               marginTop: '0',
-              marginBottom: '0'
+              marginBottom: '0',
+              textShadow: '0 1px 8px rgba(0,0,0,0.25)'
             }}
           >
             A fragrance that transcends time, inspired by rare woods and eternal elegance.

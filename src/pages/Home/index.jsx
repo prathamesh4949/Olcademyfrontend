@@ -211,14 +211,14 @@ const HomePage = () => {
           const scentsData = scentsResponse.data;
           console.log('✅ Featured scents loaded:', {
             trending: scentsData.trending?.length || 0,
-            bestSellers: scentsData.bestSellers?.length || 0,
+            best_seller: (scentsData.best_seller || scentsData.bestSellers)?.length || 0,
             signature: scentsData.signature?.length || 0,
           });
 
           setCollections((prev) => ({
             ...prev,
             trending_scents: scentsData.trending || [],
-            best_seller_scents: scentsData.bestSellers || [],
+            best_seller_scents: scentsData.best_seller || scentsData.bestSellers || [],
           }));
         }
       } catch (err) {
@@ -815,6 +815,180 @@ const handleSubscribe = async () => {
     return null;
   };
 
+  // Best Seller Carousel Section
+  const BestSellerCarousel = memo(({ products = [] }) => {
+    const [activeIndex, setActiveIndex] = useState(0);
+    const [direction, setDirection] = useState(1); // 1 = next/right, -1 = prev/left
+    const len = products.length || 0;
+
+    const prevIndex = (activeIndex - 1 + (len || 1)) % (len || 1);
+    const nextIndex = (activeIndex + 1) % (len || 1);
+
+    useEffect(() => {
+      if (!len || len < 2) return;
+      const timer = setInterval(() => {
+        setDirection(1);
+        setActiveIndex((i) => (i + 1) % len);
+      }, 5000);
+      return () => clearInterval(timer);
+    }, [len]);
+
+    const goPrev = () => {
+      setDirection(-1);
+      setActiveIndex((i) => (i - 1 + len) % len);
+    };
+    const goNext = () => {
+      setDirection(1);
+      setActiveIndex((i) => (i + 1) % len);
+    };
+
+    const getImage = (item) => {
+      if (!item) return '/images/hero-default.jpg';
+      if (item.images && item.images.length > 0) return item.images[0];
+      return '/images/hero-default.jpg';
+    };
+
+    const handleAdd = async (item) => {
+      if (!item || !item._id) {
+        addNotification('Item unavailable', 'error', null, 'cart');
+        return;
+      }
+      const cartItem = {
+        id: item._id.toString(),
+        name: item.name,
+        price: Number(item.price) || 0,
+        image: getImage(item),
+        quantity: 1,
+        selectedSize: item.sizes && item.sizes.length > 0 ? item.sizes[0].size : null,
+        personalization: null,
+        brand: item.brand || '',
+        sku: item.sku || ''
+      };
+      try {
+        const success = await addToCart(cartItem);
+        if (success) {
+          addNotification('Added to cart!', 'success', item.name, 'cart');
+          setIsCartOpen(true);
+        } else {
+          addNotification('Failed to add item to cart', 'error', null, 'cart');
+        }
+      } catch (err) {
+        addNotification('Failed to add to cart', 'error', item.name, 'cart');
+      }
+    };
+
+    if (!len) return null;
+
+    const centerItem = products[activeIndex];
+    const leftItem = products[prevIndex];
+    const rightItem = products[nextIndex];
+
+    return (
+      <section className="relative w-full py-10 sm:py-12 px-4 sm:px-6" style={{ backgroundColor: '#F9F7F6' }}>
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-6 sm:mb-8 text-center">
+            <h2 className="font-[Playfair] font-bold text-2xl sm:text-3xl md:text-[36px]" style={{ color: '#271004' }}>Best Sellers</h2>
+          </div>
+
+          <div className="relative">
+            {/* Edge arrows */}
+            <button
+              onClick={goPrev}
+              aria-label="Previous"
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-10 h-10 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center bg-white/80 backdrop-blur"
+              style={{ borderColor: '#431A06', color: '#431A06' }}
+            >
+              <span style={{ fontSize: '20px', lineHeight: '20px' }}>‹</span>
+            </button>
+            <button
+              onClick={goNext}
+              aria-label="Next"
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-10 h-10 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center bg-white/80 backdrop-blur"
+              style={{ borderColor: '#431A06', color: '#431A06' }}
+            >
+              <span style={{ fontSize: '20px', lineHeight: '20px' }}>›</span>
+            </button>
+
+            {/* Row layout: centered, horizontally wide, no overlap */}
+            <div className="flex items-center justify-center gap-4 sm:gap-6 md:gap-10">
+              {/* Left preview (hidden on small screens) */}
+              <motion.div
+                initial={{ opacity: 0, x: -40, scale: 0.9 }}
+                animate={{ opacity: 1, x: 0, scale: 0.9 }}
+                transition={{ duration: 0.5 }}
+                className="hidden md:block shrink-0"
+              >
+                <div className="overflow-hidden" style={{ width: '220px', height: '300px', borderRadius: '8px', boxShadow: '0 2px 16px rgba(0,0,0,0.08)' }}>
+                  <img src={getImage(leftItem)} alt={leftItem?.name || 'Best Seller'} className="w-full h-full" style={{ objectFit: 'cover' }} />
+                </div>
+              </motion.div>
+
+              {/* Center active with slide in/out animation (image only) */}
+              <div className="flex flex-col items-center">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={centerItem?._id || activeIndex}
+                    initial={{ opacity: 0, x: direction > 0 ? 80 : -80, scale: 0.98 }}
+                    animate={{ opacity: 1, x: 0, scale: 1 }}
+                    exit={{ opacity: 0, x: direction > 0 ? -80 : 80, scale: 0.98 }}
+                    transition={{ type: 'spring', stiffness: 260, damping: 28 }}
+                  >
+                    <div className="overflow-hidden" style={{ width: '320px', height: '420px' }}>
+                      <div className="w-full h-full" style={{ borderRadius: '8px', boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}>
+                        <img src={getImage(centerItem)} alt={centerItem?.name || 'Best Seller'} className="w-full h-full" style={{ objectFit: 'cover', borderRadius: '8px' }} />
+                      </div>
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
+
+                <div className="mt-3 sm:mt-4 text-center" style={{ color: '#431A06' }}>
+                  <div className="font-[Playfair] font-bold text-lg sm:text-xl">{centerItem?.name || 'Featured Scent'}</div>
+                  <div className="font-[Manrope] text-sm sm:text-base opacity-80">{centerItem?.brand || ''}</div>
+                  <button
+                    onClick={() => handleAdd(centerItem)}
+                    className="font-[Manrope] font-semibold uppercase mt-2 sm:mt-3"
+                    style={{
+                      width: '220px',
+                      height: '48px',
+                      display: 'inline-flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      background: '#431A06',
+                      color: '#FFFFFF',
+                      fontSize: '14px',
+                      letterSpacing: '0.04em',
+                      border: '1px solid #5E2509',
+                      borderRadius: '0px',
+                      padding: '10px 20px',
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 12px rgba(0,0,0,0.12)'
+                    }}
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+              </div>
+
+              {/* Right preview (hidden on small screens) */}
+              <motion.div
+                initial={{ opacity: 0, x: 40, scale: 0.9 }}
+                animate={{ opacity: 1, x: 0, scale: 0.9 }}
+                transition={{ duration: 0.5 }}
+                className="hidden md:block shrink-0"
+              >
+                <div className="overflow-hidden" style={{ width: '220px', height: '300px', borderRadius: '8px', boxShadow: '0 2px 16px rgba(0,0,0,0.08)' }}>
+                  <img src={getImage(rightItem)} alt={rightItem?.name || 'Best Seller'} className="w-full h-full" style={{ objectFit: 'cover' }} />
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  });
+
+  BestSellerCarousel.displayName = 'BestSellerCarousel';
+
   // Quick View Modal
   const QuickViewModal = () => {
     if (!quickViewProduct) {
@@ -1155,6 +1329,11 @@ const handleSubscribe = async () => {
             buttonText="Shop Now"
             onButtonClick={() => handleBannerClick(banners.hero)}
           />
+        )}
+
+        {/* Best Sellers Carousel */}
+        {collections.best_seller_scents && collections.best_seller_scents.length > 0 && (
+          <BestSellerCarousel products={collections.best_seller_scents} />
         )}
 
         {error && (
