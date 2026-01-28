@@ -270,19 +270,31 @@ const WomensCollection = () => {
       setImageLoading(false);
     };
 
+    // return (
+    //   <motion.div
+    //     layout
+    //     initial={{ opacity: 0, y: 20 }}
+    //     animate={{ opacity: 1, y: 0 }}
+    //     whileHover={{ y: -8, boxShadow: '0 10px 30px rgba(0,0,0,0.15)' }}
+    //     transition={{ duration: 0.3 }}
+    //     className="bg-white dark:bg-gray-800 overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300 w-full max-w-[331px]"
+    //     style={{ height: 'auto', minHeight: '528px' }}
+    //     onMouseEnter={() => setIsHovered(true)}
+    //     onMouseLeave={() => setIsHovered(false)}
+    //     onClick={handleCardClick}
+    //   >
     return (
-      <motion.div
-        layout
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        whileHover={{ y: -8, boxShadow: '0 10px 30px rgba(0,0,0,0.15)' }}
-        transition={{ duration: 0.3 }}
-        className="bg-white dark:bg-gray-800 overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300 w-full max-w-[331px]"
-        style={{ height: 'auto', minHeight: '528px' }}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        onClick={handleCardClick}
-      >
+  <motion.div
+    layout
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    whileHover={{ y: -8, boxShadow: '0 10px 30px rgba(0,0,0,0.15)' }}
+    transition={{ duration: 0.3 }}
+    className="bg-white dark:bg-gray-800 overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300 w-full max-w-[331px] min-h-0 sm:min-h-[528px]"
+    onMouseEnter={() => setIsHovered(true)}
+    onMouseLeave={() => setIsHovered(false)}
+    onClick={handleCardClick}
+  >
         {/* Image Container */}
         <div className="relative bg-white dark:bg-gray-700 flex items-center justify-center overflow-hidden w-full aspect-[331/273] p-3">
           {imageLoading && (
@@ -318,7 +330,7 @@ const WomensCollection = () => {
 
         {/* Product Info Container */}
         <div className="px-3.5 py-3.5 flex flex-col gap-3.5">
-          <h3
+          {/* <h3
             className="font-bold uppercase text-center line-clamp-1 text-lg sm:text-xl md:text-2xl"
             style={{
               fontFamily: 'Playfair Display, serif',
@@ -327,7 +339,17 @@ const WomensCollection = () => {
             }}
           >
             {product.name || 'Unnamed Gift'}
-          </h3>
+          </h3> */}
+            <h3
+            className="font-bold uppercase text-center line-clamp-2 sm:line-clamp-1 text-lg sm:text-xl md:text-2xl min-h-[3rem] sm:min-h-0"
+              style={{
+               fontFamily: 'Playfair Display, serif',
+                letterSpacing: '0.05em',
+                   color: '#5A2408'
+  }}
+          >
+            {product.name || 'Unnamed Gift'}
+</h3>
 
           <div className="flex items-center justify-center gap-1">
             {product.rating ? (
@@ -430,8 +452,8 @@ const WomensCollection = () => {
             <>
               <motion.div
                 layout
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-7 lg:gap-10 mb-7 sm:mb-10 justify-items-center"
-              >
+              //   className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-7 lg:gap-10 mb-7 sm:mb-10 justify-items-center"
+                  className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-5 sm:gap-7 lg:gap-10 mb-7 sm:mb-10 justify-items-center" >
                 <AnimatePresence mode="popLayout">
                   {displayProducts.map(product => {
                     if (!product || !product._id) return null;

@@ -302,8 +302,10 @@ const GiftCollection = () => {
         animate={{ opacity: 1, y: 0 }}
         whileHover={{ y: -8, boxShadow: '0 10px 30px rgba(0,0,0,0.15)' }}
         transition={{ duration: 0.3 }}
-        className="bg-white dark:bg-gray-800 overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300 w-full max-w-[331px]"
-        style={{ height: 'auto', minHeight: '528px' }}
+        // className="bg-white dark:bg-gray-800 overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300 w-full max-w-[331px]"
+                className="bg-white dark:bg-gray-800 overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300 w-full max-w-[331px] min-h-0 sm:min-h-[528px]"
+        
+        // style={{ height: 'auto', minHeight: '528px' }}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         onClick={handleCardClick}
@@ -338,7 +340,7 @@ const GiftCollection = () => {
         {/* Product Info Container */}
         <div className="px-3.5 py-3.5 flex flex-col gap-3.5">
           {/* Product Name */}
-          <h3 
+          {/* <h3 
             className="font-bold uppercase text-center line-clamp-1 text-lg sm:text-xl md:text-2xl"
             style={{
               fontFamily: 'Playfair Display, serif',
@@ -347,8 +349,17 @@ const GiftCollection = () => {
             }}
           >
             {product.name || 'Product'}
-          </h3>
-
+          </h3> */}
+            <h3
+           className="font-bold uppercase text-center line-clamp-2 text-lg sm:text-xl md:text-2xl"
+            style={{
+            fontFamily: 'Playfair Display, serif',
+             letterSpacing: '0.05em',
+             color: '#5A2408'
+             }}
+             >
+              {product.name || 'Unnamed Gift'}
+             </h3>
           {/* Rating */}
           <div className="flex items-center justify-center gap-1">
             {product.rating ? (
@@ -450,7 +461,9 @@ const GiftCollection = () => {
             </div>
           ) : products.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-7 lg:gap-10 mb-7 sm:mb-10 justify-items-center">
+              {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-7 lg:gap-10 mb-7 sm:mb-10 justify-items-center"> */}
+             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-5 sm:gap-7 lg:gap-10 mb-7 sm:mb-10 justify-items-center">
+                
                 {displayProducts.map((product) => {
                   if (!product || !product._id) return null;
                   return (
