@@ -12,6 +12,8 @@ import { useCart } from '@/CartContext';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fadeIn } from '../../variants';
+import HeroSectionMobile from '@/components/Mobile/HeroSectionMobile';
+import ProductHighlightMobile from '@/components/Mobile/ProductHighlightMobile';
 import {
   ChevronLeft,
   ChevronRight,
@@ -29,6 +31,8 @@ import { FiHeart } from 'react-icons/fi';
 import { useWishlist } from '@/WishlistContext';
 import ProductService from '../../services/productService';
 import ScentService from '../../services/scentService';
+import CollectionHighlightMobile from '@/components/Mobile/CollectionHighlightMobile';
+import ProductCardsMobile from '@/components/Mobile/ProductCardsMobile';
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -97,6 +101,17 @@ const HomePage = () => {
     localStorage.setItem('darkMode', JSON.stringify(darkMode));
     document.documentElement.classList.toggle('dark', darkMode);
   }, [darkMode]);
+ const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  //Mobile UI or Desktop Ui
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
 
   // Enhanced Banner Click Handler
   const handleBannerClick = async (banner) => {
@@ -587,7 +602,13 @@ const handleSubscribe = async () => {
     );
     const hasMoreProducts = products.length > 4;
 
-    return (
+    return isMobile ? (
+         <ProductCardsMobile
+          title={title}
+          products={products}
+          darkMode={darkMode}
+        />
+      ) :  (
       <section className="py-10 sm:py-14 lg:py-16 px-4 sm:px-6 bg-[#F8F6F3] dark:bg-[#0d0603]">
         <div className="max-w-[1555px] mx-auto">
           {/* Section Title - RESPONSIVE */}
@@ -698,7 +719,9 @@ const handleSubscribe = async () => {
     };
 
     if (type === 'product_highlight') {
-      return (
+      return isMobile ? (
+        <ProductHighlightMobile banner={banner} />
+      ) : (
         <motion.section
           variants={fadeIn('up', 0.2)}
           initial="hidden"
@@ -756,7 +779,9 @@ const handleSubscribe = async () => {
     }
 
     if (type === 'collection_highlight') {
-      return (
+      return isMobile ? (
+        <CollectionHighlightMobile banner={banner} />
+      ) : (
         <motion.section
           variants={fadeIn('up', 0.2)}
           initial="hidden"
@@ -1148,15 +1173,19 @@ const handleSubscribe = async () => {
 
       <main className="flex-1" style={{ backgroundColor: '#F9F7F6' }}>
         {/* HeroSection */}
-        {banners.hero && (
-          <HeroSection
-            title={banners.hero.title || 'Discover Luxury Gifts'}
-            subtitle={banners.hero.subtitle || 'Explore our exclusive collections'}
-            image={banners.hero.image || '/images/hero-default.jpg'}
-            buttonText="Shop Now"
-            onButtonClick={() => handleBannerClick(banners.hero)}
-          />
-        )}
+         {banners.hero &&
+          (isMobile ? (
+            <HeroSectionMobile />
+          ) : (
+            <HeroSection
+              title={banners.hero.title || 'Discover Luxury Gifts'}
+              subtitle={banners.hero.subtitle || 'Explore our exclusive collections'}
+              image={banners.hero.image || '/images/hero-default.jpg'}
+              buttonText="Shop Now"
+              onButtonClick={() => handleBannerClick(banners.hero)}
+            />
+          ))}
+
 
         {error && (
           <motion.div
