@@ -2,8 +2,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-
-const API_BASE_URL = "http://localhost:8000";
+import { API_BASE_URL } from "../api/constant";
 
 const UserProfile = () => {
   const [activeTab, setActiveTab] = useState("profile");
@@ -156,7 +155,7 @@ const UserProfile = () => {
               key={link.id}
               onClick={() => {
                 if (link.id === "orders") {
-                  window.location.href = "http://localhost:4028/orders";
+                  navigate('/orders');
                 } else {
                   setActiveTab(link.id);
                 }
