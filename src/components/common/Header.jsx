@@ -236,7 +236,7 @@ const Header = ({ darkMode, setDarkMode }) => {
             WebkitBackdropFilter: 'blur(8px)'
           }}
         >
-          <div className="relative w-full h-full max-w-[1728px] mx-auto px-[52px]">
+          <div className="relative w-full h-full max-w-full mx-auto px-[52px]">
             <div
               className="absolute flex items-center transition-all duration-300"
               style={{
