@@ -887,7 +887,7 @@ const handleSubscribe = async () => {
       <section className="relative w-full py-10 sm:py-12 px-4 sm:px-6" style={{ backgroundColor: '#F9F7F6' }}>
         <div className="max-w-7xl mx-auto">
           <div className="mb-6 sm:mb-8 text-center">
-            <h2 className="font-[Playfair] font-bold text-2xl sm:text-3xl md:text-[36px]" style={{ color: '#271004' }}>Best Sellers</h2>
+            <h2 className="font-[Playfair] font-bold text-2xl sm:text-3xl md:text-[36px]" style={{ color: '#271004' }}>Our Favorites</h2>
           </div>
 
           <div className="relative">
