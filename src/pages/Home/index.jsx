@@ -6,6 +6,7 @@ import Card from '../../components/ui/Card';
 import InputField from '../../components/ui/InputField';
 import Checkbox from '../../components/ui/Checkbox';
 import ProductCartSection from '../../pages/ProductCartSection'; // ADD THIS IMPORT
+import { API_BASE_URL } from '../../api/constant';
 import { useEffect, useRef, useState, useCallback, memo, useMemo } from 'react';
 import { useCart } from '@/CartContext';
 import { useNavigate } from 'react-router-dom';
@@ -314,7 +315,7 @@ const handleSubscribe = async () => {
   }
 
   try {
-    const res = await fetch("http://localhost:8000/api/subscribe", {
+    const res = await fetch(`${API_BASE_URL}/api/subscribe`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -474,8 +475,8 @@ const handleSubscribe = async () => {
         animate={{ opacity: 1, y: 0 }}
         whileHover={{ y: -8, boxShadow: '0 10px 30px rgba(0,0,0,0.15)' }}
         transition={{ duration: 0.3 }}
-        className="bg-white dark:bg-gray-800 overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300 w-full max-w-[331px]"
-        style={{ height: 'auto', minHeight: '528px' }}
+        className="bg-white dark:bg-gray-800 overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300 w-full max-w-[331px] min-h-[auto] sm:min-h-[528px]"
+        style={{ height: 'auto' }}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         onClick={handleCardClick}

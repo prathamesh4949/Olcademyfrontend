@@ -236,7 +236,7 @@ const Header = ({ darkMode, setDarkMode }) => {
             WebkitBackdropFilter: 'blur(8px)'
           }}
         >
-          <div className="relative w-full h-full max-w-[1728px] mx-auto px-[52px]">
+          <div className="relative w-full h-full max-w-full mx-auto px-[52px]">
             <div
               className="absolute flex items-center transition-all duration-300"
               style={{
@@ -294,7 +294,7 @@ const Header = ({ darkMode, setDarkMode }) => {
                   marginRight: isScrolled ? '18px' : '0px'
                 }}
               >
-                <button
+                {/* <button
                   onClick={toggleSearch}
                   style={{
                     width: '34px',
@@ -303,7 +303,19 @@ const Header = ({ darkMode, setDarkMode }) => {
                   }}
                 >
                   <FiSearch size={34} />
-                </button>
+                </button> */}
+                {!isScrolled && (
+                  <button
+                    onClick={toggleSearch}
+                    style={{
+                      width: '34px',
+                      height: '34px',
+                      color: '#341405'
+                    }}
+                  >
+                    <FiSearch size={34} />
+                  </button>
+                )}
               </div>
 
               <div className="flex items-center" style={{ gap: '28px' }}>
