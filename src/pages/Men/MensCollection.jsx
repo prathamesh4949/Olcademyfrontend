@@ -478,6 +478,8 @@ const MensCollection = () => {
         window.location.href = banner.buttonLink;
       }
     };
+    const rawBannerSrc = banner.image || banner.backgroundImage;
+    const bannerImage = rawBannerSrc ? ProductService.constructBannerURL(rawBannerSrc) : '/images/newimg1.PNG';
 
     if (type === 'hero') {
       return (
@@ -489,9 +491,13 @@ const MensCollection = () => {
         >
           <div className="relative h-[270px] sm:h-[360px] lg:h-[450px] bg-gradient-to-r from-black/50 to-transparent">
             <img 
-              src={banner.backgroundImage || '/images/baner1.jpeg'} 
+              src={banner.backgroundImage ? ProductService.constructBannerURL(banner.backgroundImage) : '/images/baner1.jpeg'} 
               alt={banner.altText || banner.title} 
               className="w-full h-full object-cover"
+              onError={(e) => {
+                console.warn('Hero banner failed to load:', e.target.src);
+                e.target.src = '/images/baner1.jpeg';
+              }}
             />
             <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent"></div>
             <div className="absolute inset-0 flex items-center justify-start px-5 sm:px-7 lg:px-10">
@@ -583,37 +589,81 @@ const MensCollection = () => {
             </motion.div>
 
             <motion.div 
-              className="relative flex items-center justify-center order-1 md:order-2"
-              initial={{ opacity: 0, scale: 0.9 }}
+              className="relative order-1 md:order-2 h-[400px]"
+              initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.3 }}
             >
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                transition={{ duration: 0.4 }}
-                className="w-full max-w-[693px]"
-              >
-                <img
-                  src={banner.image || '/images/newimg1.PNG'}
-                  alt={banner.altText || banner.title}
-                  className="w-full h-auto object-contain filter drop-shadow-2xl"
-                />
-              </motion.div>
-              
-              <motion.div
-                className="absolute -z-10 bg-gradient-to-br from-[#79300f]/5 to-[#5a2408]/5 rounded-full blur-3xl w-[80%] h-[80%]"
-                animate={{ 
-                  scale: [1, 1.1, 1],
-                  rotate: [0, 5, 0]
-                }}
-                transition={{ 
-                  duration: 8, 
-                  repeat: Infinity,
-                  ease: "easeInOut"
+              <img
+                src={bannerImage}
+                alt={banner.altText || banner.title}
+                className="w-full h-full object-cover shadow-lg"
+                onError={(e) => {
+                  console.warn('Banner image failed to load:', e.target.src);
+                  const altSrc = banner.backgroundImage 
+                    ? ProductService.constructBannerURL(banner.backgroundImage) 
+                    : null;
+                  if (altSrc && e.target.src !== altSrc) {
+                    e.target.src = altSrc;
+                  } else {
+                    e.target.src = '/images/newimg1.PNG';
+                  }
                 }}
               />
             </motion.div>
+          </div>
+        </motion.section>
+      );
+    }
+
+    if (type === 'collection_highlight') {
+      return (
+        <motion.section
+          variants={fadeIn("up", 0.2)}
+          initial="hidden"
+          whileInView="show"
+          className="bg-[#F8F6F3] dark:bg-[#0d0603] py-10 sm:py-14 lg:py-16 px-4 sm:px-6"
+        >
+          <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
+            <div className="text-left">
+              {banner.subtitle && (
+                <h3 className="text-lg text-[#79300f] dark:text-[#f6d110] font-semibold uppercase mb-3">
+                  {banner.subtitle}
+                </h3>
+              )}
+              <h2 className="text-[42px] font-dm-serif mb-6 text-[#79300f] dark:text-[#f6d110]">
+                {banner.title} <br />
+                <span className="text-[#79300f] dark:text-[#f6d110]">{banner.titleHighlight}</span>
+              </h2>
+              <p className="text-[18px] mb-6 text-[#5a2408] dark:text-gray-300 leading-relaxed">
+                {banner.description}
+              </p>
+              <Button
+                onClick={handleClick}
+                className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white px-8 py-4 text-lg font-semibold "
+              >
+                {banner.buttonText}
+              </Button>
+            </div>
+            <div className="relative h-[400px]">
+              <img
+                src={bannerImage}
+                alt={banner.altText || banner.title}
+                className="w-full h-full object-cover shadow-lg"
+                onError={(e) => {
+                  console.warn('Banner image failed to load:', e.target.src);
+                  const altSrc = banner.backgroundImage 
+                    ? ProductService.constructBannerURL(banner.backgroundImage) 
+                    : null;
+                  if (altSrc && e.target.src !== altSrc) {
+                    e.target.src = altSrc;
+                  } else {
+                    e.target.src = '/images/newimg1.PNG';
+                  }
+                }}
+              />
+            </div>
           </div>
         </motion.section>
       );

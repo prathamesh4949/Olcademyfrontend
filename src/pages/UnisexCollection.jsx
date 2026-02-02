@@ -461,7 +461,12 @@ const UnisexCollection = () => {
       return (
         <motion.section variants={fadeIn('up', 0.2)} initial="hidden" whileInView="show" className="relative py-0 overflow-hidden">
           <div className="relative h-[270px] sm:h-[360px] lg:h-[450px] bg-gradient-to-r from-black/50 to-transparent">
-            <img src={banner.backgroundImage || '/images/baner1.jpeg'} alt={banner.altText || banner.title} className="w-full h-full object-cover" />
+            <img 
+              src={banner.backgroundImage ? ProductService.constructBannerURL(banner.backgroundImage) : '/images/baner1.jpeg'} 
+              alt={banner.altText || banner.title} 
+              className="w-full h-full object-cover" 
+              onError={(e) => { console.warn('Hero banner failed to load:', e.target.src); e.target.src = '/images/baner1.jpeg'; }}
+            />
             <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
             <div className="absolute inset-0 flex items-center justify-start px-5 sm:px-7 lg:px-10">
               <div className="text-white max-w-2xl">
@@ -482,86 +487,90 @@ const UnisexCollection = () => {
         </motion.section>
       );
     } else if (type === 'product_highlight') {
+      const primarySrc = banner.backgroundImage || banner.image;
+      const primaryURL = primarySrc ? ProductService.constructBannerURL(primarySrc) : '/images/newimg1.PNG';
+      const altSrc = banner.backgroundImage ? banner.image : banner.backgroundImage;
+      const altURL = altSrc ? ProductService.constructBannerURL(altSrc) : null;
       return (
-        <motion.section variants={fadeIn('up', 0.2)} initial="hidden" whileInView="show" className="bg-[#F8F6F3] dark:bg-[#0d0603] py-10 sm:py-14 lg:py-16 px-4 sm:px-6">
-          <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-7 sm:gap-10 lg:gap-14 items-center">
-            <motion.div
-              className="text-left order-2 md:order-1"
-              initial={{ opacity: 0, x: -50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-            >
-              {banner.subtitle && (
-                <motion.h3
-                  className="text-sm sm:text-base lg:text-lg text-[#79300f] dark:text-[#f6d110] font-semibold uppercase mb-2.5 sm:mb-3.5 tracking-wider"
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.2 }}
-                >
-                  {banner.subtitle}
-                </motion.h3>
-              )}
-              <motion.h2
-                className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3.5 sm:mb-5 leading-[110%] text-[#271004] dark:text-[#f6d110]"
-                style={{ fontFamily: 'Playfair Display, serif' }}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.3 }}
-              >
-                {banner.title} <br />
-                <span className="text-[#79300f] dark:text-[#f6d110]">{banner.titleHighlight}</span>
-              </motion.h2>
-              <motion.p
-                className="text-base sm:text-lg mb-5 sm:mb-7 text-[#5a2408] dark:text-gray-300 leading-relaxed"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.4 }}
-              >
-                {banner.description}
-              </motion.p>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.5 }}
-              >
+        <motion.section variants={fadeIn('up', 0.2)} initial="hidden" whileInView="show" className="relative py-0 overflow-hidden">
+          <div className="relative h-[270px] sm:h-[360px] lg:h-[450px]">
+            <img
+              src={primaryURL}
+              alt={banner.altText || banner.title}
+              className="absolute inset-0 w-full h-full object-cover"
+              onError={(e) => {
+                console.warn('Product highlight banner failed:', e.target.src);
+                if (altURL && e.target.src !== altURL) {
+                  e.target.src = altURL;
+                } else {
+                  e.target.src = '/images/newimg1.PNG';
+                }
+              }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
+            <div className="absolute inset-0 flex items-center justify-start px-5 sm:px-7 lg:px-10">
+              <div className="text-white max-w-2xl">
+                {banner.subtitle && (
+                  <h3 className="text-xs sm:text-sm lg:text-base font-semibold uppercase mb-2.5 tracking-wider">
+                    {banner.subtitle}
+                  </h3>
+                )}
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3.5 leading-tight" style={{ color: banner.textColor || '#FFFFFF' }}>
+                  {banner.title} <br />
+                  <span style={{ color: banner.highlightColor || '#f6d110' }}>{banner.titleHighlight}</span>
+                </h2>
+                <p className="text-xs sm:text-sm lg:text-base mb-5 text-gray-200">{banner.description}</p>
                 <Button
                   onClick={handleClick}
-                  className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white px-7 sm:px-9 py-3.5 sm:py-4.5 text-base sm:text-lg font-semibold  shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
+                  className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white px-5 sm:px-7 py-2.5 sm:py-3.5 text-sm sm:text-base font-semibold  shadow-lg hover:shadow-xl transition-all duration-300"
                 >
                   {banner.buttonText}
                 </Button>
-              </motion.div>
-            </motion.div>
-
-            <motion.div
-              className="relative flex items-center justify-center order-1 md:order-2"
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-            >
-              <motion.div whileHover={{ scale: 1.05 }} transition={{ duration: 0.4 }} className="w-full max-w-[693px]">
-                <img src={banner.image || '/images/newimg1.PNG'} alt={banner.altText || banner.title} className="w-full h-auto object-contain filter drop-shadow-2xl" />
-              </motion.div>
-
-              <motion.div
-                className="absolute -z-10 bg-gradient-to-br from-[#79300f]/5 to-[#5a2408]/5  blur-3xl w-[80%] h-[80%]"
-                animate={{
-                  scale: [1, 1.1, 1],
-                  rotate: [0, 5, 0]
-                }}
-                transition={{
-                  duration: 8,
-                  repeat: Infinity,
-                  ease: 'easeInOut'
-                }}
-              />
-            </motion.div>
+              </div>
+            </div>
+          </div>
+        </motion.section>
+      );
+    } else if (type === 'collection_highlight') {
+      const primarySrc = banner.backgroundImage || banner.image;
+      const primaryURL = primarySrc ? ProductService.constructBannerURL(primarySrc) : '/images/newimg1.PNG';
+      const altSrc = banner.backgroundImage ? banner.image : banner.backgroundImage;
+      const altURL = altSrc ? ProductService.constructBannerURL(altSrc) : null;
+      return (
+        <motion.section variants={fadeIn('up', 0.2)} initial="hidden" whileInView="show" className="relative py-0 overflow-hidden">
+          <div className="relative h-[270px] sm:h-[360px] lg:h-[450px]">
+            <img
+              src={primaryURL}
+              alt={banner.altText || banner.title}
+              className="absolute inset-0 w-full h-full object-cover"
+              onError={(e) => {
+                console.warn('Collection highlight banner failed:', e.target.src);
+                if (altURL && e.target.src !== altURL) {
+                  e.target.src = altURL;
+                } else {
+                  e.target.src = '/images/newimg1.PNG';
+                }
+              }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
+            <div className="absolute inset-0 flex items-center justify-start px-5 sm:px-7 lg:px-10">
+              <div className="text-white max-w-2xl">
+                {banner.subtitle && (
+                  <h3 className="text-xs sm:text-sm lg:text-base font-semibold uppercase mb-2.5 tracking-wider">{banner.subtitle}</h3>
+                )}
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3.5 leading-tight" style={{ color: banner.textColor || '#FFFFFF' }}>
+                  {banner.title} <br />
+                  <span style={{ color: banner.highlightColor || '#f6d110' }}>{banner.titleHighlight}</span>
+                </h2>
+                <p className="text-xs sm:text-sm lg:text-base mb-5 text-gray-200">{banner.description}</p>
+                <Button
+                  onClick={handleClick}
+                  className="bg-gradient-to-r from-[#79300f] to-[#5a2408] hover:from-[#5a2408] hover:to-[#79300f] text-white px-5 sm:px-7 py-2.5 sm:py-3.5 text-sm sm:text-base font-semibold  shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                  {banner.buttonText}
+                </Button>
+              </div>
+            </div>
           </div>
         </motion.section>
       );

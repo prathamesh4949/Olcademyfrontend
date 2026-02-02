@@ -29,6 +29,22 @@ class ProductService {
     return fullURL;
   }
 
+  // ✅ New: Construct banner image URLs using static server for speed + caching
+  constructBannerURL(imagePath) {
+    if (!imagePath) return '/images/default-gift.png';
+
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      return imagePath;
+    }
+
+    const cleanPath = imagePath.replace(/^\/+/, '').replace(/^images\//, '');
+
+    // Use backend's banner image lookup route for reliability with timestamped files
+    // It supports both exact filenames and timestamped variants.
+    const apiURL = `${API_BASE_URL}/api/banners/images/${cleanPath}`;
+    return apiURL;
+  }
+
   // ✅ Helper to normalize product images
   normalizeProductImages(product) {
     if (!product) return product;
@@ -411,12 +427,12 @@ class ProductService {
         };
       }
 
-      // Normalize banner images
+      // Normalize banner images (use banner URL builder for speed)
       if (Array.isArray(response.data)) {
         response.data = response.data.map(banner => ({
           ...banner,
-          image: banner.image ? this.constructImageURL(banner.image) : null,
-          backgroundImage: banner.backgroundImage ? this.constructImageURL(banner.backgroundImage) : null
+          image: banner.image ? this.constructBannerURL(banner.image) : null,
+          backgroundImage: banner.backgroundImage ? this.constructBannerURL(banner.backgroundImage) : null
         }));
       }
 
@@ -612,12 +628,12 @@ getRelatedProducts(productId) {
     try {
       const response = await this.apiCall(endpoint);
       
-      // Normalize banner images
+      // Normalize banner images (use banner URL builder for speed)
       if (response.success && response.data && Array.isArray(response.data)) {
         response.data = response.data.map(banner => ({
           ...banner,
-          image: banner.image ? this.constructImageURL(banner.image) : null,
-          backgroundImage: banner.backgroundImage ? this.constructImageURL(banner.backgroundImage) : null
+          image: banner.image ? this.constructBannerURL(banner.image) : null,
+          backgroundImage: banner.backgroundImage ? this.constructBannerURL(banner.backgroundImage) : null
         }));
       }
       
@@ -638,12 +654,12 @@ getRelatedProducts(productId) {
     try {
       const response = await this.apiCall(endpoint);
       
-      // Normalize banner images
+      // Normalize banner images (use banner URL builder for speed)
       if (response.success && response.data && Array.isArray(response.data)) {
         response.data = response.data.map(banner => ({
           ...banner,
-          image: banner.image ? this.constructImageURL(banner.image) : null,
-          backgroundImage: banner.backgroundImage ? this.constructImageURL(banner.backgroundImage) : null
+          image: banner.image ? this.constructBannerURL(banner.image) : null,
+          backgroundImage: banner.backgroundImage ? this.constructBannerURL(banner.backgroundImage) : null
         }));
       }
       
@@ -659,12 +675,12 @@ getRelatedProducts(productId) {
     try {
       const response = await this.apiCall(endpoint);
       
-      // Normalize banner images
+      // Normalize banner images (use banner URL builder for speed)
       if (response.success && response.data) {
         response.data = {
           ...response.data,
-          image: response.data.image ? this.constructImageURL(response.data.image) : null,
-          backgroundImage: response.data.backgroundImage ? this.constructImageURL(response.data.backgroundImage) : null
+          image: response.data.image ? this.constructBannerURL(response.data.image) : null,
+          backgroundImage: response.data.backgroundImage ? this.constructBannerURL(response.data.backgroundImage) : null
         };
       }
       
