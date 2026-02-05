@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { FiMenu, FiSearch, FiX, FiUser, FiShoppingCart, FiHeart } from 'react-icons/fi';
+import { FiMenu, FiSearch, FiX, FiUser, FiShoppingCart, FiHeart, FiHome } from 'react-icons/fi';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import SignupModal from './SignupModal';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -174,7 +174,7 @@ const Header = ({ darkMode, setDarkMode }) => {
 
             <div className="flex gap-2 overflow-x-auto scrollbar-hide">
               <button
-                onClick={() => setMenuOpen(true)}
+                onClick={() => navigate('/')}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-lg whitespace-nowrap flex-shrink-0"
                 style={{
                   border: '1.5px solid #8B6F47',
@@ -186,12 +186,8 @@ const Header = ({ darkMode, setDarkMode }) => {
                   letterSpacing: '1.2px'
                 }}
               >
-                <svg width="20" height="12" viewBox="0 0 20 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect x="0" y="0" width="20" height="2" rx="1" fill="#6b3f2a"/>
-                  <rect x="2" y="5" width="16" height="2" rx="1" fill="#6b3f2a"/>
-                  <rect x="4" y="10" width="12" height="2" rx="1" fill="#6b3f2a"/>
-                </svg>
-                FILTERS
+                <FiHome size={16} color="#6b3f2a" />
+                HOME
               </button>
 
               {navItems.slice(1).map(item => {
