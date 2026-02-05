@@ -11,6 +11,7 @@ import { useEffect, useRef, useState, useCallback, memo, useMemo } from 'react';
 import { useCart } from '@/CartContext';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import PerfumeSlideAnimation from '../../components/PerfumeSlideAnimation/PerfumeSlideAnimation';
 import { fadeIn } from '../../variants';
 import HeroSectionMobile from '@/components/Mobile/HeroSectionMobile';
 import ProductHighlightMobile from '@/components/Mobile/ProductHighlightMobile';
@@ -227,14 +228,14 @@ const HomePage = () => {
           const scentsData = scentsResponse.data;
           console.log('✅ Featured scents loaded:', {
             trending: scentsData.trending?.length || 0,
-            bestSellers: scentsData.bestSellers?.length || 0,
+            best_seller: (scentsData.best_seller || scentsData.bestSellers)?.length || 0,
             signature: scentsData.signature?.length || 0,
           });
 
           setCollections((prev) => ({
             ...prev,
             trending_scents: scentsData.trending || [],
-            best_seller_scents: scentsData.bestSellers || [],
+            best_seller_scents: scentsData.best_seller || scentsData.bestSellers || [],
           }));
         }
       } catch (err) {
@@ -841,6 +842,40 @@ const handleSubscribe = async () => {
     return null;
   };
 
+  // Specific handler for Scent carousel navigation
+  const handleScentClick = (product) => {
+    if (!product || !product._id) return;
+    const productId = product._id.toString();
+    console.log('🔗 Navigating to scent:', productId);
+    navigate(`/scent/${productId}`);
+  };
+
+  // Best Seller Carousel Section
+  const BestSellerCarousel = memo(({ products = [] }) => {
+    const items = useMemo(
+      () => (Array.isArray(products) ? products : []).filter((p) => p && p._id).slice(0, 7),
+      [products]
+    );
+
+    if (!items.length) return null;
+
+    return (
+      <section className="relative w-full py-10 sm:py-12 px-4 sm:px-6" style={{ backgroundColor: '#F9F7F6' }}>
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-6 sm:mb-8 text-center">
+            <h2 className="font-[Playfair] font-bold text-2xl sm:text-3xl md:text-[36px]" style={{ color: '#271004' }}>
+              Our Favorites
+            </h2>
+          </div>
+
+          <PerfumeSlideAnimation products={items} onProductClick={handleScentClick} />
+        </div>
+      </section>
+    );
+  });
+
+  BestSellerCarousel.displayName = 'BestSellerCarousel';
+
   // Quick View Modal
   const QuickViewModal = () => {
     if (!quickViewProduct) {
@@ -1186,6 +1221,11 @@ const handleSubscribe = async () => {
             />
           ))}
 
+
+        {/* Best Sellers Carousel */}
+        {collections.best_seller_scents && collections.best_seller_scents.length > 0 && (
+          <BestSellerCarousel products={collections.best_seller_scents} />
+        )}
 
         {error && (
           <motion.div
