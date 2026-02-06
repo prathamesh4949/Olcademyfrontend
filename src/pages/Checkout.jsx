@@ -8,7 +8,7 @@ import { AuthContext } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, AlertCircle, X, Heart, ShoppingCart } from 'lucide-react';
 import { getShipment, saveShipment } from '../services/userService';
-
+import '../styles/Checkout-Responsive.css';
 const Checkout = () => {
   const [darkMode, setDarkMode] = useState(false);
   const { cartItems, setCartItems } = useCart();
@@ -149,7 +149,24 @@ const Checkout = () => {
     localStorage.setItem('darkMode', JSON.stringify(darkMode));
     document.documentElement.classList.toggle('dark', darkMode);
   }, [darkMode]);
+ // Force mobile layout for forms
+useEffect(() => {
+  const handleResize = () => {
+    if (window.innerWidth <= 768) {
+      // Find all grid containers
+      const grids = document.querySelectorAll('div[style*="gridTemplateColumns"]');
+      grids.forEach(grid => {
+        if (grid.style.gridTemplateColumns.includes('repeat(2')) {
+          grid.style.gridTemplateColumns = '1fr';
+        }
+      });
+    }
+  };
 
+  handleResize();
+  window.addEventListener('resize', handleResize);
+  return () => window.removeEventListener('resize', handleResize);
+}, []);
   const validateStep = useCallback((step) => {
     const newErrors = {};
     if (step === 1) {
@@ -546,7 +563,8 @@ const Checkout = () => {
           +
         </button>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+      {/* <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}> */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }} className="checkout-form-grid">
         <div>
           <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Full Name *</label>
           <input
