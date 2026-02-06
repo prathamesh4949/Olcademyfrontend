@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 
 const images = [
   "/images/baner1.jpeg",
-  "/images/baner2.jpeg",
+  "/images/baner2.png",
   "/images/baner3.jpeg",
   "/images/Export3.png",
 ];
@@ -12,15 +12,16 @@ const images = [
 const HeroSection = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const navigate = useNavigate();
+  const INTERVAL_MS = 5000; // 5 seconds
 
   useEffect(() => {
-    const interval = setInterval(() => {
+    const timer = setTimeout(() => {
       setCurrentIndex((prevIndex) =>
         prevIndex === images.length - 1 ? 0 : prevIndex + 1
       );
-    }, 2000);
-    return () => clearInterval(interval);
-  }, []);
+    }, INTERVAL_MS);
+    return () => clearTimeout(timer);
+  }, [currentIndex]);
 
   const handleClick = () => {
     navigate('/about-page');
@@ -31,164 +32,146 @@ const handleClickDiscover = () => {
   }
   return (
     <section
-      className="flex flex-col items-center justify-center w-full min-h-screen bg-[#F9F7F6]"
-      style={{ minHeight: '502px'}}
+      className="w-full bg-[#F9F7F6]"
+      style={{ minHeight: '0',
+               width: '100%',
+       }}
     >
+      {/* Unified hero with image + overlay + content */}
       <div
-        className="w-full max-w-[1440px] px-0 mx-auto"
-        style={{ minHeight: '502px' }}
+        className="relative w-full max-w-[1728px] mx-auto"
+        style={{ height: '490px',
+                 width: '100%'
+         }}
       >
+        {/* Background image (carousel) with crossfade */}
+        <div className="absolute inset-0 w-full h-full">
+          {images.map((src, idx) => (
+            <img
+              key={src}
+              src={src}
+              alt={`Banner ${idx + 1}`}
+              className="absolute inset-0 w-full h-full"
+              style={{
+                objectFit: 'cover',
+                display: 'block',
+                transition: 'opacity 900ms ease-in-out',
+                opacity: currentIndex === idx ? 1 : 0
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Gradient overlay covering the whole image */}
         <div
-          className="flex flex-col items-center justify-center w-full h-auto mx-auto bg-transparent"
+          className="absolute inset-0"
           style={{
-            width: '1280px',
-            maxWidth: '1280px',
-            paddingTop: '112px',
-            paddingBottom: '112px',
-            paddingLeft: '64px',
-            paddingRight: '64px',
-            gap: '80px'
+            background: 'linear-gradient(262.47deg, rgba(0, 0, 0, 0.10) 32.56%, #000000 53.91%)',
+            opacity: 0.69,
+            zIndex: 1
           }}
+        />
+
+        {/* Left-aligned content */}
+        <div
+          className="absolute flex flex-col items-start justify-center"
+          style={{ left: '63px', top: '150px', width: '640px', gap: '24px', zIndex: 2 }}
         >
-          <div
-            className="flex flex-col items-center w-full"
-            style={{ maxWidth: '768px', gap: '24px' }}
+          <h1
+            className="font-[Playfair] font-bold"
+            style={{
+              fontSize: '50px',
+              lineHeight: '120%',
+              color: '#FFFFFF',
+              textAlign: 'left',
+              margin: '0'
+            }}
           >
-            {/* Heading */}
-            <h1
-              className="font-[Playfair] font-bold"
-              style={{
-                fontSize: '62px',
-                lineHeight: '120%',
-                color: '#271004',
-                textAlign: 'center',
-                height: '148px',
-                marginBottom: '24px'
-              }}
-            >
-              Crafted in Paris. Defined by You
-            </h1>
+            Crafted in Paris. Defined by You
+          </h1>
 
-            {/* Subheading */}
-            <p
-              className="font-[Manrope] font-normal"
-              style={{
-                fontSize: '18px',
-                lineHeight: '150%',
-                color: '#431A06',
-                textAlign: 'center',
-                marginTop: '0',
-                marginBottom: '0',
-                // height: '27px',
+          <p
+            className="font-[Manrope] font-normal"
+            style={{
+              fontSize: '18px',
+              lineHeight: '150%',
+              color: '#F9F7F6',
+              textAlign: 'left',
+              marginTop: '0',
+              marginBottom: '0',
+              textShadow: '0 1px 8px rgba(0,0,0,0.25)'
+            }}
+          >
+            A fragrance that transcends time, inspired by rare woods and eternal elegance.
+          </p>
 
-              }}
-            >
-              A fragrance that transcends time, inspired by rare woods and eternal elegance.
-            </p>
-
-            {/* Buttons */}
-            <div
-              className="flex justify-center items-center"
-              style={{
-                width: '460px',
-                gap: '32px',
-                marginTop: '24px',
-                height: '47px'
-              }}
-            >
-              <button
+          <div
+            className="flex items-start"
+            style={{
+              gap: '12px',
+              marginTop: '0',
+              height: '40px'
+            }}
+          >
+            <button
               onClick={handleClickDiscover}
-                className="font-[Manrope] font-normal uppercase"
-                style={{
-                  width: '243px',
-                  height: '47px',
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  background: '#431A06',
-                  color: '#FFFFFF',
-                  fontSize: '15px',
-                  lineHeight: '150%',
-                  letterSpacing: '0%',
-                  border: '1px solid #5E2509',
-                  borderRadius: '0px',
-                  paddingTop: '12px',
-                  paddingBottom: '12px',
-                  paddingLeft: '24px',
-                  paddingRight: '24px',
-                  whiteSpace: 'nowrap',
-                  boxSizing: 'border-box',
-                  cursor: 'pointer',
-                  gap: '8px'
-                }}
-              >
-                DISCOVER THE COLLECTION
-              </button>
-              <button
-                onClick={handleClick}
-                className="font-[Manrope] font-normal uppercase"
-                style={{
-                  width: '185px',
-                  height: '47px',
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  background: '#F9F7F6',
-                  color: '#431A06',
-                  fontSize: '15px',
-                  lineHeight: '150%',
-                  letterSpacing: '0%',
-                  border: '1px solid #431A06',
-                  borderRadius: '0px',
-                  paddingTop: '12px',
-                  paddingBottom: '12px',
-                  paddingLeft: '24px',
-                  paddingRight: '24px',
-                  whiteSpace: 'nowrap',
-                  boxSizing: 'border-box',
-                  cursor: 'pointer',
-                  gap: '8px'
-                }}
-              >
-                EXPLORE ABOUT US
-              </button>
-
-            </div>
-
+              className="font-[Manrope] font-normal uppercase"
+              style={{
+                width: '190px',
+                height: '40px',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                background: '#CDAF6E',
+                color: '#341405',
+                fontSize: '14px',
+                lineHeight: '150%',
+                letterSpacing: '0%',
+                border: '1px solid #EFDB94',
+                borderRadius: '0px',
+                paddingTop: '10px',
+                paddingBottom: '10px',
+                paddingLeft: '24px',
+                paddingRight: '24px',
+                whiteSpace: 'nowrap',
+                boxSizing: 'border-box',
+                cursor: 'pointer',
+                gap: '8px'
+              }}
+            >
+              DISCOVER COLLECTIONS
+            </button>
+            {/* <button
+              onClick={handleClick}
+              className="font-[Manrope] font-normal uppercase"
+              style={{
+                width: '170px',
+                height: '44px',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                background: 'transparent',
+                color: '#F9F7F6',
+                fontSize: '15px',
+                lineHeight: '150%',
+                letterSpacing: '0%',
+                border: '1px solid #EFDB94',
+                borderRadius: '0px',
+                paddingTop: '12px',
+                paddingBottom: '12px',
+                paddingLeft: '24px',
+                paddingRight: '24px',
+                whiteSpace: 'nowrap',
+                boxSizing: 'border-box',
+                cursor: 'pointer',
+                gap: '8px'
+              }}
+            >
+              EXPLORE ABOUT US
+            </button> */}
           </div>
         </div>
-
-        {/* Carousel Image */}
-        <div
-          className="flex justify-center items-center w-full"
-          style={{
-            marginTop: '80px',
-            paddingTop: '40px',
-            paddingBottom: '40px',
-            paddingLeft: '76.8px',
-            paddingRight: '76.8px',
-            background: '#F9F7F6',
-            boxSizing: 'border-box'
-          }}
-        >
-          <img
-            src={images[currentIndex]}
-            alt={`Banner ${currentIndex + 1}`}
-            style={{
-              width: '1344px',
-              height: '864px',
-              objectFit: 'cover', // Use your design system's "Radius/Large" value
-              boxShadow: '0 2px 16px rgba(0,0,0,0.07)',
-              background: '#eee',
-              maxWidth: '100%',
-              display: 'block'
-            }}
-          />
-        </div>
-        
-
       </div>
-
     </section>
 
   );

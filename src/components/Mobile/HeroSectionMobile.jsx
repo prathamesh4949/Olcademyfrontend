@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 const images = [
   "/images/baner1.jpeg",
-  "/images/baner2.jpeg",
+  "/images/baner2.png",
   "/images/baner3.jpeg",
   "/images/Export3.png",
 ];
@@ -24,88 +24,77 @@ const HeroSectionMobile = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const goToPrev = () => {
-    setCurrentIndex((prev) =>
-      prev === 0 ? images.length - 1 : prev - 1
-    );
-  };
-
-  const goToNext = () => {
-    setCurrentIndex((prev) =>
-      prev === images.length - 1 ? 0 : prev + 1
-    );
-  };
-
   const handleShopNow = () => {
     navigate("/discover-collection");
   };
 
   return (
-    <section className="w-full bg-[#F9F7F6] pt-16 pb-12 overflow-hidden">
-      <div className="relative w-full h-[420px]">
-        {/* Banner Image */}
-        <img
-          src={images[currentIndex]}
-          alt={`VESARII Banner ${currentIndex + 1}`}
-          className="w-full h-full object-cover"
+    <section className="w-full bg-[#F9F7F6] relative" style={{ height: '420px' }}>
+      {/* Container */}
+      <div className="relative w-full h-full">
+        
+        {/* Background Images + Transitions */}
+        <div className="absolute inset-0 w-full h-full">
+          {images.map((src, idx) => (
+            <img
+              key={src}
+              src={src}
+              alt={`Banner ${idx + 1}`}
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{
+                transition: 'opacity 900ms ease-in-out',
+                opacity: currentIndex === idx ? 1 : 0
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Gradient Overlay */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: 'linear-gradient(262.47deg, rgba(0, 0, 0, 0.10) 32.56%, #000000 53.91%)',
+            opacity: 0.69,
+            zIndex: 1
+          }}
         />
 
-        {/* Subtle Overlay */}
-        <div className="absolute inset-0 bg-black/15" />
+        {/* Navigation Arrows Removed */}
 
-        {/* Left Arrow */}
-        <button
-          onClick={goToPrev}
-          className="absolute left-4 top-1/2 -translate-y-1/2 z-10"
-          aria-label="Previous"
+        {/* Content Overlay */}
+        <div
+          className="absolute flex flex-col justify-center items-start z-10 px-6"
+          style={{ top: '50%', transform: 'translateY(-50%)', width: '100%' }}
         >
-          <svg
-            className="w-10 h-10 text-[#431A06]"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+          <h1
+            className="font-[Playfair] font-bold text-white mb-3"
+            style={{ fontSize: '32px', lineHeight: '1.2' }}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2.5}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-        </button>
+            Crafted in Paris.<br />Defined by You
+          </h1>
 
-        {/* Right Arrow */}
-        <button
-          onClick={goToNext}
-          className="absolute right-4 top-1/2 -translate-y-1/2 z-10"
-          aria-label="Next"
-        >
-          <svg
-            className="w-10 h-10 text-[#431A06]"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+          <p
+            className="font-[Manrope] text-[#F9F7F6] mb-6"
+            style={{ fontSize: '14px', lineHeight: '1.5', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2.5}
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
-        </button>
-      </div>
+            A fragrance that transcends time, inspired by rare woods and eternal elegance.
+          </p>
 
-      {/* SHOP NOW Button (Below banner) */}
-      <div className="flex justify-center mt-6">
-        <button
-          onClick={handleShopNow}
-          className="bg-[#431A06] text-white
-                     text-md uppercase tracking-widest
-                     px-16 py-3"
-        >
-          SHOP NOW
-        </button>
+          <button
+            onClick={handleShopNow}
+            className="font-[Manrope] font-normal uppercase flex items-center justify-center gap-2"
+            style={{
+              background: '#CDAF6E',
+              color: '#341405',
+              fontSize: '12px',
+              padding: '10px 20px',
+              border: '1px solid #EFDB94',
+              letterSpacing: '0.05em'
+            }}
+          >
+            <span>DISCOVER COLLECTIONS</span>
+          </button>
+        </div>
       </div>
     </section>
   );
