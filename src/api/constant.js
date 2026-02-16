@@ -5,11 +5,11 @@ const isDevelopment =
     (typeof window !== 'undefined' && window.location.hostname === 'localhost') ||
     (typeof window !== 'undefined' && window.location.hostname === '127.0.0.1');
 
-const PRODUCTION_BASE_URL = "https://olcademybackend.vercel.app";
+// USE ENVIRONMENT VARIABLE FIRST, THEN FALLBACK
+const PRODUCTION_BASE_URL = import.meta.env.VITE_API_URL || "https://olcademybackend.vercel.app";
 const DEVELOPMENT_BASE_URL = "http://localhost:8000";
 
 export const API_BASE_URL = isDevelopment ? DEVELOPMENT_BASE_URL : PRODUCTION_BASE_URL;
-// export const API_BASE_URL = PRODUCTION_BASE_URL;
 
 // API Endpoints
 export const USER_API_END_POINT = `${API_BASE_URL}/user`;
@@ -17,7 +17,7 @@ export const ORDER_API_END_POINT = `${API_BASE_URL}/order`;
 export const CART_API_END_POINT = `${API_BASE_URL}/cart`;
 export const WISHLIST_API_END_POINT = `${API_BASE_URL}/wishlist`;
 export const PRODUCT_API_END_POINT = `${API_BASE_URL}/api/products`;
-export const SCENT_API_END_POINT = `${API_BASE_URL}/api/scents`;  // Scents endpoint
+export const SCENT_API_END_POINT = `${API_BASE_URL}/api/scents`;
 export const BANNER_API_END_POINT = `${API_BASE_URL}/api/banners`;
 
 // Frontend URL
