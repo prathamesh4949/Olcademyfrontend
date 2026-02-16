@@ -31,8 +31,8 @@ const Header = ({ darkMode, setDarkMode }) => {
   const [showLogoutNotification, setShowLogoutNotification] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  const INITIAL_HEIGHT = 197;
-  const STICKY_HEIGHT = 120;
+  const INITIAL_HEIGHT = 197;  // Back to original
+  const STICKY_HEIGHT = 120;   // Back to original
   const MOBILE_HEIGHT = 'auto';
   const SCROLL_THRESHOLD = 50;
 
@@ -105,20 +105,21 @@ const Header = ({ darkMode, setDarkMode }) => {
 
   const isActiveNavItem = (path) => location.pathname === path;
 
-  const currentHeight = isMobile ? MOBILE_HEIGHT : (isScrolled ? STICKY_HEIGHT : INITIAL_HEIGHT);
+  const currentHeight = isMobile ? MOBILE_HEIGHT : STICKY_HEIGHT;
 
-  const logoTop = isScrolled ? '28px' : '20px';
-  const logoLeft = isScrolled ? '52px' : '50%';
-  const logoTransform = isScrolled ? 'translateX(0%)' : 'translateX(-50%)';
+  // Static positions - no animation
+  const logoTop = '28px';
+  const logoLeft = '52px';
+  const logoTransform = 'translateX(0%)';
 
-  const navLayerTop = isScrolled ? '22px' : '116px';
-  const iconLayerTop = isScrolled ? '26px' : '86px';
+  const navLayerTop = '22px';
+  const iconLayerTop = '26px';
 
-  const navFontSize = isScrolled ? '18px' : '20px';
-  const navPadding = isScrolled ? '2px 8px' : '12px 8px';
-  const navMinWidth = isScrolled ? '80px' : '120px';
+  const navFontSize = '18px';
+  const navPadding = '2px 8px';
+  const navMinWidth = '80px';
 
-  const spacerHeight = isMobile ? 120 : INITIAL_HEIGHT;
+  const spacerHeight = isMobile ? 120 : STICKY_HEIGHT;
 
   return (
     <>
@@ -218,224 +219,60 @@ const Header = ({ darkMode, setDarkMode }) => {
         <motion.header
           animate={{
             height: currentHeight,
-            backgroundColor: isScrolled ? '#ffffff' : '#F9F7F6',
-            borderBottomWidth: isScrolled ? '0px' : '1px'
+            backgroundColor: '#ffffff',  // Always white like when scrolled
+            borderBottomWidth: '0px'  // No border like when scrolled
           }}
           transition={{ duration: 0.3 }}
           className="fixed top-0 left-0 right-0 z-[9999]"
           style={{
             width: '100%',
-            height: INITIAL_HEIGHT,
+            height: STICKY_HEIGHT,  // Always use sticky height
             border: '1px solid #B59B8E',
-            backgroundColor: '#F9F7F6',
+            backgroundColor: '#ffffff',
             backdropFilter: 'blur(8px)',
             WebkitBackdropFilter: 'blur(8px)'
           }}
         >
-          <div className="relative w-full h-full max-w-full mx-auto px-[52px]">
-            <div
-              className="absolute flex items-center transition-all duration-300"
-              style={{
-                width: isScrolled ? 'auto' : '80px',
-                height: '60px',
-                top: logoTop,
-                left: logoLeft,
-                transform: logoTransform,
-                zIndex: 10001,
-                gap: isScrolled ? '12px' : '0'
-              }}
-            >
-              {isScrolled && (
-                <button
-                  onClick={toggleSearch}
-                  style={{
-                    width: '28px',
-                    height: '28px',
-                    color: '#341405',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
-                  <FiSearch size={28} />
-                </button>
-              )}
-              <Link to="/">
+          {/* MODIFIED: Changed from absolute positioning to flexbox for proper alignment */}
+          <div className="w-full h-full flex items-center justify-between px-[52px]">
+            
+            {/* Left Section: Search + Logo */}
+            <div className="flex items-center" style={{ gap: '12px', flexShrink: 0 }}>
+              <button
+                onClick={toggleSearch}
+                style={{
+                  width: '24px',
+                  height: '24px',
+                  color: '#341405',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <FiSearch size={24} />
+              </button>
+
+              <Link to="/" style={{ display: 'flex', alignItems: 'center' }}>
                 <motion.img
                   src="/images/Logo.png"
                   alt="Logo"
-                  animate={{ scale: isScrolled ? 0.78 : 1 }}
+                  animate={{ scale: 0.78 }}
                   transition={{ duration: 0.25 }}
                   style={{ width: '120px', height: '60px', objectFit: 'contain' }}
                 />
               </Link>
             </div>
 
-            <div
-              className="absolute flex items-center transition-all duration-300"
-              style={{
-                width: isScrolled ? 'auto' : 'calc(100% - 104px)',
-                top: iconLayerTop,
-                left: isScrolled ? 'auto' : '52px',
-                right: '52px',
-                justifyContent: isScrolled ? 'flex-end' : 'space-between',
-                zIndex: 10002,
-                pointerEvents: 'auto'
-              }}
-            >
-              <div
-                className="flex items-center transition-all duration-300"
-                style={{
-                  transform: isScrolled ? 'scale(0.95)' : 'scale(1)',
-                  marginRight: isScrolled ? '18px' : '0px'
-                }}
-              >
-                {/* <button
-                  onClick={toggleSearch}
-                  style={{
-                    width: '34px',
-                    height: '34px',
-                    color: '#341405'
-                  }}
-                >
-                  <FiSearch size={34} />
-                </button> */}
-                {!isScrolled && (
-                  <button
-                    onClick={toggleSearch}
-                    style={{
-                      width: '34px',
-                      height: '34px',
-                      color: '#341405'
-                    }}
-                  >
-                    <FiSearch size={34} />
-                  </button>
-                )}
-              </div>
-
-              <div className="flex items-center" style={{ gap: '28px' }}>
-                <Link
-                  to="/wishlist-collection"
-                  style={{
-                    width: '34px',
-                    height: '34px',
-                    color: '#341405',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                  }}
-                >
-                  <FiHeart size={34} />
-                </Link>
-
-                <button
-                  onClick={openCart}
-                  style={{
-                    width: '34px',
-                    height: '34px',
-                    color: '#341405',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                  }}
-                >
-                  <FiShoppingCart size={34} />
-                </button>
-
-                {user ? (
-                  <div className="relative">
-                    <button
-                      onClick={toggleUserDropdown}
-                      style={{
-                        width: '34px',
-                        height: '34px'
-                      }}
-                    >
-                      <div
-                        className="rounded-full flex items-center justify-center"
-                        style={{
-                          width: '34px',
-                          height: '34px',
-                          backgroundColor: '#341405',
-                          color: '#fff'
-                        }}
-                      >
-                        {user.username ? user.username.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
-                      </div>
-                    </button>
-
-                    <AnimatePresence>
-                      {isUserDropdownOpen && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 8 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: 8 }}
-                          transition={{ duration: 0.2 }}
-                          className="absolute top-full mt-2 right-0 shadow-lg"
-                          style={{
-                            backgroundColor: '#F9F7F6',
-                            border: '1px solid #B59B8E',
-                            width: '200px',
-                            padding: '16px',
-                            zIndex: 10050,
-                            pointerEvents: 'auto'
-                          }}
-                        >
-                          <Link
-                            to="/userProfile"
-                            onClick={() => setIsUserDropdownOpen(false)}
-                            className="block py-2"
-                            style={{ color: '#341405', fontSize: '16px' }}
-                          >
-                            My Profile
-                          </Link>
-
-                          <button
-                            onClick={() => {
-                              setIsLogoutModalOpen(true);
-                              setIsUserDropdownOpen(false);
-                            }}
-                            className="block w-full text-left py-2"
-                            style={{ color: '#341405', fontSize: '16px' }}
-                          >
-                            Logout
-                          </button>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setIsSignupOpen(true)}
-                    style={{
-                      width: '34px',
-                      height: '34px',
-                      color: '#341405',
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center'
-                    }}
-                  >
-                    <FiUser size={34} />
-                  </button>
-                )}
-              </div>
-            </div>
-
+            {/* Center Section: Navigation */}
             <motion.div
-              animate={{ top: navLayerTop }}
               transition={{ duration: 0.3 }}
-              className="absolute hidden md:flex items-center"
+              className="hidden md:flex items-center"
               style={{
-                width: '100%',
-                left: 0,
-                transform: 'translateX(0)',
-                justifyContent: 'center',
                 gap: '12px',
-                height: '60px',
                 pointerEvents: 'auto',
-                zIndex: 10000
+                zIndex: 10000,
+                flex: 1,
+                justifyContent: 'center'
               }}
             >
               {navItems.map((item) => (
@@ -464,6 +301,148 @@ const Header = ({ darkMode, setDarkMode }) => {
                 </div>
               ))}
             </motion.div>
+
+            {/* Right Section: Icons */}
+            <div className="flex items-center" style={{ gap: '28px', flexShrink: 0 }}>
+              {/* KEPT: Original commented code for reference */}
+              {/* <div
+                className="flex items-center transition-all duration-300"
+                style={{
+                  transform: isScrolled ? 'scale(0.95)' : 'scale(1)',
+                  marginRight: isScrolled ? '18px' : '0px'
+                }}
+              >
+                <button
+                  onClick={toggleSearch}
+                  style={{
+                    width: '34px',
+                    height: '34px',
+                    color: '#341405'
+                  }}
+                >
+                  <FiSearch size={34} />
+                </button>
+                {!isScrolled && (
+                  <button
+                    onClick={toggleSearch}
+                    style={{
+                      width: '34px',
+                      height: '34px',
+                      color: '#341405'
+                    }}
+                  >
+                    <FiSearch size={34} />
+                  </button>
+                )}
+              </div> */}
+
+              <Link
+                to="/wishlist-collection"
+                style={{
+                  width: '24px',  // Reduced from 34px
+                  height: '24px',
+                  color: '#341405',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center'
+                }}
+              >
+                <FiHeart size={24} />  {/* Reduced from 34 */}
+              </Link>
+
+              <button
+                onClick={openCart}
+                style={{
+                  width: '24px',  // Reduced from 34px
+                  height: '24px',
+                  color: '#341405',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center'
+                }}
+              >
+                <FiShoppingCart size={24} />  {/* Reduced from 34 */}
+              </button>
+
+              {user ? (
+                <div className="relative">
+                  <button
+                    onClick={toggleUserDropdown}
+                    style={{
+                      width: '24px',  // Reduced from 34px
+                      height: '24px'
+                    }}
+                  >
+                    <div
+                      className="rounded-full flex items-center justify-center"
+                      style={{
+                        width: '24px',  // Reduced from 34px
+                        height: '24px',
+                        backgroundColor: '#341405',
+                        color: '#fff',
+                        fontSize: '12px'  // Reduced font size for smaller circle
+                      }}
+                    >
+                      {user.username ? user.username.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
+                    </div>
+                  </button>
+
+                  <AnimatePresence>
+                    {isUserDropdownOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 8 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute top-full mt-2 right-0 shadow-lg"
+                        style={{
+                          backgroundColor: '#F9F7F6',
+                          border: '1px solid #B59B8E',
+                          width: '200px',
+                          padding: '16px',
+                          zIndex: 10050,
+                          pointerEvents: 'auto'
+                        }}
+                      >
+                        <Link
+                          to="/userProfile"
+                          onClick={() => setIsUserDropdownOpen(false)}
+                          className="block py-2"
+                          style={{ color: '#341405', fontSize: '16px' }}
+                        >
+                          My Profile
+                        </Link>
+
+                        <button
+                          onClick={() => {
+                            setIsLogoutModalOpen(true);
+                            setIsUserDropdownOpen(false);
+                          }}
+                          className="block w-full text-left py-2"
+                          style={{ color: '#341405', fontSize: '16px' }}
+                        >
+                          Logout
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setIsSignupOpen(true)}
+                  style={{
+                    width: '24px',  // Reduced from 34px
+                    height: '24px',
+                    color: '#341405',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                  }}
+                >
+                  <FiUser size={24} />  {/* Reduced from 34 */}
+                </button>
+              )}
+            </div>
           </div>
         </motion.header>
       )}
